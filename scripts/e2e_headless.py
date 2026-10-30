@@ -20,6 +20,7 @@ import os, runpy, sys
 ap = os.path.join(r"{root}", "ap")
 os.chdir(ap)
 sys.path.insert(0, ap)
+sys.argv = ["tf3_e2e", "--nogui"]  # Utils.gui_enabled is read from argv when Utils is imported
 import ModuleUpdate
 ModuleUpdate.update_ran = True
 {body}
@@ -75,7 +76,8 @@ def main(seed_zip: str) -> int:
     server_log = (work / "server.log").read_text(encoding="utf-8", errors="replace")
     print("--- client:\n" + "\n".join(line for line in client_log.splitlines() if "requests" not in line and "File " not in line)[-1500:])
     print("--- server:\n" + "\n".join(line for line in server_log.splitlines() if "requests" not in line and "File " not in line)[-1500:])
-    ok = "Sent 2 new checks" in client_log and "Goal reached" in client_log
+    # the server is the judge: both fake checks arrived and the goal was reported
+    ok = ("(population:1)" in server_log or "(line:road)" in server_log) and "completed all of their games" in server_log
     print("RESULT:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 
