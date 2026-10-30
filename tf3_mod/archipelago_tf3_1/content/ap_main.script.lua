@@ -483,7 +483,7 @@ local function uid_of(key)
 end
 
 local function experiment_contracts(inbox)
-	if not inbox.contracts or type(app.loadUserdata(DIR, "archipelago_tf3_experiment.lua")) ~= "table" then return end
+	if not inbox.contracts or type(app.loadUserdata(DIR, "archipelago_tf3_experiment")) ~= "table" then return end
 	state.spawned = state.spawned or {}
 	local open = notify.open_contracts(inbox.contracts, state.checks, inbox.config)
 	local first = open[1]
