@@ -130,3 +130,28 @@ def test_the_log_replaces_the_item_counts_so_nothing_is_announced_twice():
 def test_a_log_state_after_the_first_one_stays_silent_at_the_baseline():
     entry = {"item": "Rail Transport", "from": "Alice", "where": "chest"}
     assert diff(None, log_state([entry])) == []
+
+
+def diff_with_contracts(previous, current, contracts):
+    runtime, notify = load_module("ap_notify")
+    result = notify.diff(to_lua(runtime, previous), to_lua(runtime, current), to_lua(runtime, CONFIG), 5,
+                         to_lua(runtime, contracts))
+    return from_lua(result)
+
+
+def test_a_contract_with_its_reward_is_announced_with_the_reward():
+    contracts = {"population:1": {"item": "Rail Transport", "to": "Me", "own": True}}
+    messages = diff_with_contracts(state(), state(checks=["population:1"]), contracts)
+    assert messages == [{"title": "Archipelago: contract completed",
+                         "text": "Population reached 500 - reward: Rail Transport"}]
+
+
+def test_a_reward_for_another_player_names_them():
+    contracts = {"population:1": {"item": "Cargo Class: Bulk", "to": "Alice", "own": False}}
+    messages = diff_with_contracts(state(), state(checks=["population:1"]), contracts)
+    assert messages[0]["text"] == "Population reached 500 - reward: Cargo Class: Bulk for Alice"
+
+
+def test_a_check_without_a_known_contract_keeps_the_plain_message():
+    messages = diff_with_contracts(state(), state(checks=["population:1"]), {})
+    assert messages == [{"title": "Archipelago: check sent", "text": "Population reached 500"}]

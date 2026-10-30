@@ -57,6 +57,7 @@ def main(seed_zip: str) -> int:
         inbox = userdata / "archipelago_tf3_inbox.lua"
         print("inbox written by the client:", inbox.exists())
         text = inbox.read_text(encoding="utf-8") if inbox.exists() else ""
+        print("inbox carries contracts (scouting):", "contracts" in text and "population:1" in text)
         seed = next((line.split('"')[1] for line in text.splitlines() if line.strip().startswith("seed")), "")
         outbox = (
             'function data()\nreturn {\n\tversion = 1,\n\tseed = "%s",\n\tchecks = { "population:1", "line:road" },\n'

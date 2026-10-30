@@ -67,6 +67,34 @@ def received_log(received, own_slot: int, player_name, location_name) -> list[di
     return log
 
 
+def contracts_from_scout(infos, own_slot: int, location_name, item_name, player_name) -> dict:
+    """The reward of each check from the server's scout reply, keyed by check id.
+
+    `infos` is a list of (location id, item id, receiving slot); an id that cannot be named is skipped.
+    """
+    contracts = {}
+    for location, item, receiver in infos:
+        check, reward = location_name(location), item_name(item)
+        if check is None or reward is None:
+            continue
+        contracts[check] = {"item": reward, "to": player_name(receiver) or f"Player {receiver}",
+                            "own": receiver == own_slot}
+    return contracts
+
+
+def contracts_report(contracts: dict, done) -> list[str]:
+    """Console lines for /contracts: the progress, then the open contracts with their reward."""
+    if not contracts:
+        return ["No contracts known yet (waiting for the server)."]
+    open_ids = sorted(check for check in contracts if check not in done)
+    lines = [f"Contracts: {len(contracts) - len(open_ids)}/{len(contracts)} done"]
+    for check in open_ids:
+        reward = contracts[check]
+        suffix = "" if reward["own"] else f" for {reward['to']}"
+        lines.append(f"{check} -> {reward['item']}{suffix}")
+    return lines
+
+
 @dataclass
 class PollResult:
     new_checks: set = field(default_factory=set)
@@ -85,12 +113,13 @@ class TF3Sync:
         self.log: list[dict] | None = None
         self.sent: set = set()
         self.inbox_dirty = False  # the last inbox write failed and must be retried
+        self.contracts: dict | None = None
 
     def _write_inbox(self) -> None:
         if self.slot_data is None:
             return
         try:
-            self.bridge.write_inbox(self.slot_data, self.received, self.log)
+            self.bridge.write_inbox(self.slot_data, self.received, self.log, self.contracts)
             self.inbox_dirty = False
         except OSError:
             self.inbox_dirty = True
@@ -107,6 +136,10 @@ class TF3Sync:
     def on_items(self, received: list[str], log: list[dict] | None = None) -> None:
         self.received = list(received)
         self.log = log
+        self._write_inbox()
+
+    def set_contracts(self, contracts: dict) -> None:
+        self.contracts = contracts
         self._write_inbox()
 
     def flush_inbox(self) -> None:
@@ -142,7 +175,7 @@ def parse_launch_args(launch_args):
 def launch(*launch_args) -> None:
     """Entry point used by the Archipelago Launcher component."""
     from CommonClient import ClientCommandProcessor, CommonContext, gui_enabled, logger, server_loop
-    from NetUtils import ClientStatus
+    from NetUtils import ClientStatus, NetworkItem
 
     class TF3CommandProcessor(ClientCommandProcessor):
         def _cmd_folder(self, *path_parts: str) -> bool:
@@ -153,6 +186,12 @@ def launch(*launch_args) -> None:
                 return False
             self.ctx.set_folder(folder)
             self.output(f"Using {folder}")
+            return True
+
+        def _cmd_contracts(self) -> bool:
+            """List the open contracts with their reward."""
+            for line in contracts_report(self.ctx.contracts, done=self.ctx.checked_names()):
+                self.output(line)
             return True
 
     class TF3Context(CommonContext):
@@ -168,6 +207,10 @@ def launch(*launch_args) -> None:
             self.last_status = ""
             self.warned_year = False
             self.warned_folder = False
+            self.contracts: dict = {}  # check id -> reward, filled from the server's scout reply
+
+        def checked_names(self) -> set:
+            return {self.location_names.lookup_in_slot(code, self.slot) for code in self.checked_locations}
 
         def set_folder(self, folder: Path) -> None:
             self.sync = TF3Sync(Bridge(folder))
@@ -200,6 +243,20 @@ def launch(*launch_args) -> None:
                     self.sync.on_connected(*self.pending_slot)
                 if self.poll_task is None or self.poll_task.done():
                     self.poll_task = asyncio.create_task(self.poll_loop(), name="TF3 outbox poll")
+                everything = sorted(set(args.get("missing_locations", [])) | set(args.get("checked_locations", [])))
+                if everything:
+                    asyncio.create_task(self.send_msgs([{"cmd": "LocationScouts", "locations": everything,
+                                                         "create_as_hint": 0}]), name="TF3 scout")
+            elif cmd == "LocationInfo":
+                infos = [(entry.location, entry.item, entry.player) for entry in
+                         (NetworkItem(**raw) if isinstance(raw, dict) else raw for raw in args["locations"])]
+                self.contracts = contracts_from_scout(
+                    infos, own_slot=self.slot,
+                    location_name=lambda code: self.location_names.lookup_in_slot(code, self.slot),
+                    item_name=lambda code: self.item_names.lookup_in_slot(code, self.slot),
+                    player_name=lambda slot: self.player_names.get(slot))
+                if self.sync:
+                    self.sync.set_contracts(self.contracts)
             elif cmd == "ReceivedItems" and self.pending_slot:
                 self.pending_slot = (self.pending_slot[0], *self.received_with_sources())
                 if self.sync:

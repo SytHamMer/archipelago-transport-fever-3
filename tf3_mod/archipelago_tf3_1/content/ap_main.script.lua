@@ -438,7 +438,7 @@ local function notify_changes(inbox)
 		current.log = inbox.log
 		current.log_size = #inbox.log
 	end
-	local messages = notify.diff(state.last_notified, current, inbox.config)
+	local messages = notify.diff(state.last_notified, current, inbox.config, nil, inbox.contracts)
 	state.last_notified = current
 	for _, message in ipairs(messages) do
 		local ok, err = pcall(send_notification, message)

@@ -8,6 +8,7 @@ local M = {}
 M.DEFAULT_LIMIT = 5 -- notifications per tick, the last one sums up the rest
 M.ITEM_TITLE = "Archipelago: item received"
 M.CHECK_TITLE = "Archipelago: check sent"
+M.CONTRACT_TITLE = "Archipelago: contract completed"
 M.SUMMARY_TITLE = "Archipelago"
 
 local function with_separators(number)
@@ -65,7 +66,8 @@ end
 
 -- Messages for what is new in `current` compared with `previous`. The first state (previous is nil) only sets the
 -- baseline and notifies nothing, so a reloaded game does not replay everything already received.
-function M.diff(previous, current, config, limit)
+-- `contracts` (optional) maps a check id to its reward { item, to, own }: such checks are announced as contracts.
+function M.diff(previous, current, config, limit, contracts)
 	if previous == nil then return {} end
 	limit = limit or M.DEFAULT_LIMIT
 	local messages = {}
@@ -89,7 +91,11 @@ function M.diff(previous, current, config, limit)
 	for _, id in ipairs(previous.checks or {}) do known[id] = true end
 	for _, id in ipairs(current.checks or {}) do
 		if not known[id] then
-			messages[#messages + 1] = { title = M.CHECK_TITLE, text = M.describe_check(id, config) }
+			local text, reward = M.describe_check(id, config), contracts and contracts[id]
+			if reward then
+				text = text .. " - reward: " .. reward.item .. (reward.own and "" or (" for " .. reward.to))
+			end
+			messages[#messages + 1] = { title = reward and M.CONTRACT_TITLE or M.CHECK_TITLE, text = text }
 		end
 	end
 

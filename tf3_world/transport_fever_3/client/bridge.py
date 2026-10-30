@@ -47,10 +47,12 @@ class Bridge:
     def outbox_path(self) -> Path:
         return self.dir / f"{OUTBOX_PREFIX}{safe_seed(self.seed or '')}.lua"
 
-    def write_inbox(self, slot_data: dict, received: list[str], log: list[dict] | None = None) -> None:
+    def write_inbox(self, slot_data: dict, received: list[str], log: list[dict] | None = None,
+                    contracts: dict | None = None) -> None:
         """Write the complete wanted state. `received` is the full ordered list of items received so far.
 
         `log` (optional) says who sent each of them and for which check, for the in-game notifications.
+        `contracts` (optional) maps each check id to its reward `{item, to, own}`.
         """
         self.seed = slot_data["seed"]
         items: dict[str, int] = {}
@@ -72,6 +74,8 @@ class Bridge:
         }
         if log is not None:
             inbox["log"] = log
+        if contracts is not None:
+            inbox["contracts"] = contracts
         target = self.dir / INBOX_NAME
         temporary = self.dir / (INBOX_NAME + ".tmp")
         temporary.write_text(luafile.dumps(inbox), encoding="utf-8")
