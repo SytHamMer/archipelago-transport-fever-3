@@ -1,6 +1,7 @@
 from BaseClasses import Item, ItemClassification, Location, Region
 from Options import OptionError
 from worlds.AutoWorld import WebWorld, World
+from worlds.LauncherComponents import Component, Type, components, launch as launch_component
 from worlds.generic.Rules import set_rule
 
 from . import data
@@ -8,6 +9,15 @@ from .Items import item_counts, item_table
 from .Locations import active_locations, location_table
 from .Options import TF3Options, validate_goals
 from .Rules import GOAL_NEED, MODE_ITEMS, Need, need_for
+
+
+def launch_client(*args) -> None:
+    from .client.tf3_client import launch
+
+    launch_component(launch, name="Transport Fever 3 Client", args=args)
+
+
+components.append(Component("Transport Fever 3 Client", func=launch_client, component_type=Type.CLIENT))
 
 
 class TF3Web(WebWorld):
