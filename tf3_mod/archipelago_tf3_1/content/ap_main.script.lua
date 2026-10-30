@@ -163,6 +163,7 @@ local function take_readings(player)
 	local progression = ug_require("::/game_mechanics/company/company_progression_util.tl")
 	local company = ug_require("::/game_mechanics/company/company_util.tl")
 	local status = progression.getCompanyProgressionState(player)
+	if not status then return nil end -- the company is not ready yet right after the game loads
 	readings.experience = status.experience
 	readings.earned_level = progression.getLevelAndFraction(company.getBasePopulation(), status.experience)
 
