@@ -46,6 +46,27 @@ def check_ids(names) -> list[int]:
     return sorted(location_table[name] for name in names if name in location_table)
 
 
+def received_log(received, own_slot: int, player_name, location_name) -> list[dict]:
+    """Who sent each received item and for which check, for the in-game notifications.
+
+    `received` is a list of (item name, location id, sender slot); `player_name(slot)` and `location_name(id, slot)`
+    give the names (a location that cannot be named is left out).
+    """
+    log = []
+    for item, location, sender in received:
+        entry: dict = {"item": item}
+        if sender == own_slot:
+            entry["own"] = True
+        else:
+            entry["from"] = player_name(sender) or f"Player {sender}"
+        try:
+            entry["where"] = location_name(location, sender)
+        except (KeyError, LookupError):
+            pass
+        log.append(entry)
+    return log
+
+
 @dataclass
 class PollResult:
     new_checks: set = field(default_factory=set)
@@ -61,6 +82,7 @@ class TF3Sync:
         self.bridge = bridge
         self.slot_data: dict | None = None
         self.received: list[str] = []
+        self.log: list[dict] | None = None
         self.sent: set = set()
         self.inbox_dirty = False  # the last inbox write failed and must be retried
 
@@ -68,21 +90,23 @@ class TF3Sync:
         if self.slot_data is None:
             return
         try:
-            self.bridge.write_inbox(self.slot_data, self.received)
+            self.bridge.write_inbox(self.slot_data, self.received, self.log)
             self.inbox_dirty = False
         except OSError:
             self.inbox_dirty = True
 
-    def on_connected(self, slot_data: dict, received: list[str]) -> None:
+    def on_connected(self, slot_data: dict, received: list[str], log: list[dict] | None = None) -> None:
         self.slot_data = slot_data
         self.received = list(received)
+        self.log = log
         # A new connection starts from the server's view: every check of the outbox is offered again, since checks
         # marked as sent while the connection was down never reached the server (the server ignores duplicates).
         self.sent = set()
         self._write_inbox()
 
-    def on_items(self, received: list[str]) -> None:
+    def on_items(self, received: list[str], log: list[dict] | None = None) -> None:
         self.received = list(received)
+        self.log = log
         self._write_inbox()
 
     def flush_inbox(self) -> None:
@@ -139,7 +163,7 @@ def launch(*launch_args) -> None:
         def __init__(self, server_address, password, userdata_dir: Path | None):
             super().__init__(server_address, password)
             self.sync = TF3Sync(Bridge(userdata_dir)) if userdata_dir else None
-            self.pending_slot: tuple[dict, list[str]] | None = None  # slot data and items, kept until a folder is known
+            self.pending_slot: tuple[dict, list[str], list[dict]] | None = None  # kept until a folder is known
             self.poll_task: asyncio.Task | None = None
             self.last_status = ""
             self.warned_year = False
@@ -159,17 +183,27 @@ def launch(*launch_args) -> None:
         def received_names(self) -> list[str]:
             return [self.item_names.lookup_in_game(item.item, self.game) for item in self.items_received]
 
+        def received_with_sources(self) -> tuple[list[str], list[dict]]:
+            names = self.received_names()
+            log = received_log(
+                [(name, item.location, item.player) for name, item in zip(names, self.items_received)],
+                own_slot=self.slot,
+                player_name=lambda slot: self.player_names.get(slot),
+                location_name=lambda code, slot: self.location_names.lookup_in_slot(code, slot),
+            )
+            return names, log
+
         def on_package(self, cmd: str, args: dict) -> None:
             if cmd == "Connected":
-                self.pending_slot = (args["slot_data"], self.received_names())
+                self.pending_slot = (args["slot_data"], *self.received_with_sources())
                 if self.sync:
                     self.sync.on_connected(*self.pending_slot)
                 if self.poll_task is None or self.poll_task.done():
                     self.poll_task = asyncio.create_task(self.poll_loop(), name="TF3 outbox poll")
             elif cmd == "ReceivedItems" and self.pending_slot:
-                self.pending_slot = (self.pending_slot[0], self.received_names())
+                self.pending_slot = (self.pending_slot[0], *self.received_with_sources())
                 if self.sync:
-                    self.sync.on_items(self.pending_slot[1])
+                    self.sync.on_items(*self.pending_slot[1:])
 
         def connected_to_server(self) -> bool:
             return self.server is not None and self.slot is not None

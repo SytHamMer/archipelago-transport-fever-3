@@ -45,6 +45,17 @@ function M.describe_check(id, config)
 	return "Check reached: " .. id
 end
 
+-- Text of a received item: who sent it and for which check, when known. Our own checks are shown with the
+-- readable check text, the others by the name the server gives them.
+local function item_text(entry, config)
+	local text = entry.item
+	if entry.from then text = text .. " from " .. entry.from end
+	if entry.where then
+		text = text .. " (" .. (entry.own and M.describe_check(entry.where, config) or entry.where) .. ")"
+	end
+	return text
+end
+
 local function sorted_names(items)
 	local names = {}
 	for name in pairs(items or {}) do names[#names + 1] = name end
@@ -59,10 +70,18 @@ function M.diff(previous, current, config, limit)
 	limit = limit or M.DEFAULT_LIMIT
 	local messages = {}
 
-	for _, name in ipairs(sorted_names(current.items)) do
-		local delta = (current.items[name] or 0) - ((previous.items or {})[name] or 0)
-		if delta > 0 then
-			messages[#messages + 1] = { title = M.ITEM_TITLE, text = delta > 1 and (name .. " x" .. delta) or name }
+	if current.log then
+		-- the ordered log says who sent what: announce the entries that are new
+		local seen = previous.log_size or #(previous.log or {})
+		for index = seen + 1, #current.log do
+			messages[#messages + 1] = { title = M.ITEM_TITLE, text = item_text(current.log[index], config) }
+		end
+	else
+		for _, name in ipairs(sorted_names(current.items)) do
+			local delta = (current.items[name] or 0) - ((previous.items or {})[name] or 0)
+			if delta > 0 then
+				messages[#messages + 1] = { title = M.ITEM_TITLE, text = delta > 1 and (name .. " x" .. delta) or name }
+			end
 		end
 	end
 

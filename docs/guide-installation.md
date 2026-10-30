@@ -96,7 +96,7 @@ Ces étapes sont celles d'Archipelago en général : voir la [documentation offi
 - Les items « **niveau d'entreprise +1** » accordent un niveau, avec les avantages du jeu.
 - L'**argent** arrive en écritures comptables ; les pièges retirent de l'argent (perte de 50 000 ou de 250 000).
 - Les effets d'argent sont appliqués **une seule fois**, mais ils sont liés au seed, pas à la sauvegarde : si tu recharges une vieille sauvegarde, l'argent déjà reçu ne revient pas.
-- Le jeu est silencieux : items reçus et checks s'affichent dans la fenêtre du client.
+- Chaque item reçu et chaque check envoyé est annoncé par une **notification** du jeu avec le logo d'Archipelago (en haut de l'écran, puis dans l'onglet des notifications) : « Rail Transport from Alice (son check) », « Population reached 2,500 »… Au chargement d'une partie, rien n'est annoncé de ce qui était déjà reçu. Les items et checks apparaissent aussi dans la fenêtre du client.
 
 ## 9. Quand ça ne marche pas
 
@@ -121,5 +121,5 @@ Fichiers utiles :
 
 - Cargos du climat tempéré uniquement.
 - Le tram, l'eau et l'air n'ont pas tous été vérifiés dans les menus ; voir `docs/superpowers/plans/e2e-checklist.md`.
-- Pas de notification ni de panneau dans le jeu.
+- Pas de fenêtre de suivi dans le jeu (seulement des notifications).
 - Plateforme : PC Windows uniquement.

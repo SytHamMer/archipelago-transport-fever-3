@@ -284,6 +284,10 @@ local function notify_changes(inbox)
 	for name, count in pairs(inbox.items or {}) do items[name] = count end
 	for _, id in ipairs(state.checks) do ids[#ids + 1] = id end
 	local current = { items = items, checks = ids }
+	if inbox.log then
+		current.log = inbox.log
+		current.log_size = #inbox.log
+	end
 	local messages = notify.diff(state.last_notified, current, inbox.config)
 	state.last_notified = current
 	for _, message in ipairs(messages) do

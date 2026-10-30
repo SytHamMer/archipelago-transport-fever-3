@@ -99,11 +99,11 @@ def test_failed_inbox_write_is_kept_for_a_retry_not_raised(sync, tmp_path, monke
     calls = []
     real = sync.bridge.write_inbox
 
-    def flaky(slot_data, received):
+    def flaky(slot_data, received, log=None):
         calls.append(1)
         if len(calls) == 1:
             raise PermissionError("busy")
-        real(slot_data, received)
+        real(slot_data, received, log)
 
     monkeypatch.setattr(sync.bridge, "write_inbox", flaky)
     sync.on_connected(slot(population=100), ["Rail Transport"])  # must not raise
@@ -218,3 +218,37 @@ def test_late_or_unknown_game_year_has_no_warning(sync, tmp_path):
     assert sync.poll(NOW).year_warning is False
     outbox(tmp_path)
     assert sync.poll(NOW).year_warning is False
+
+
+def test_received_log_names_the_sender_and_the_source_check():
+    from transport_fever_3.client.tf3_client import received_log
+
+    names = {1: "Me", 2: "Alice"}
+    where = {(7400001, 1): "population:1", (55, 2): "Alice's chest"}
+    log = received_log(
+        [("Money Grant (small)", 7400001, 1), ("Rail Transport", 55, 2)],
+        own_slot=1, player_name=names.get, location_name=lambda code, slot: where[(code, slot)],
+    )
+    assert log == [
+        {"item": "Money Grant (small)", "own": True, "where": "population:1"},
+        {"item": "Rail Transport", "from": "Alice", "where": "Alice's chest"},
+    ]
+
+
+def test_received_log_leaves_out_a_location_that_cannot_be_named():
+    from transport_fever_3.client.tf3_client import received_log
+
+    def unknown(code, slot):
+        raise KeyError(code)
+
+    log = received_log([("Rail Transport", -2, 0)], own_slot=1, player_name={0: "Archipelago"}.get, location_name=unknown)
+    assert log == [{"item": "Rail Transport", "from": "Archipelago"}]
+
+
+def test_sync_passes_the_log_to_the_inbox(sync, tmp_path):
+    log = [{"item": "Rail Transport", "from": "Alice", "where": "chest"}]
+    sync.on_connected(slot(population=100), ["Rail Transport"], log)
+    assert luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["log"] == log
+    more = log + [{"item": "Tram Transport", "own": True, "where": "population:1"}]
+    sync.on_items(["Rail Transport", "Tram Transport"], more)
+    assert luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["log"] == more

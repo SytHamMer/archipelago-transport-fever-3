@@ -96,3 +96,37 @@ def test_a_missing_config_is_safe():
     runtime, notify = load_module("ap_notify")
     result = notify.diff(to_lua(runtime, state()), to_lua(runtime, state(checks=["population:1"])), None)
     assert texts(from_lua(result)) == ["Check reached: population:1"]
+
+
+def log_state(entries, checks=None):
+    return {"items": {}, "checks": checks or [], "log": entries, "log_size": len(entries)}
+
+
+def test_new_log_entries_name_the_sender_and_the_source():
+    first = {"item": "Rail Transport", "from": "Alice", "where": "Alice's chest"}
+    second = {"item": "Tram Transport", "from": "Bob", "where": "Boss kill"}
+    messages = diff(log_state([first]), log_state([first, second]))
+    assert messages == [{"title": "Archipelago: item received", "text": "Tram Transport from Bob (Boss kill)"}]
+
+
+def test_own_checks_are_described_with_the_readable_check_text():
+    entry = {"item": "Rail Transport", "own": True, "where": "population:2"}
+    messages = diff(log_state([]), log_state([entry]))
+    assert texts(messages) == ["Rail Transport (Population reached 2,500)"]
+
+
+def test_a_log_entry_without_a_source_shows_the_sender_only():
+    entry = {"item": "Rail Transport", "from": "Archipelago"}
+    assert texts(diff(log_state([]), log_state([entry]))) == ["Rail Transport from Archipelago"]
+
+
+def test_the_log_replaces_the_item_counts_so_nothing_is_announced_twice():
+    entry = {"item": "Rail Transport", "from": "Alice", "where": "chest"}
+    previous = {"items": {}, "checks": [], "log": [], "log_size": 0}
+    current = {"items": {"Rail Transport": 1}, "checks": [], "log": [entry], "log_size": 1}
+    assert len(diff(previous, current)) == 1
+
+
+def test_a_log_state_after_the_first_one_stays_silent_at_the_baseline():
+    entry = {"item": "Rail Transport", "from": "Alice", "where": "chest"}
+    assert diff(None, log_state([entry])) == []

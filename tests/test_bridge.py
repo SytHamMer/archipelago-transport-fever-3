@@ -175,3 +175,15 @@ def test_outbox_year_is_read_when_present(bridge, tmp_path):
 def test_outbox_without_year_is_still_valid(bridge, tmp_path):
     write_outbox(tmp_path, OUTBOX)
     assert bridge.read_outbox().year is None
+
+
+def test_inbox_carries_the_log_of_who_sent_what_when_given(bridge, tmp_path):
+    log = [{"item": "Rail Transport", "from": "Alice", "where": "Alice's chest"}, {"item": "Money Grant (small)", "own": True, "where": "population:1"}]
+    bridge.write_inbox(SLOT_DATA, ["Rail Transport", "Money Grant (small)"], log)
+    inbox = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))
+    assert inbox["log"] == log
+
+
+def test_inbox_without_a_log_has_no_log_field(bridge, tmp_path):
+    bridge.write_inbox(SLOT_DATA, ["Rail Transport"])
+    assert "log" not in luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))
