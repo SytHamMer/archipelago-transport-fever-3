@@ -457,7 +457,10 @@ local function publish_contracts(inbox)
 	local entities = {}
 	local entity_util = ug_require("::/scripts/entity_util.tl")
 	local anchor = entity_util and entity_util.makeEntityAndRevision(api.engine.util.getPlayer())
-	if anchor then entities = { anchor } end -- a notification with no entity is not kept as persistent by the game
+	-- A notification with no entity is not kept as persistent by the game. The revision is fixed: the game compares the
+	-- entities of the open notifications with the new ones, and a changing revision made it replace every contract
+	-- (and show its pop-up again) each time one was completed.
+	if anchor then entities = { { entity = anchor.entity, revision = { num = { 0, 0, 0 } } } } end
 	local entries = {}
 	for _, contract in ipairs(open) do
 		entries[#entries + 1] = { entities = entities, param = { title = contract.title, text = contract.text } }
