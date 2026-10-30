@@ -463,7 +463,7 @@ local function publish_contracts(inbox)
 	if anchor then entities = { { entity = anchor.entity, revision = { num = { 0, 0, 0 } } } } end
 	local entries = {}
 	for _, contract in ipairs(open) do
-		entries[#entries + 1] = { entities = entities, param = { title = contract.title, text = contract.text } }
+		entries[#entries + 1] = { entities = entities, param = { title = contract.title, text = contract.text, progress = contract.progress } }
 	end
 	api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "Notifications", "updatePersistent", {
 		type = CONTRACT_TYPE, passOnlyParam = true, entitiesAndParam = entries,

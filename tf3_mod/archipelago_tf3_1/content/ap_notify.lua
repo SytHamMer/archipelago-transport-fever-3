@@ -48,6 +48,25 @@ function M.describe_check(id, config)
 	return "Check reached: " .. id
 end
 
+-- What a contract's progress follows, for the live "35 / 100" of the notifications tab: { kind, goal, cargo? }, or nil
+-- for checks without a number to follow (first lines, missions). Static, so the notification parameters never change.
+function M.progress_spec(id, config)
+	local checks = (config and config.checks) or {}
+	local parts = split(id)
+	local family = parts[1]
+	local function threshold(list, index) return list and list[tonumber(index)] end
+	if family == "population" or family == "passengers" or family == "cargo" then
+		local goal = threshold(checks[family], parts[2])
+		return goal and { kind = family, goal = goal } or nil
+	elseif family == "company_level" and tonumber(parts[2]) then
+		return { kind = family, goal = tonumber(parts[2]) }
+	elseif family == "delivered" and parts[2] then
+		local goal = threshold(checks.delivery, parts[3])
+		return goal and { kind = family, goal = goal, cargo = parts[2] } or nil
+	end
+	return nil
+end
+
 local FAMILY_ORDER = { "population", "company_level", "passengers", "cargo", "mission", "line", "delivered" }
 
 -- The contracts still to do, for the notifications tab: { key, title, text } each, in a fixed order. Only the next
@@ -88,6 +107,7 @@ function M.open_contracts(contracts, done, config)
 			key = row.key,
 			title = "Contract: " .. M.describe_check(row.key, config),
 			text = "Reward: " .. reward.item .. (reward.own and "" or (" for " .. reward.to)),
+			progress = M.progress_spec(row.key, config),
 		}
 	end
 	return out

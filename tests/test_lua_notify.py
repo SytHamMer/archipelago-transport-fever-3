@@ -177,8 +177,9 @@ def test_the_next_contract_of_each_ladder_is_open_with_its_reward():
     result = open_contracts(contracts, ["population:1"])
     assert result == [
         {"key": "population:2", "title": "Contract: Population reached 2,500",
-         "text": "Reward: Cargo Class: Bulk for Alice"},
-        {"key": "company_level:2", "title": "Contract: Company level 2 reached", "text": "Reward: Money Grant (small)"},
+         "text": "Reward: Cargo Class: Bulk for Alice", "progress": {"kind": "population", "goal": 2500}},
+        {"key": "company_level:2", "title": "Contract: Company level 2 reached", "text": "Reward: Money Grant (small)",
+         "progress": {"kind": "company_level", "goal": 2}},
     ]
 
 
@@ -192,3 +193,29 @@ def test_every_first_line_is_open_but_only_the_next_delivery_tier_of_each_cargo(
 def test_no_contract_is_open_without_scouted_contracts_or_when_all_are_done():
     assert open_contracts({}, []) == []
     assert open_contracts({"population:1": reward()}, ["population:1"]) == []
+
+
+def progress_spec(check, config=CONFIG):
+    runtime, notify = load_module("ap_notify")
+    return from_lua(notify.progress_spec(check, to_lua(runtime, config)))
+
+
+def test_ladders_and_deliveries_have_a_progress_to_follow():
+    assert progress_spec("population:2") == {"kind": "population", "goal": 2500}
+    assert progress_spec("company_level:3") == {"kind": "company_level", "goal": 3}
+    assert progress_spec("passengers:1") == {"kind": "passengers", "goal": 100}
+    assert progress_spec("cargo:1") == {"kind": "cargo", "goal": 50}
+    assert progress_spec("delivered:wool:2") == {"kind": "delivered", "goal": 500, "cargo": "wool"}
+
+
+def test_lines_missions_and_unknown_checks_have_no_progress():
+    assert progress_spec("line:rail") is None
+    assert progress_spec("mission:1", {"checks": {"missions": [1]}}) is None
+    assert progress_spec("population:9") is None
+
+
+def test_an_open_contract_carries_its_progress_spec():
+    contracts = {"delivered:wool:1": reward(), "line:rail": reward()}
+    by_key = {c["key"]: c for c in open_contracts(contracts, [])}
+    assert by_key["delivered:wool:1"]["progress"] == {"kind": "delivered", "goal": 100, "cargo": "wool"}
+    assert "progress" not in by_key["line:rail"]
