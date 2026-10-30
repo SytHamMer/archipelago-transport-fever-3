@@ -73,6 +73,11 @@ local contract = {
 	end,
 }
 
-return {
-	ap_contract = contract,
-}
+-- The game loads a script resource through its data(); the module is returned as well for loaders that read the chunk.
+local module = { ap_contract = contract }
+
+function data()
+	return module
+end
+
+return module

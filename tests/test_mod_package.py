@@ -48,3 +48,12 @@ def test_game_modules_are_required_with_the_game_root_prefix():
             if re.search(r'ug_require\s*\(?\s*"/', line):
                 bad.append(f"{path.name}:{number}")
     assert not bad, bad
+
+
+def test_every_script_of_the_mod_defines_data():
+    # the game loads a script resource by calling its global data(); without it every function of the script is missing
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent / "tf3_mod" / "archipelago_tf3_1"
+    missing = [p.name for p in sorted(root.rglob("*.script.lua")) if "function data()" not in p.read_text(encoding="utf-8")]
+    assert not missing, missing
