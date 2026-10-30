@@ -52,3 +52,11 @@ def test_granted_level_is_capped():
 def test_granted_level_with_no_items_is_the_earned_level():
     assert granted({}, 1) == 1
     assert granted(None, 2) == 2
+
+
+def test_failures_are_counted_per_effect_and_skip_after_the_limit():
+    runtime, module = load_module("ap_effects")
+    failures = runtime.table_from({})
+    skipped = [module.register_failure(failures, 7) for _ in range(module.MAX_FAILURES)]
+    assert skipped == [False] * (module.MAX_FAILURES - 1) + [True]
+    assert module.register_failure(failures, 8) is False  # another effect starts from zero

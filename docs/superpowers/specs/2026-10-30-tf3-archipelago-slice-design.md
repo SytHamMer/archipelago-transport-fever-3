@@ -116,7 +116,7 @@ Dossier de données utilisateur de TF3 : `Steam/userdata/<id>/3493540/local/town
 
 **`outbox`** (mod vers client) : `version`, `seed`, `checks` (identifiants stables), `goals` (état par goal), `applied` (dernier effet appliqué), `heartbeat`.
 
-Si le `seed` de l'`inbox` et celui de l'`outbox` diffèrent, le mod ignore l'`outbox` et le client prévient le joueur.
+L'`outbox` est **un fichier par seed** (`archipelago_tf3_outbox_<seed>.lua`) : deux seeds ne partagent jamais leur progression, et revenir à un seed précédent retrouve ses checks et son curseur d'effets. Le client ne lit que l'`outbox` de son seed.
 
 ## 7. Le client Python
 
@@ -161,6 +161,6 @@ Notifications et panneau dans le jeu, missions, cargos et ères comme items, aut
 - Une partie Archipelago démarre à une **année tardive** (`MIN_START_YEAR = 2000` ou plus), choisie par le joueur à la création de la carte. Tout le contenu dont l'année est passée est alors disponible par la date, et ce sont nos items et nos filtres qui verrouillent.
 - Le mod retire la **date de fin** des véhicules au chargement (`ap_load.script.lua`, `addModifier("loadModel", ...)`, comme le mod officiel `urbangames_vehicles_no_end_year`) : les anciens véhicules restent en vente. La **première année** n'est pas modifiée, les tranches s'appuient dessus.
 - L'`outbox` contient `year` (année du jeu). Le client affiche un avertissement si elle est inférieure à `MIN_START_YEAR`.
-- **Option B différée** (phase 2) : imposer l'année par la commande de réglage de date du jeu au premier tour. Ses effets sur les villes et les prix ne sont pas vérifiés.
+- **L'année n'est jamais imposée par le mod** (l'option « le mod règle la date » a été écartée le 2026-10-30) : c'est le joueur qui choisit une année de départ tardive.
 
 **À vérifier en jeu** : l'année maximale proposée à la création d'une partie, les prix et coûts à partir de 2020, les bâtiments, et le verrouillage de tout le contenu moderne à l'état de départ.

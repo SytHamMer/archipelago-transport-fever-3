@@ -4,7 +4,7 @@
 -- in the "towns_industries" folder, which the game accepts for mods.
 local MOD = "archipelago_tf3_1"
 local DIR = "towns_industries"
-local INBOX, OUTBOX = "archipelago_tf3_inbox", "archipelago_tf3_outbox"
+local INBOX, OUTBOX_PREFIX = "archipelago_tf3_inbox", "archipelago_tf3_outbox_" -- one outbox per seed
 local TICK_SECONDS = 2
 local FORMAT_VERSION = 1
 local ERAS = { B = 1920, C = 1960 } -- first years of vehicle era B and C
@@ -30,6 +30,7 @@ local state = {
 	seed = nil, checks = {}, goals = {}, applied = 0, year = nil,
 	enforced = nil,
 	inflight = false,
+	failures = {}, -- failed attempts per effect id
 	logged = {},
 }
 
@@ -112,21 +113,29 @@ local function read_inbox()
 	return inbox
 end
 
+-- The outbox file name carries the seed (same character rule as the client), so seeds never share progress:
+-- going back to an earlier seed finds its own checks and effect cursor again.
+local function outbox_name(seed)
+	return OUTBOX_PREFIX .. (tostring(seed):gsub("[^%w_%-]", "_"))
+end
+
 local function adopt_seed(seed)
 	if state.seed == seed then return end
 	-- A different seed means a different game: start from the outbox of that seed, or from nothing.
 	state.seed = seed
-	state.checks, state.goals, state.applied = {}, {}, 0
-	local previous = app.loadUserdata(DIR, OUTBOX)
+	state.checks, state.goals, state.applied, state.failures = {}, {}, 0, {}
+	local previous = app.loadUserdata(DIR, outbox_name(seed))
 	if type(previous) == "table" and previous.seed == seed then
 		state.checks = previous.checks or {}
+		state.goals = previous.goals or {}
 		state.applied = previous.applied or 0
 	end
 end
 
 local function write_outbox()
-	app.saveUserdata(DIR, OUTBOX, {
-		version = FORMAT_VERSION, seed = state.seed or "", checks = state.checks, goals = state.goals,
+	if not state.seed then return end
+	app.saveUserdata(DIR, outbox_name(state.seed), {
+		version = FORMAT_VERSION, seed = state.seed, checks = state.checks, goals = state.goals,
 		applied = state.applied, heartbeat = os.time(), year = state.year,
 	})
 end
@@ -201,27 +210,48 @@ end
 
 local function apply_next_effect(player, inbox)
 	if state.inflight then return end
-	local pending = effects.pending(inbox.effects, state.applied)
-	local effect = pending[1]
+	local effect = effects.pending(inbox.effects, state.applied)[1]
 	if not effect then return end
-	local function done(id)
-		state.applied = id
+	local seed = state.seed -- a callback arriving after a seed change must not move the new seed's cursor
+
+	local function release()
 		state.inflight = false
+	end
+	local function done(id)
+		release()
+		if state.seed ~= seed then return end
+		state.applied = id
 		guarded("outbox", write_outbox) -- persist the cursor immediately so a crash cannot repeat the effect
 	end
-	state.inflight = true
-	if effect.kind == "money" then
-		book_money(player, effect.amount, function(_, success) if success then done(effect.id) else state.inflight = false end end)
-	elseif effect.kind == "money_loss" then
-		book_money(player, -effect.amount, function(_, success) if success then done(effect.id) else state.inflight = false end end)
-	elseif effect.kind == "loan" then
-		local loan = ug_require("::/game_mechanics/finance/loan_util.tl").createSmallLoan()
-		api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "Loan", "Obtain", { loan, loan }))
-		done(effect.id)
-	else
-		say("unknown effect kind " .. tostring(effect.kind) .. ", skipped")
-		done(effect.id)
+	-- A failing effect is retried a few times, then skipped, so it can never block the effects after it.
+	local function failed(reason)
+		release()
+		problem("effect " .. tostring(effect.id), reason)
+		if state.seed == seed and effects.register_failure(state.failures, effect.id) then
+			say("effect " .. tostring(effect.id) .. " given up after repeated failures")
+			done(effect.id)
+		end
 	end
+	local function on_money(_, success)
+		if success then done(effect.id) else failed("the game refused the command") end
+	end
+
+	state.inflight = true
+	local ok, err = pcall(function()
+		if effect.kind == "money" then
+			book_money(player, effect.amount, on_money)
+		elseif effect.kind == "money_loss" then
+			book_money(player, -effect.amount, on_money)
+		elseif effect.kind == "loan" then
+			local loan = ug_require("::/game_mechanics/finance/loan_util.tl").createSmallLoan()
+			api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "Loan", "Obtain", { loan, loan }))
+			done(effect.id)
+		else
+			say("unknown effect kind " .. tostring(effect.kind) .. ", skipped")
+			done(effect.id)
+		end
+	end)
+	if not ok then failed(err) end
 end
 
 local function apply_level(items, earned)
@@ -259,7 +289,7 @@ local function tick()
 		guarded("level", apply_level, items, readings.earned_level)
 		local result = checks.evaluate(inbox.config or {}, readings)
 		state.checks = checks.merge_monotonic(state.checks, result.checks)
-		state.goals = result.goals
+		state.goals = checks.merge_goals(state.goals, result.goals)
 	end
 	guarded("effects", apply_next_effect, player, inbox)
 	guarded("outbox", write_outbox)

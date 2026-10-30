@@ -20,7 +20,7 @@ def slot(**goals):
 def outbox(tmp_path, **overrides):
     value = {"version": 1, "seed": "seed-1", "checks": [], "goals": {}, "applied": 0, "heartbeat": NOW}
     value.update(overrides)
-    (tmp_path / "archipelago_tf3_outbox.lua").write_text(luafile.dumps(value), encoding="utf-8")
+    (tmp_path / f"archipelago_tf3_outbox_{value['seed']}.lua").write_text(luafile.dumps(value), encoding="utf-8")
 
 
 @pytest.fixture
@@ -50,7 +50,7 @@ def test_no_goal_reached_before_any_outbox(sync):
 
 def test_corrupt_outbox_sends_nothing(sync, tmp_path):
     sync.on_connected(slot(population=100), [])
-    (tmp_path / "archipelago_tf3_outbox.lua").write_text("function data()\nreturn { checks = { \"popul", encoding="utf-8")
+    (tmp_path / "archipelago_tf3_outbox_seed-1.lua").write_text("function data()\nreturn { checks = { \"popul", encoding="utf-8")
     result = sync.poll(NOW)
     assert result.new_checks == set() and result.goal_reached is False
 
@@ -78,12 +78,67 @@ def test_status_follows_heartbeat(sync, tmp_path):
     assert sync.poll(NOW).status == "game_idle"
 
 
-def test_seed_mismatch_sends_nothing_and_is_reported(sync, tmp_path):
+def test_outbox_of_another_seed_is_ignored(sync, tmp_path):
     sync.on_connected(slot(population=100), [])
     outbox(tmp_path, seed="old", checks=["line:road"], goals={"population": True})
     result = sync.poll(NOW)
-    assert result.status == "seed_mismatch"
+    assert result.status == "no_outbox"
     assert result.new_checks == set() and result.goal_reached is False
+
+
+def test_reconnect_resends_checks_that_were_marked_sent_while_offline(sync, tmp_path):
+    sync.on_connected(slot(population=100), [])
+    outbox(tmp_path, checks=["line:road"])
+    sync.mark_sent(sync.poll(NOW).new_checks)  # marked while the socket was down: the server never got it
+    assert sync.poll(NOW).new_checks == set()
+    sync.on_connected(slot(population=100), [])  # reconnection
+    assert sync.poll(NOW).new_checks == {"line:road"}
+
+
+def test_failed_inbox_write_is_kept_for_a_retry_not_raised(sync, tmp_path, monkeypatch):
+    calls = []
+    real = sync.bridge.write_inbox
+
+    def flaky(slot_data, received):
+        calls.append(1)
+        if len(calls) == 1:
+            raise PermissionError("busy")
+        real(slot_data, received)
+
+    monkeypatch.setattr(sync.bridge, "write_inbox", flaky)
+    sync.on_connected(slot(population=100), ["Rail Transport"])  # must not raise
+    assert sync.inbox_dirty is True
+    sync.flush_inbox()
+    assert sync.inbox_dirty is False
+    assert (tmp_path / "archipelago_tf3_inbox.lua").exists()
+
+
+def test_flush_inbox_does_nothing_when_clean(sync):
+    sync.on_connected(slot(population=100), [])
+    assert sync.inbox_dirty is False
+    sync.flush_inbox()
+    assert sync.inbox_dirty is False
+
+
+def test_find_userdata_dir_prefers_the_most_recently_used_account(tmp_path):
+    import os
+
+    old = tmp_path / "userdata" / "111" / "3493540" / "local"
+    new = tmp_path / "userdata" / "222" / "3493540" / "local"
+    old.mkdir(parents=True)
+    new.mkdir(parents=True)
+    os.utime(old, (1_000_000, 1_000_000))
+    os.utime(new, (2_000_000, 2_000_000))
+    assert find_userdata_dir(steam_root=tmp_path) == new / "towns_industries"
+
+
+def test_resolve_userdata_dir_accepts_an_existing_folder_only(tmp_path):
+    from transport_fever_3.client.tf3_client import resolve_userdata_dir
+
+    assert resolve_userdata_dir(str(tmp_path)) == tmp_path
+    assert resolve_userdata_dir(f'"{tmp_path}"') == tmp_path  # quotes pasted from the Explorer
+    assert resolve_userdata_dir(str(tmp_path / "nowhere")) is None
+    assert resolve_userdata_dir("") is None
 
 
 def test_items_update_rewrites_the_inbox(sync, tmp_path):

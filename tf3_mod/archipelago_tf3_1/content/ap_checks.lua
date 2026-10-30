@@ -89,4 +89,13 @@ function M.merge_monotonic(previous, current)
 	return sorted_unique(all)
 end
 
+-- Goals stay reached too: a goal that was reached once is never taken back by a later reading
+-- (for example population falling below its target after another goal was reached).
+function M.merge_goals(previous, current)
+	local out = {}
+	for name, reached in pairs(previous or {}) do out[name] = reached end
+	for name, reached in pairs(current or {}) do out[name] = out[name] or reached end
+	return out
+end
+
 return M

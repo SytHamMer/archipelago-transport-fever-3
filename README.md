@@ -7,20 +7,23 @@ Statut : tranche minimale (phase 1), testée en local. **Rien n'est proposé au 
 ## Ce qu'il faut
 
 - Transport Fever 3 (Steam) et Archipelago 0.6.x installés.
-- Le monde `dist/transport_fever_3.apworld` (à construire : `python scripts/build_world.py`).
-- Le mod `tf3_mod/archipelago_tf3_1`, installé avec `python scripts/install_mod.py` (jeu fermé). Le script écrit uniquement un nouveau dossier dans `...\3493540\local\mods\`.
+- Les deux livrables de ce projet, décrits plus bas : le monde (`.apworld`) et le mod.
 
 ## Installer et jouer
 
-1. Dans le Launcher d'Archipelago : **Install APWorld**, choisis `transport_fever_3.apworld`, puis relance le Launcher.
-2. **Generate Template Options**, copie le modèle « Transport Fever 3 » dans `Players`, règle-le (voir ci-dessous), puis **Generate**.
-3. **Host Game** avec le zip généré, ou envoie-le à l'hébergeur de la partie.
-4. Crée une **nouvelle partie libre** dans TF3 avec le mod « Archipelago for Transport Fever 3 » actif et une **année de départ de 2000 ou plus** (2020 est le maximum proposé). Sans cela, aucun item ne peut débloquer les véhicules plus récents que la partie.
-5. Lance **Transport Fever 3 Client** depuis le Launcher, connecte-toi avec ton nom de slot.
+L'installation d'Archipelago, l'ajout d'un monde, la génération, l'hébergement et la connexion d'un client sont décrits dans la [documentation officielle d'Archipelago](https://archipelago.gg/tutorial/Archipelago/setup/en) : on ne les répète pas ici. Ce qui est propre à ce monde :
 
-Le client écrit et lit deux fichiers dans `...\3493540\local\towns_industries\` (le jeu n'autorise que ce dossier et `mod_presets` pour les mods). Variable `TF3_USERDATA_DIR` pour changer le dossier.
+- Le monde à installer est `dist/transport_fever_3.apworld` (`python scripts/build_world.py`). Le client s'appelle **Transport Fever 3 Client** dans le Launcher.
+- Le mod `tf3_mod/archipelago_tf3_1` s'installe avec `python scripts/install_mod.py` (jeu fermé). Le script écrit uniquement un nouveau dossier dans `...\3493540\local\mods\`.
+- Crée une **nouvelle partie libre** avec le mod « Archipelago for Transport Fever 3 » actif et une **année de départ de 2000 ou plus** (2020 est le maximum proposé). Sans cela, aucun item ne peut débloquer les véhicules plus récents que la partie.
+
+Le client et le mod échangent deux fichiers dans `...\3493540\local\towns_industries\` (le jeu n'autorise que ce dossier et `mod_presets` pour les mods). Variable `TF3_USERDATA_DIR` pour changer le dossier.
+
+Le détail pas à pas, le choix de l'année et le dépannage sont dans [docs/guide-installation.md](docs/guide-installation.md).
 
 ## Options YAML
+
+Le format d'un YAML, les poids et les options aléatoires sont expliqués dans la [documentation officielle des réglages](https://archipelago.gg/tutorial/Archipelago/advanced_settings/en). Voici les options de ce monde :
 
 | Option | Défaut | Rôle |
 |---|---|---|

@@ -1,5 +1,7 @@
-"""The file exchange with the TF3 mod: the client writes the inbox and reads the outbox."""
+"""The file exchange with the TF3 mod: the client writes the inbox and reads the outbox of its seed."""
 import os
+import re
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -7,8 +9,10 @@ from .. import data
 from . import luafile
 
 INBOX_NAME = "archipelago_tf3_inbox.lua"
-OUTBOX_NAME = "archipelago_tf3_outbox.lua"
+OUTBOX_PREFIX = "archipelago_tf3_outbox_"  # one outbox per seed, so seeds never share progress
 FORMAT_VERSION = 1
+REPLACE_ATTEMPTS = 5  # the game or a scanner may hold the inbox open for a moment on Windows
+REPLACE_DELAY = 0.05
 
 
 @dataclass(frozen=True)
@@ -32,10 +36,18 @@ def _effect(index: int, name: str) -> dict | None:
     return None
 
 
+def safe_seed(seed: str) -> str:
+    """The seed as it appears in the outbox file name (the mod applies the same rule)."""
+    return re.sub(r"[^A-Za-z0-9_-]", "_", seed)
+
+
 class Bridge:
-    def __init__(self, userdata_dir: Path):
+    def __init__(self, userdata_dir: Path, seed: str | None = None):
         self.dir = Path(userdata_dir)
-        self.seed: str | None = None
+        self.seed = seed
+
+    def outbox_path(self) -> Path:
+        return self.dir / f"{OUTBOX_PREFIX}{safe_seed(self.seed or '')}.lua"
 
     def write_inbox(self, slot_data: dict, received: list[str]) -> None:
         """Write the complete wanted state. `received` is the full ordered list of items received so far."""
@@ -60,12 +72,24 @@ class Bridge:
         target = self.dir / INBOX_NAME
         temporary = self.dir / (INBOX_NAME + ".tmp")
         temporary.write_text(luafile.dumps(inbox), encoding="utf-8")
-        os.replace(temporary, target)
+        for attempt in range(REPLACE_ATTEMPTS):
+            try:
+                os.replace(temporary, target)
+                return
+            except PermissionError:
+                if attempt == REPLACE_ATTEMPTS - 1:
+                    temporary.unlink(missing_ok=True)
+                    raise
+                time.sleep(REPLACE_DELAY)
 
     def read_outbox(self) -> Outbox | None:
-        """The mod's outbox, or None when it is missing, unreadable (for example half written) or incomplete."""
+        """The seed's outbox, or None when it is missing, unreadable (for example half written) or incomplete."""
+        if self.seed is None:
+            return None
         try:
-            raw = luafile.loads((self.dir / OUTBOX_NAME).read_text(encoding="utf-8"))
+            raw = luafile.loads(self.outbox_path().read_text(encoding="utf-8"))
+            if str(raw["seed"]) != self.seed:
+                return None
             goals = raw["goals"] or {}
             return Outbox(
                 seed=str(raw["seed"]),
@@ -78,14 +102,8 @@ class Bridge:
         except (OSError, luafile.LuaFormatError, KeyError, TypeError, ValueError):
             return None
 
-    def seed_matches(self, slot_seed: str | None = None) -> bool:
-        """False when an outbox exists but belongs to another seed. No outbox counts as a match."""
-        wanted = slot_seed if slot_seed is not None else self.seed
-        outbox = self.read_outbox()
-        return outbox is None or outbox.seed == wanted
-
     def new_checks(self, sent: set) -> set:
         outbox = self.read_outbox()
-        if outbox is None or not self.seed_matches():
+        if outbox is None:
             return set()
         return set(outbox.checks) - set(sent)

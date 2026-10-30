@@ -89,3 +89,15 @@ def test_experience_dropping_does_not_remove_checks_after_merge():
     later, _ = evaluate({"experience": 100})
     merged = from_lua(checks.merge_monotonic(to_lua(runtime, first), to_lua(runtime, later)))
     assert "population:2" in merged
+
+
+def test_goals_stay_reached_once_they_were():
+    runtime, checks = load_module("ap_checks")
+    merged = checks.merge_goals(to_lua(runtime, {"population": True}), to_lua(runtime, {"population": False, "passengers": True}))
+    assert from_lua(merged) == {"population": True, "passengers": True}
+
+
+def test_merge_goals_is_safe_with_nothing_before_or_nothing_now():
+    runtime, checks = load_module("ap_checks")
+    assert from_lua(checks.merge_goals(None, to_lua(runtime, {"population": False}))) == {"population": False}
+    assert from_lua(checks.merge_goals(to_lua(runtime, {"population": True}), None)) == {"population": True}

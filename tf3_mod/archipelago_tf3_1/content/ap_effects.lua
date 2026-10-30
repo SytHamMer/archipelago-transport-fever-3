@@ -3,6 +3,7 @@ local M = {}
 
 M.MAX_LEVEL = 15
 M.LEVEL_ITEM = "Company Level +1"
+M.MAX_FAILURES = 3 -- an effect that fails this many times is given up, so it cannot block the ones after it
 
 -- Effects not yet applied, in the order they were received. `applied` is the highest effect id already done.
 function M.pending(effects, applied)
@@ -12,6 +13,12 @@ function M.pending(effects, applied)
 	end
 	table.sort(out, function(a, b) return a.id < b.id end)
 	return out
+end
+
+-- Counts one more failure for an effect id and tells whether it must now be skipped.
+function M.register_failure(failures, id)
+	failures[id] = (failures[id] or 0) + 1
+	return failures[id] >= M.MAX_FAILURES
 end
 
 -- Company level to enforce: one level per "Company Level +1" item on top of level 1,

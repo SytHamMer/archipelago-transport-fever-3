@@ -62,7 +62,7 @@ def main(seed_zip: str) -> int:
             'function data()\nreturn {\n\tversion = 1,\n\tseed = "%s",\n\tchecks = { "population:1", "line:road" },\n'
             '\tgoals = { population = true },\n\tapplied = 0,\n\theartbeat = %d,\n}\nend\n' % (seed, int(time.time()))
         )
-        (userdata / "archipelago_tf3_outbox.lua").write_text(outbox, encoding="utf-8")
+        (userdata / f"archipelago_tf3_outbox_{seed}.lua").write_text(outbox, encoding="utf-8")
         time.sleep(8)
         client.stdin.close()
         client.terminate()
