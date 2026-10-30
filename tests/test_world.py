@@ -34,6 +34,7 @@ class TestDefaultWorld(TF3TestBase):
         assert data["checks"]["first_line"] is True
         assert data["checks"]["delivery"] == [100]
         assert data["eras"] == {"B": 1920, "C": 1960}
+        assert data["money_scale"] == 100
 
 
 class TestFillerAndTraps(TF3TestBase):
@@ -97,3 +98,10 @@ class TestCargoClassItems(TF3TestBase):
         # a universal road vehicle carries every cargo from the start
         assert self.can_reach_location("delivered:coal:1")
         assert self.can_reach_location("delivered:crude_oil:1")
+
+
+class TestMoneyScale(TF3TestBase):
+    options = {"money_scale": 250}
+
+    def test_the_scale_reaches_the_slot_data(self):
+        assert self.world.fill_slot_data()["money_scale"] == 250

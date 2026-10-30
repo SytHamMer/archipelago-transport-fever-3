@@ -187,3 +187,15 @@ def test_inbox_carries_the_log_of_who_sent_what_when_given(bridge, tmp_path):
 def test_inbox_without_a_log_has_no_log_field(bridge, tmp_path):
     bridge.write_inbox(SLOT_DATA, ["Rail Transport"])
     assert "log" not in luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))
+
+
+def test_money_scale_multiplies_grants_and_losses(bridge, tmp_path):
+    bridge.write_inbox({**SLOT_DATA, "money_scale": 50}, ["Money Grant (small)", "Money Loss (medium)"])
+    effects = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["effects"]
+    assert [effect["amount"] for effect in effects] == [25000, 125000]
+
+
+def test_slot_data_without_a_money_scale_keeps_the_base_amounts(bridge, tmp_path):
+    bridge.write_inbox(SLOT_DATA, ["Money Grant (small)"])
+    effects = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["effects"]
+    assert effects[0]["amount"] == 50000

@@ -25,12 +25,12 @@ class Outbox:
     year: int | None = None  # in-game year, absent in outboxes written by older mod versions
 
 
-def _effect(index: int, name: str) -> dict | None:
+def _effect(index: int, name: str, scale: int = 100) -> dict | None:
     """One-shot effect for a received item (None for items that are state, not effects)."""
     if name in data.MONEY_ITEMS:
-        return {"id": index, "kind": "money", "amount": data.MONEY_ITEMS[name]}
+        return {"id": index, "kind": "money", "amount": data.MONEY_ITEMS[name] * scale // 100}
     if name in data.TRAPS:
-        return {"id": index, "kind": "money_loss", "amount": data.TRAPS[name]}
+        return {"id": index, "kind": "money_loss", "amount": data.TRAPS[name] * scale // 100}
     return None
 
 
@@ -59,7 +59,7 @@ class Bridge:
         effects = []
         for index, name in enumerate(received, start=1):
             items[name] = items.get(name, 0) + 1
-            effect = _effect(index, name)
+            effect = _effect(index, name, slot_data.get("money_scale", 100))
             if effect:
                 effects.append(effect)
         config = {"goals": slot_data["goals"], "checks": slot_data["checks"]}

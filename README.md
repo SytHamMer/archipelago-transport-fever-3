@@ -33,6 +33,7 @@ Le format d'un YAML, les poids et les options aléatoires sont expliqués dans l
 | `company_level_checks` | 4 | niveaux d'entreprise 2, 3, 4… |
 | `delivery_checks` | 1 | paliers de livraison par type de cargo (100, 500, 2 000, 10 000) |
 | `first_line_checks` | oui | première ligne de chaque mode |
+| `money_scale` | 100 | pourcentage appliqué à tous les gains et pertes d'argent (10 à 1000) |
 | `goal_population`, `goal_company_level`, `goal_passengers`, `goal_cargo` | 2500, 0, 0, 0 | goals ; 0 désactive ; la partie est gagnée quand **tous** les goals actifs sont atteints |
 
 Exemple :

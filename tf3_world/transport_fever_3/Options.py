@@ -82,6 +82,14 @@ class GoalCargo(Range):
     default = 0
 
 
+class MoneyScale(Range):
+    """Percentage applied to every money grant and every money loss (100 = the base amounts)."""
+    display_name = "Money scale (%)"
+    range_start = 10
+    range_end = 1000
+    default = 100
+
+
 @dataclass
 class TF3Options(PerGameCommonOptions):
     population_checks: PopulationChecks
@@ -100,6 +108,7 @@ class TF3Options(PerGameCommonOptions):
     goal_company_level: GoalCompanyLevel
     goal_passengers: GoalPassengers
     goal_cargo: GoalCargo
+    money_scale: MoneyScale
 
 
 def validate_goals(options: TF3Options) -> None:
