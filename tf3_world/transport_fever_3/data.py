@@ -22,6 +22,9 @@ CARGOS = (
 )
 DELIVERY_AMOUNTS = (100, 500, 2000, 10000)
 
+# First year of the second and third vehicle eras: vehicles are unlocked by tier, tier 1 (era A) comes with the mode.
+ERA_STARTS = {"B": 1920, "C": 1960}
+
 # Check families with a configurable ladder of thresholds, and goal names.
 FAMILIES = ("population", "company_level", "passengers", "cargo")
 GOALS = FAMILIES
@@ -75,6 +78,7 @@ def contract() -> dict:
         "traps": dict(TRAPS),
         "cargos": list(CARGOS),
         "delivery_amounts": list(DELIVERY_AMOUNTS),
+        "era_starts": dict(ERA_STARTS),
         "families": list(FAMILIES),
         "goals": list(GOALS),
     }

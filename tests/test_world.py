@@ -33,6 +33,7 @@ class TestDefaultWorld(TF3TestBase):
         assert data["checks"]["company_level"] == [2, 3, 4, 5]
         assert data["checks"]["first_line"] is True
         assert data["checks"]["delivery"] == [100]
+        assert data["eras"] == {"B": 1920, "C": 1960}
 
 
 class TestAllGoalsRequired(TF3TestBase):

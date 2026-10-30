@@ -6,6 +6,7 @@ from transport_fever_3.client.bridge import Bridge, Outbox
 SLOT_DATA = {
     "version": 1,
     "seed": "seed-1",
+    "eras": {"B": 1920, "C": 1960},
     "goals": {"population": 2500, "company_level": 0, "passengers": 0, "cargo": 0},
     "checks": {"population": [500, 1000], "company_level": [2], "passengers": [], "cargo": [], "first_line": True, "delivery": [100]},
 }
@@ -36,6 +37,7 @@ def test_inbox_counts_items_and_numbers_effects(bridge, tmp_path):
     ]
     assert inbox["config"]["goals"]["population"] == 2500
     assert inbox["config"]["checks"]["population"] == [500, 1000]
+    assert inbox["config"]["eras"] == {"B": 1920, "C": 1960}
 
 
 def test_trap_effects_have_kinds(bridge, tmp_path):
@@ -110,3 +112,10 @@ def test_seed_matches_when_equal_or_no_outbox(bridge, tmp_path):
     assert bridge.seed_matches() is True
     write_outbox(tmp_path, OUTBOX)
     assert bridge.seed_matches() is True
+
+
+def test_old_slot_data_without_eras_still_writes_an_inbox(bridge, tmp_path):
+    old = {key: value for key, value in SLOT_DATA.items() if key != "eras"}
+    bridge.write_inbox(old, [])
+    config = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["config"]
+    assert "eras" not in config

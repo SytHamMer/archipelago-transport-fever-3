@@ -54,3 +54,8 @@ def test_cargos_are_unique_lowercase_game_ids():
 
 def test_constants_match_contract():
     assert json.loads(CONTRACT.read_text(encoding="utf-8")) == data.contract()
+
+
+def test_era_starts_are_increasing():
+    assert data.ERA_STARTS == {"B": 1920, "C": 1960}
+    assert data.ERA_STARTS["B"] < data.ERA_STARTS["C"]

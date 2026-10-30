@@ -133,8 +133,9 @@ end
 
 -- ===== locks =====
 
-local function apply_locks(items)
+local function apply_locks(items, eras)
 	if not state.catalog then state.catalog = build_catalog() end
+	state.catalog.eras = eras or ERAS
 	local result = locks.compute_locks(items or {}, state.catalog)
 	if not locks.deep_equal(result.menu, state.last_menu or {}) or state.last_menu == nil then
 		api.gui.fireReactEvent("setMenuFilter", { enabledItems = {}, disabledItems = result.menu, disabledParams = {} })
@@ -246,7 +247,7 @@ local function tick()
 
 	local inbox = guarded("inbox", read_inbox)
 	local items = inbox and inbox.items or {}
-	guarded("locks", apply_locks, items) -- without an inbox the start state is enforced: everything locked but the road
+	guarded("locks", apply_locks, items, inbox and inbox.config and inbox.config.eras) -- without an inbox the start state is enforced: everything locked but the road
 	if not inbox then return end
 
 	adopt_seed(inbox.seed)

@@ -72,6 +72,10 @@
         2000,
         10000
     ],
+    "era_starts": {
+        "B": 1920,
+        "C": 1960
+    },
     "families": [
         "population",
         "company_level",

@@ -109,6 +109,7 @@ class TF3World(World):
         return {
             "version": 1,
             "seed": self.multiworld.seed_name,
+            "eras": dict(data.ERA_STARTS),
             "goals": {
                 "population": options.goal_population.value,
                 "company_level": options.goal_company_level.value,
