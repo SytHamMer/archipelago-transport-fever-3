@@ -127,3 +127,25 @@ def test_launcher_component_is_registered():
     assert len(matches) == 1
     assert matches[0].type == Type.CLIENT
     assert callable(matches[0].func)
+
+
+def test_launch_args_accept_name_and_connect():
+    from transport_fever_3.client.tf3_client import parse_launch_args
+
+    args = parse_launch_args(["--connect", "localhost:38281", "--name", "Mathys"])
+    assert args.connect == "localhost:38281" and args.name == "Mathys"
+
+
+def test_launch_args_accept_an_archipelago_url():
+    from transport_fever_3.client.tf3_client import parse_launch_args
+
+    args = parse_launch_args(["archipelago://Mathys:secret@example.org:38281"])
+    assert args.connect.endswith("example.org:38281")  # Archipelago keeps the credentials in the netloc
+    assert args.name == "Mathys" and args.password == "secret"
+
+
+def test_launch_args_without_anything_are_valid():
+    from transport_fever_3.client.tf3_client import parse_launch_args
+
+    args = parse_launch_args([])
+    assert args.connect is None and args.name is None

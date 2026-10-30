@@ -74,9 +74,19 @@ class TF3Sync:
         return PollResult(new_checks=self.bridge.new_checks(self.sent), goal_reached=goal, status=status)
 
 
+def parse_launch_args(launch_args):
+    """Command line of the client: the base Archipelago arguments plus --name and an archipelago:// url."""
+    from CommonClient import get_base_parser, handle_url_arg
+
+    parser = get_base_parser(description="Transport Fever 3 client.")
+    parser.add_argument("--name", default=None, help="Slot name to connect as.")
+    parser.add_argument("url", nargs="?", help="Archipelago connection url (archipelago://name:password@host:port).")
+    return handle_url_arg(parser.parse_args(launch_args), parser=parser)
+
+
 def launch(*launch_args) -> None:
     """Entry point used by the Archipelago Launcher component."""
-    from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, logger, server_loop
+    from CommonClient import ClientCommandProcessor, CommonContext, gui_enabled, logger, server_loop
     from NetUtils import ClientStatus
 
     class TF3Context(CommonContext):
@@ -142,6 +152,4 @@ def launch(*launch_args) -> None:
         await ctx.exit_event.wait()
         await ctx.shutdown()
 
-    parser = get_base_parser(description="Transport Fever 3 client.")
-    args = parser.parse_args(launch_args)
-    asyncio.run(main(args))
+    asyncio.run(main(parse_launch_args(launch_args)))
