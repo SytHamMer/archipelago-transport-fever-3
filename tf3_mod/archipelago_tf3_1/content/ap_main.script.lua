@@ -42,7 +42,7 @@ local state = {
 	last_tick = 0,
 	catalog = nil,
 	last_menu = nil, last_vehicles = nil,
-	seed = nil, checks = {}, goals = {}, applied = 0, year = nil,
+	seed = nil, checks = {}, goals = {}, missions = {}, applied = 0, year = nil,
 	enforced = nil,
 	inflight = false,
 	failures = {}, -- failed attempts per effect id
@@ -271,12 +271,13 @@ local function adopt_seed(seed)
 	if state.seed == seed then return end
 	-- A different seed means a different game: start from the outbox of that seed, or from nothing.
 	state.seed = seed
-	state.checks, state.goals, state.applied, state.failures = {}, {}, 0, {}
+	state.checks, state.goals, state.missions, state.applied, state.failures = {}, {}, {}, 0, {}
 	state.last_notified = nil -- a new seed starts a new silent baseline
 	local previous = app.loadUserdata(DIR, outbox_name(seed))
 	if type(previous) == "table" and previous.seed == seed then
 		state.checks = previous.checks or {}
 		state.goals = previous.goals or {}
+		state.missions = previous.missions or {}
 		state.applied = previous.applied or 0
 	end
 end
@@ -284,7 +285,7 @@ end
 local function write_outbox()
 	if not state.seed then return end
 	app.saveUserdata(DIR, outbox_name(state.seed), {
-		version = FORMAT_VERSION, seed = state.seed, checks = state.checks, goals = state.goals,
+		version = FORMAT_VERSION, seed = state.seed, checks = state.checks, goals = state.goals, missions = state.missions,
 		applied = state.applied, heartbeat = os.time(), year = state.year,
 	})
 end
@@ -348,6 +349,18 @@ local function take_readings(player)
 		if value and value > 0 then readings.delivered[short] = value end
 	end
 	return readings
+end
+
+-- Uids of the missions (the game's "subventions") the game lists as completed. Empty when they cannot be read.
+local function completed_mission_uids()
+	local uids = {}
+	local script = api.engine.system.gameScriptSystem.getEntityForGameScript("::/game_mechanics/subventions/subventions.gs")
+	local component = script and api.engine.getComponent(script, api.type.ComponentType.GAME_SCRIPT)
+	local list = component and component.state_native and component.state_native:find("completedSubventions")
+	for _, entry in pairs(list and list:asTable() or {}) do
+		if type(entry) == "table" and type(entry.uid) == "number" then uids[#uids + 1] = entry.uid end
+	end
+	return uids
 end
 
 -- ===== effects =====
@@ -466,6 +479,8 @@ local function tick()
 	local player = api.engine.util.getPlayer()
 	local readings = guarded("readings", take_readings, player)
 	if readings then
+		state.missions = checks.merge_missions(state.missions, guarded("missions", completed_mission_uids) or {})
+		readings.missions = #state.missions
 		guarded("level", apply_level, items, readings.earned_level)
 		local result = checks.evaluate(inbox.config or {}, readings)
 		state.checks = checks.merge_monotonic(state.checks, result.checks)

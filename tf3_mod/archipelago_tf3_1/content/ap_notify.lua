@@ -38,6 +38,8 @@ function M.describe_check(id, config)
 		return "Passengers transported: " .. with_separators(threshold(checks.passengers, parts[2]))
 	elseif family == "cargo" and threshold(checks.cargo, parts[2]) then
 		return "Cargo transported: " .. with_separators(threshold(checks.cargo, parts[2]))
+	elseif family == "mission" and threshold(checks.missions, parts[2]) then
+		return "Missions completed: " .. with_separators(threshold(checks.missions, parts[2]))
 	elseif family == "line" and parts[2] then
 		return "First " .. parts[2] .. " line built"
 	elseif family == "delivered" and parts[2] and threshold(checks.delivery, parts[3]) then

@@ -2,7 +2,7 @@
 --
 -- config   = the inbox `config`: { goals = {population, company_level, passengers, cargo},
 --            checks = {population = {...}, company_level = {...}, passengers = {...}, cargo = {...},
---                      first_line = boolean, delivery = {...}} }
+--                      first_line = boolean, delivery = {...}, missions = {...}} }
 -- readings = { experience, earned_level, passengers, cargo, line_modes = {[TransportMode index] = true},
 --              delivered = {[cargo name] = amount} }   (any field may be missing)
 local M = {}
@@ -52,6 +52,9 @@ function M.evaluate(config, readings)
 	ladder("company_level", readings.earned_level, true)
 	ladder("passengers", readings.passengers)
 	ladder("cargo", readings.cargo)
+	for index, needed in ipairs(checks.missions or {}) do
+		if number(readings.missions) >= needed then reached[#reached + 1] = "mission:" .. index end
+	end
 
 	if checks.first_line then
 		local modes = readings.line_modes or {}
@@ -79,6 +82,15 @@ function M.evaluate(config, readings)
 		if wanted > 0 then goals[name] = number(readings[reading]) >= wanted end
 	end
 	return { checks = sorted_unique(reached), goals = goals }
+end
+
+-- Uids of the missions completed so far: the ones already known plus the ones the game lists now, each once.
+-- A mission that later leaves the game's list stays counted.
+function M.merge_missions(previous, current)
+	local all = {}
+	for _, value in ipairs(previous or {}) do all[#all + 1] = value end
+	for _, value in ipairs(current or {}) do all[#all + 1] = value end
+	return sorted_unique(all)
 end
 
 -- Checks never go away, even if a reading later drops.

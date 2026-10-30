@@ -155,3 +155,8 @@ def test_a_reward_for_another_player_names_them():
 def test_a_check_without_a_known_contract_keeps_the_plain_message():
     messages = diff_with_contracts(state(), state(checks=["population:1"]), {})
     assert messages == [{"title": "Archipelago: check sent", "text": "Population reached 500"}]
+
+
+def test_a_mission_check_has_a_readable_text():
+    config = {"checks": {"missions": [1, 2, 3]}}
+    assert texts(diff(state(), state(checks=["mission:3"]), config)) == ["Missions completed: 3"]

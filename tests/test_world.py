@@ -69,7 +69,7 @@ class TestAllGoalsRequired(TF3TestBase):
 class TestTooFewChecks(TF3TestBase):
     options = {
         "population_checks": 0, "company_level_checks": 0, "passengers_checks": 0, "cargo_checks": 0,
-        "delivery_checks": 0, "first_line_checks": 0,
+        "delivery_checks": 0, "first_line_checks": 0, "mission_checks": 0,
     }
     auto_construct = False
 
@@ -105,3 +105,11 @@ class TestMoneyScale(TF3TestBase):
 
     def test_the_scale_reaches_the_slot_data(self):
         assert self.world.fill_slot_data()["money_scale"] == 250
+
+
+class TestMissionChecks(TF3TestBase):
+    options = {"mission_checks": 2}
+
+    def test_missions_are_reachable_from_the_start_and_in_the_slot_data(self):
+        assert self.can_reach_location("mission:1") and self.can_reach_location("mission:2")
+        assert self.world.fill_slot_data()["checks"]["missions"] == [1, 2]

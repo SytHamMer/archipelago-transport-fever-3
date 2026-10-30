@@ -40,6 +40,8 @@ def need_for(location: str, ladder_sizes: dict[str, int]) -> Need:
         tier = int(parts[1])
         tiers = 0 if tier <= 1 else 1 if tier <= 2 else 2
         return Need({ROAD_VEHICLES: tiers} if tiers else {})
+    if family == "mission":
+        return Need()  # an offer can be completed with the starting road vehicles
     raise ValueError(f"unknown location {location}")
 
 

@@ -16,6 +16,7 @@ _NAMES = [
         for cargo in data.CARGOS
         for tier in range(1, len(data.DELIVERY_AMOUNTS) + 1)
     ),
+    *(data.location_id("mission", step) for step in range(1, MAX_LADDER_STEPS + 1)),  # appended last: ids stay stable
 ]
 location_table: dict[str, int] = {name: LOCATION_ID_BASE + index for index, name in enumerate(_NAMES)}
 
@@ -32,4 +33,5 @@ def active_locations(options: TF3Options) -> list[str]:
         for cargo in data.CARGOS
         for tier in range(1, options.delivery_checks.value + 1)
     ]
+    names += [data.location_id("mission", step) for step in range(1, options.mission_checks.value + 1)]
     return names

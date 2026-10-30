@@ -76,6 +76,7 @@ Le fonctionnement des YAML (modèle du Launcher, dossier `Players`, poids et val
 
 Principales options (voir le README pour la liste complète et un exemple) :
 
+- **Missions** : `mission_checks` (3 par défaut, 0 à 30) crée des contrats « N missions accomplies ». Une mission est une offre du jeu, par exemple relier deux villes ; elle compte une fois accomplie, quel que soit son type.
 - **Argent** : `money_scale` (en %, 100 par défaut) multiplie tous les gains et toutes les pertes d'argent (base : 50 000, 250 000 et 1 000 000 pour les gains ; 50 000 et 250 000 pour les pertes). Baissez-le pour une partie plus dure.
 - **Goals** : `goal_population`, `goal_company_level`, `goal_passengers`, `goal_cargo`. 0 désactive un goal. La partie est gagnée quand **tous** les goals actifs sont atteints. Au moins un doit rester actif.
 - **Checks** : paliers de population, de passagers et de fret (nombre, première et dernière valeur), niveaux d'entreprise, livraisons par cargo, première ligne de chaque mode.

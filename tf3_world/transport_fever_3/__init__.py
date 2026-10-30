@@ -51,7 +51,7 @@ class TF3World(World):
             raise OptionError(
                 f"Transport Fever 3: the chosen options only give {locations} checks, but {needed} progression items "
                 f"must be placed. Raise the check options (population_checks, company_level_checks, "
-                f"passengers_checks, cargo_checks, delivery_checks, first_line_checks) until there are at least "
+                f"passengers_checks, cargo_checks, delivery_checks, first_line_checks, mission_checks) until there are at least "
                 f"{needed} checks."
             )
 
@@ -123,6 +123,7 @@ class TF3World(World):
                 "passengers": data.spread(options.passengers_checks.value, options.passengers_first.value, options.passengers_last.value),
                 "cargo": data.spread(options.cargo_checks.value, options.cargo_first.value, options.cargo_last.value),
                 "first_line": bool(options.first_line_checks.value),
+                "missions": list(range(1, options.mission_checks.value + 1)),
                 "delivery": list(data.DELIVERY_AMOUNTS[: options.delivery_checks.value]),
             },
         }

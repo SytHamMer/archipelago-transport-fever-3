@@ -88,3 +88,10 @@ def test_each_cargo_class_is_a_single_item():
     counts = item_counts(opts())
     for item in data.cargo_class_items():
         assert counts[item] == 1 and item in item_table
+
+
+def test_mission_checks_default_to_three_and_scale_with_the_option():
+    assert [n for n in active_locations(opts()) if n.startswith("mission:")] == ["mission:1", "mission:2", "mission:3"]
+    assert not any(n.startswith("mission:") for n in active_locations(opts(mission_checks=0)))
+    assert "mission:30" in active_locations(opts(mission_checks=30))
+    assert "mission:30" in location_table

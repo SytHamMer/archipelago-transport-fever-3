@@ -101,3 +101,23 @@ def test_merge_goals_is_safe_with_nothing_before_or_nothing_now():
     runtime, checks = load_module("ap_checks")
     assert from_lua(checks.merge_goals(None, to_lua(runtime, {"population": False}))) == {"population": False}
     assert from_lua(checks.merge_goals(to_lua(runtime, {"population": True}), None)) == {"population": True}
+
+
+def test_mission_checks_use_the_number_of_completed_missions():
+    config = {"goals": {}, "checks": {"missions": [1, 2, 3]}}
+    assert evaluate({"missions": 2}, config)[0] == ["mission:1", "mission:2"]
+    assert evaluate({}, config)[0] == []
+
+
+def merge_missions(previous, current):
+    runtime, checks = load_module("ap_checks")
+    return from_lua(checks.merge_missions(to_lua(runtime, previous), to_lua(runtime, current)))
+
+
+def test_completed_missions_are_remembered_once_by_uid():
+    assert merge_missions([5, 7], [7, 9]) == [5, 7, 9]
+    assert merge_missions([], []) == []
+
+
+def test_a_mission_that_leaves_the_game_list_is_still_counted():
+    assert merge_missions([5, 7], []) == [5, 7]

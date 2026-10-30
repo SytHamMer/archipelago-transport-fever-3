@@ -44,6 +44,15 @@ class DeliveryChecks(Range):
     default = 1
 
 
+class MissionChecks(Range):
+    """Number of missions (the game's offers such as connecting two towns) that are checks: 1, 2, 3... missions
+    completed (0 disables them)."""
+    display_name = "Mission checks"
+    range_start = 0
+    range_end = 30
+    default = 3
+
+
 class FirstLineChecks(Toggle):
     """Building the first line of each transport mode is a check."""
     display_name = "First line checks"
@@ -104,6 +113,7 @@ class TF3Options(PerGameCommonOptions):
     cargo_last: CargoLast
     delivery_checks: DeliveryChecks
     first_line_checks: FirstLineChecks
+    mission_checks: MissionChecks
     goal_population: GoalPopulation
     goal_company_level: GoalCompanyLevel
     goal_passengers: GoalPassengers
