@@ -1,3 +1,87 @@
 {
-    "version": 1
+    "version": 1,
+    "modes": [
+        "Tram",
+        "Rail",
+        "Water",
+        "Air"
+    ],
+    "line_modes": [
+        "road",
+        "tram",
+        "rail",
+        "water",
+        "air"
+    ],
+    "mode_items": [
+        "Tram Transport",
+        "Rail Transport",
+        "Water Transport",
+        "Air Transport"
+    ],
+    "vehicle_items": [
+        "Progressive Road Vehicles",
+        "Progressive Tram Vehicles",
+        "Progressive Rail Vehicles",
+        "Progressive Water Vehicles",
+        "Progressive Air Vehicles"
+    ],
+    "level_item": "Company Level +1",
+    "money_items": {
+        "Money Grant (small)": 50000,
+        "Money Grant (medium)": 250000,
+        "Money Grant (large)": 1000000
+    },
+    "traps": {
+        "Money Loss": 100000,
+        "Forced Loan": 0
+    },
+    "cargos": [
+        "beverages",
+        "bricks",
+        "chemicals",
+        "clay",
+        "clothes",
+        "coal",
+        "crude_oil",
+        "dyes",
+        "fabric",
+        "fish",
+        "fuel",
+        "furniture",
+        "glass",
+        "grain",
+        "iron_ore",
+        "logs",
+        "machines",
+        "meat",
+        "planks",
+        "sand",
+        "sheet_metal",
+        "steel",
+        "stone",
+        "tinned_food",
+        "tools",
+        "vegetables",
+        "vehicles",
+        "wool"
+    ],
+    "delivery_amounts": [
+        100,
+        500,
+        2000,
+        10000
+    ],
+    "families": [
+        "population",
+        "company_level",
+        "passengers",
+        "cargo"
+    ],
+    "goals": [
+        "population",
+        "company_level",
+        "passengers",
+        "cargo"
+    ]
 }
