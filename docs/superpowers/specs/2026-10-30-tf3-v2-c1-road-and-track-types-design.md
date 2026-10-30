@@ -24,3 +24,21 @@ Le catalogue contient, par mode, `types` (étiquette et année, lue dans `availa
 ## Vérification
 
 Tests Lua des tranches et du verrouillage par mode ; tests Python des items et du contrat. En jeu : sans item, seules les routes anciennes et la voie simple ; avec un puis deux items, les types plus récents apparaissent.
+
+## Ajouts après le premier essai en jeu (2026-10-30)
+
+**Routes entièrement bloquées au départ.** Le rapport de diagnostic du mod a montré que les routes anciennes ont une année de départ à 0 mais aussi une **date de fin** (par exemple `country_old_small` : 0 à 1940) : en 2020 le jeu les masque, comme les véhicules. `ap_load.script.lua` retire donc aussi la date de fin des modèles de rues (`loadStreetTemplate`) et des constructions d'infrastructure seulement (`loadConstruction`, chemins `/infrastructure/` : ronds-points, échangeurs, signaux), jamais des bâtiments ni des industries.
+
+**Ronds-points et échangeurs** (`/infrastructure/street_construction/`, six constructions) suivent les types de routes : ils sont répartis par tranche d'année avec le même item.
+
+**Outils**, un item à un exemplaire chacun (`data.TOOLS`) :
+
+| Item | Libère |
+|---|---|
+| `Tool: Bus Lanes` | `bus_lane_tool.res` |
+| `Tool: Tram Tracks` | `tram_track_tool.res` |
+| `Tool: Rail Signals` | les constructions de `/infrastructure/signal/` |
+| `Tool: Electrification` | `rail_electrification_tool.res` |
+| `Tool: Noise Barriers` | les décorations de bord `barrier_*.edge` (routes et voies) |
+
+Un outil d'un mode verrouillé (tram, rail) reste fermé même avec son item.

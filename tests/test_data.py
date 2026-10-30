@@ -77,3 +77,10 @@ def test_road_type_and_rail_track_items():
     assert data.ITEM_ROAD_TYPES == "Progressive Road Types"
     assert data.ITEM_RAIL_TRACKS == "Progressive Rail Tracks"
     assert data.ITEM_ROAD_TYPES not in data.vehicle_items()
+
+
+def test_tool_items():
+    assert data.TOOLS == (
+        "Tool: Bus Lanes", "Tool: Tram Tracks", "Tool: Rail Signals", "Tool: Electrification", "Tool: Noise Barriers",
+    )
+    assert len(set(data.TOOLS)) == len(data.TOOLS)

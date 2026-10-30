@@ -8,6 +8,7 @@ _ITEM_NAMES = [
     *(data.ITEM_MODE(mode) for mode in data.MODES),
     *data.vehicle_items(),
     *data.type_items(),
+    *data.TOOLS,
     data.ITEM_LEVEL,
     *data.MONEY_ITEMS,
     *data.TRAPS,
@@ -23,6 +24,7 @@ def item_counts(options: TF3Options) -> dict[str, int]:
     counts = {data.ITEM_MODE(mode): 1 for mode in data.MODES}
     counts.update({name: VEHICLE_TIERS_PER_MODE for name in data.vehicle_items()})
     counts.update({name: VEHICLE_TIERS_PER_MODE for name in data.type_items()})  # same two steps as the vehicles
+    counts.update({name: 1 for name in data.TOOLS})
     if options.company_level_checks.value > 0:
         counts[data.ITEM_LEVEL] = options.company_level_checks.value
     return counts

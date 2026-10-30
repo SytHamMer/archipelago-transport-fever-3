@@ -8,6 +8,8 @@ LINE_MODES = ("road", "tram", "rail", "water", "air")
 
 ITEM_LEVEL = "Company Level +1"
 # Road and track types come in steps by first year, like the vehicles (see ERA_STARTS).
+# Construction tools, one item each: the tool stays locked until its item is received.
+TOOLS = ("Tool: Bus Lanes", "Tool: Tram Tracks", "Tool: Rail Signals", "Tool: Electrification", "Tool: Noise Barriers")
 ITEM_ROAD_TYPES = "Progressive Road Types"
 ITEM_RAIL_TRACKS = "Progressive Rail Tracks"
 MONEY_ITEMS = {
@@ -85,6 +87,7 @@ def contract() -> dict:
         "mode_items": [ITEM_MODE(mode) for mode in MODES],
         "vehicle_items": vehicle_items(),
         "type_items": type_items(),
+        "tools": list(TOOLS),
         "level_item": ITEM_LEVEL,
         "money_items": dict(MONEY_ITEMS),
         "traps": dict(TRAPS),

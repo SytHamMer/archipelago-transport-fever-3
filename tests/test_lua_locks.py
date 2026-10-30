@@ -135,3 +135,39 @@ def test_type_tags_are_merged_without_duplicates_with_the_mode_menu():
         "type_item": "Progressive Rail Tracks", "types": [{"tag": "t", "year": 0}, {"tag": "x", "year": 1980}]}}}
     menu, _ = compute({}, catalog)
     assert menu == ["t", "x"]
+
+
+TOOLS_CATALOG = {
+    "eras": {"B": 1920, "C": 1960},
+    "modes": {
+        "road": {"menu": [], "vehicles": [], "tools": [
+            {"item": "Tool: Bus Lanes", "tags": ["bus_lane_tool"]},
+            {"item": "Tool: Noise Barriers", "tags": ["barrier_a", "barrier_b"]},
+        ]},
+        "rail": {"menu": ["rail_depot"], "vehicles": [], "tools": [
+            {"item": "Tool: Rail Signals", "tags": ["signal_a"]},
+            {"item": "Tool: Electrification", "tags": ["electrify"]},
+        ]},
+    },
+}
+
+
+def test_a_tool_is_locked_until_its_item_is_received():
+    menu, _ = compute({}, TOOLS_CATALOG)
+    assert {"bus_lane_tool", "barrier_a", "barrier_b"} <= set(menu)
+    menu, _ = compute({"Tool: Bus Lanes": 1}, TOOLS_CATALOG)
+    assert "bus_lane_tool" not in menu and "barrier_a" in menu
+
+
+def test_a_tool_of_a_locked_mode_stays_locked_even_with_its_item():
+    menu, _ = compute({"Tool: Rail Signals": 1}, TOOLS_CATALOG)
+    assert "signal_a" in menu  # the rail mode is not unlocked
+    menu, _ = compute({"Tool: Rail Signals": 1, "Rail Transport": 1}, TOOLS_CATALOG)
+    assert "signal_a" not in menu and "electrify" in menu and "rail_depot" not in menu
+
+
+def test_tool_tags_are_merged_without_duplicates():
+    catalog = {"eras": {"B": 1920, "C": 1960}, "modes": {"road": {"menu": ["t"], "vehicles": [], "tools": [
+        {"item": "Tool: Bus Lanes", "tags": ["t", "u"]}]}}}
+    menu, _ = compute({}, catalog)
+    assert menu == ["t", "u"]

@@ -76,3 +76,9 @@ def test_road_types_and_rail_tracks_come_in_two_steps_each():
     assert counts[data.ITEM_ROAD_TYPES] == 2
     assert counts[data.ITEM_RAIL_TRACKS] == 2
     assert data.ITEM_ROAD_TYPES in item_table and data.ITEM_RAIL_TRACKS in item_table
+
+
+def test_each_tool_is_a_single_item():
+    counts = item_counts(opts())
+    for tool in data.TOOLS:
+        assert counts[tool] == 1 and tool in item_table

@@ -12,6 +12,19 @@ function data()
 				end
 				return data
 			end)
+			-- Roads and tracks: the old types have an end year too (for example the old country roads end in 1940),
+			-- and the game hides them from a late start year on.
+			addModifier("loadStreetTemplate", function(fileName, data)
+				if data.availability then data.availability.yearTo = 0 end
+				return data
+			end)
+			-- Interchanges, roundabouts, signals: only the infrastructure constructions, never buildings or industries.
+			addModifier("loadConstruction", function(fileName, data)
+				if data.availability and tostring(fileName):find("/infrastructure/", 1, true) then
+					data.availability.yearTo = 0
+				end
+				return data
+			end)
 		end,
 	}
 end

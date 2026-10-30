@@ -30,6 +30,13 @@
         "Progressive Road Types",
         "Progressive Rail Tracks"
     ],
+    "tools": [
+        "Tool: Bus Lanes",
+        "Tool: Tram Tracks",
+        "Tool: Rail Signals",
+        "Tool: Electrification",
+        "Tool: Noise Barriers"
+    ],
     "level_item": "Company Level +1",
     "money_items": {
         "Money Grant (small)": 50000,
