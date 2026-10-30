@@ -34,3 +34,17 @@ def test_every_lua_file_of_the_mod_is_valid_syntax():
     for path in sorted(root.rglob("*.lua")):
         valid, error = check(path.read_text(encoding="utf-8"), path.name)
         assert valid, f"{path.name}: {error}"
+
+
+def test_game_modules_are_required_with_the_game_root_prefix():
+    # a path starting with a single slash is looked up inside the mod and fails (it broke the game's own scripts)
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent / "tf3_mod" / "archipelago_tf3_1"
+    bad = []
+    for path in sorted(root.rglob("*.lua")):
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if re.search(r'ug_require\s*\(?\s*"/', line):
+                bad.append(f"{path.name}:{number}")
+    assert not bad, bad

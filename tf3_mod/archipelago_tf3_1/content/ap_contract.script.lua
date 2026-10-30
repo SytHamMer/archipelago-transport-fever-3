@@ -50,7 +50,7 @@ local function progress_of(spec)
 end
 
 contract.useDataState = function(params)
-	local engine_react_util = ug_require("/gui/main/engine_react_util.tl")
+	local engine_react_util = ug_require("::/gui/main/engine_react_util.tl")
 	local state = engine_react_util.useStepStateTimer(function()
 		return { progress = params and progress_of(params.progress) or nil }
 	end)
