@@ -11,13 +11,17 @@ local ERAS = { B = 1920, C = 1960 } -- first years of vehicle era B and C
 
 -- Menu and vehicle catalog per mode. Fragments are searched in the game's resource names (plain find).
 local MODES = {
-	road = { vehicles = { "bus", "truck", "car" } },
-	tram = { cons = { "/depots/road/tram_depot/" }, tools = { "::/gui/construction/tools/tram_track_tool.res" }, vehicles = { "tram" } },
+	-- `streets` are locked together with the mode; `types` (street templates) are tiered by year and released
+	-- by the mode's `type_item`, on top of the mode itself.
+	road = { vehicles = { "bus", "truck", "car" }, type_item = "Progressive Road Types",
+		types = { "/infrastructure/street/country/", "/infrastructure/street/town/", "/infrastructure/street/highway/" } },
+	tram = { cons = { "/depots/road/tram_depot/" }, tools = { "::/gui/construction/tools/tram_track_tool.res" },
+		streets = { "/infrastructure/street/tram/" }, vehicles = { "tram" } },
 	rail = { cons = { "/stations/rail/", "/depots/rail/", "/infrastructure/signal/" }, meta = { "/stations/rail/" },
-		streets = { "/infrastructure/track/" }, vehicles = { "train", "waggon" } },
+		vehicles = { "train", "waggon" }, type_item = "Progressive Rail Tracks", types = { "/infrastructure/track/" } },
 	water = { cons = { "/stations/water/", "/depots/water/" }, meta = { "/stations/water/" }, vehicles = { "ship" } },
 	air = { cons = { "/stations/air/airfield", "/stations/air/airport", "/depots/air/" }, meta = { "/stations/air/" },
-		vehicles = { "plane", "helicopter", "zeppelin" } },
+		streets = { "/infrastructure/street/airport/" }, vehicles = { "plane", "helicopter", "zeppelin" } },
 }
 local TEMPLATE_SUFFIXES = 12 -- constructions are tagged "name@0" .. "name@11" in the menu
 
@@ -93,6 +97,25 @@ local function vehicles_of(kinds)
 	return out
 end
 
+-- Street templates matching the fragments, each with its first year (nil counts as the first tier).
+local function street_types(fragments)
+	local out = {}
+	local rep = api.res.streetTemplateRep
+	for id, name in pairs(rep.getAll(true)) do
+		if type(name) == "string" then
+			for _, fragment in ipairs(fragments) do
+				if name:find(fragment, 1, true) then
+					local table_ = rep.getAsTable(id)
+					local availability = table_ and table_.availability
+					out[#out + 1] = { tag = name, year = availability and availability.yearFrom or nil }
+					break
+				end
+			end
+		end
+	end
+	return out
+end
+
 local function build_catalog()
 	local catalog = { eras = ERAS, modes = {} }
 	for mode, def in pairs(MODES) do
@@ -101,7 +124,8 @@ local function build_catalog()
 		scan(api.res.metaConstructionRep, def.meta or {}, false, menu)
 		scan(api.res.streetTemplateRep, def.streets or {}, false, menu)
 		for _, tool in ipairs(def.tools or {}) do menu[#menu + 1] = tool end
-		catalog.modes[mode] = { menu = menu, vehicles = vehicles_of(def.vehicles) }
+		catalog.modes[mode] = { menu = menu, vehicles = vehicles_of(def.vehicles),
+			type_item = def.type_item, types = street_types(def.types or {}) }
 	end
 	return catalog
 end

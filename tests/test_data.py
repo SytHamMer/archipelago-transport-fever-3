@@ -71,3 +71,9 @@ def test_traps_are_money_losses_in_two_sizes_and_the_loan_is_gone():
     assert len(data.TRAP_WEIGHTS) == len(data.TRAPS)
     assert data.TRAP_WEIGHTS[0] > data.TRAP_WEIGHTS[1]  # the small loss is the common one
     assert "Forced Loan" not in data.TRAPS
+
+
+def test_road_type_and_rail_track_items():
+    assert data.ITEM_ROAD_TYPES == "Progressive Road Types"
+    assert data.ITEM_RAIL_TRACKS == "Progressive Rail Tracks"
+    assert data.ITEM_ROAD_TYPES not in data.vehicle_items()

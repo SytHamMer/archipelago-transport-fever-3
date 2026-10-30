@@ -7,6 +7,9 @@ MODES = ("Tram", "Rail", "Water", "Air")
 LINE_MODES = ("road", "tram", "rail", "water", "air")
 
 ITEM_LEVEL = "Company Level +1"
+# Road and track types come in steps by first year, like the vehicles (see ERA_STARTS).
+ITEM_ROAD_TYPES = "Progressive Road Types"
+ITEM_RAIL_TRACKS = "Progressive Rail Tracks"
 MONEY_ITEMS = {
     "Money Grant (small)": 50_000,
     "Money Grant (medium)": 250_000,
@@ -69,6 +72,10 @@ def vehicle_items() -> list[str]:
     return [ITEM_VEHICLES(mode) for mode in ("Road", *MODES)]
 
 
+def type_items() -> list[str]:
+    return [ITEM_ROAD_TYPES, ITEM_RAIL_TRACKS]
+
+
 def contract() -> dict:
     """The part of this module that the mod and client tests must agree on."""
     return {
@@ -77,6 +84,7 @@ def contract() -> dict:
         "line_modes": list(LINE_MODES),
         "mode_items": [ITEM_MODE(mode) for mode in MODES],
         "vehicle_items": vehicle_items(),
+        "type_items": type_items(),
         "level_item": ITEM_LEVEL,
         "money_items": dict(MONEY_ITEMS),
         "traps": dict(TRAPS),

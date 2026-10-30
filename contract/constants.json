@@ -26,6 +26,10 @@
         "Progressive Water Vehicles",
         "Progressive Air Vehicles"
     ],
+    "type_items": [
+        "Progressive Road Types",
+        "Progressive Rail Tracks"
+    ],
     "level_item": "Company Level +1",
     "money_items": {
         "Money Grant (small)": 50000,

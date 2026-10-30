@@ -92,7 +92,7 @@ Ces étapes sont celles d'Archipelago en général : voir la [documentation offi
 ## 8. Dans le jeu
 
 - Sans item reçu : la **route** est libre, le **tram, le rail, l'eau et l'air** sont verrouillés, et seuls les véhicules les plus anciens (avant 1920) sont en vente.
-- Les items de **mode** déverrouillent les menus (stations, dépôts, voies, signaux) et les véhicules de ce mode. Les items « véhicules progressifs » ajoutent deux tranches : 1920 à 1960, puis après 1960.
+- Les items de **mode** déverrouillent les menus (stations, dépôts, voies, signaux) et les véhicules de ce mode. Les items « véhicules progressifs » ajoutent deux tranches : 1920 à 1960, puis après 1960. Les items **« Progressive Road Types »** et **« Progressive Rail Tracks »** font de même pour les types de routes (anciennes routes de campagne et de ville au départ, puis les routes récentes et les autoroutes) et de voies ferrées (voie simple au départ, puis voie standard avec caténaire, puis grande vitesse).
 - Les items « **niveau d'entreprise +1** » accordent un niveau, avec les avantages du jeu.
 - L'**argent** arrive en écritures comptables ; les pièges retirent de l'argent (perte de 50 000 ou de 250 000).
 - Les effets d'argent sont appliqués **une seule fois**, mais ils sont liés au seed, pas à la sauvegarde : si tu recharges une vieille sauvegarde, l'argent déjà reçu ne revient pas.

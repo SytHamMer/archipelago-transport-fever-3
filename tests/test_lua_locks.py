@@ -85,3 +85,53 @@ def test_deep_equal():
     same = locks.deep_equal(to_lua(runtime, {"a": ["x", "y"], "b": {"c": 1}}), to_lua(runtime, {"a": ["x", "y"], "b": {"c": 1}}))
     other = locks.deep_equal(to_lua(runtime, {"a": ["x", "y"]}), to_lua(runtime, {"a": ["x", "z"]}))
     assert same is True and other is False
+
+
+TYPES_CATALOG = {
+    "eras": {"B": 1920, "C": 1960},
+    "modes": {
+        "road": {"menu": [], "vehicles": [], "type_item": "Progressive Road Types", "types": [
+            {"tag": "street_old", "year": 0}, {"tag": "street_town", "year": 1910},
+            {"tag": "street_new", "year": 1940}, {"tag": "highway", "year": 1980},
+        ]},
+        "rail": {"menu": ["rail_depot"], "vehicles": [], "type_item": "Progressive Rail Tracks", "types": [
+            {"tag": "track_simple", "year": 0}, {"tag": "track_standard", "year": 1930},
+            {"tag": "track_fast", "year": 1980},
+        ]},
+    },
+}
+
+
+def test_road_types_follow_the_progressive_road_types_item():
+    none, _ = compute({}, TYPES_CATALOG)
+    one, _ = compute({"Progressive Road Types": 1}, TYPES_CATALOG)
+    two, _ = compute({"Progressive Road Types": 2}, TYPES_CATALOG)
+    assert [t for t in none if t.startswith("street") or t == "highway"] == ["highway", "street_new"]
+    assert [t for t in one if t.startswith("street") or t == "highway"] == ["highway"]
+    assert not [t for t in two if t.startswith("street") or t == "highway"]
+
+
+def test_rail_tracks_stay_locked_with_the_rail_mode_then_follow_their_item():
+    locked, _ = compute({}, TYPES_CATALOG)
+    assert {"track_simple", "track_standard", "track_fast", "rail_depot"} <= set(locked)
+    with_mode, _ = compute({"Rail Transport": 1}, TYPES_CATALOG)
+    assert "track_simple" not in with_mode and "rail_depot" not in with_mode
+    assert "track_standard" in with_mode and "track_fast" in with_mode
+    one, _ = compute({"Rail Transport": 1, "Progressive Rail Tracks": 1}, TYPES_CATALOG)
+    assert "track_standard" not in one and "track_fast" in one
+    two, _ = compute({"Rail Transport": 1, "Progressive Rail Tracks": 2}, TYPES_CATALOG)
+    assert not [t for t in two if t.startswith("track")]
+
+
+def test_a_types_entry_without_an_item_name_only_allows_the_first_tier():
+    catalog = {"eras": {"B": 1920, "C": 1960}, "modes": {"road": {"menu": [], "vehicles": [], "types": [
+        {"tag": "a", "year": 0}, {"tag": "b", "year": 1940}]}}}
+    menu, _ = compute({"Progressive Road Types": 2}, catalog)
+    assert menu == ["b"]
+
+
+def test_type_tags_are_merged_without_duplicates_with_the_mode_menu():
+    catalog = {"eras": {"B": 1920, "C": 1960}, "modes": {"rail": {"menu": ["x", "t"], "vehicles": [],
+        "type_item": "Progressive Rail Tracks", "types": [{"tag": "t", "year": 0}, {"tag": "x", "year": 1980}]}}}
+    menu, _ = compute({}, catalog)
+    assert menu == ["t", "x"]

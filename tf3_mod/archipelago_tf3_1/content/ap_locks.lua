@@ -5,6 +5,8 @@
 --   eras = { B = <first year of era B>, C = <first year of era C> },
 --   modes = { <mode> = { menu = { tag, ... }, vehicles = { { path = ..., year = ... }, ... } }, ... },
 -- }
+--   An entry may also have `types = { { tag = ..., year = ... }, ... }` and `type_item` (the name of the item that
+--   releases them by tier): road and track types, tiered by first year like the vehicles.
 -- Modes are road, tram, rail, water, air. Road starts unlocked.
 local M = {}
 
@@ -47,6 +49,11 @@ function M.compute_locks(items, catalog)
 			for _, vehicle in ipairs(entry.vehicles or {}) do
 				if tier_of(vehicle.year, catalog.eras) > allowed then vehicles[vehicle.path] = true end
 			end
+		end
+		-- road and track types: locked with the mode, then released step by step by their own item
+		local allowed_types = entry.type_item and (items[entry.type_item] or 0) or 0
+		for _, entry_type in ipairs(entry.types or {}) do
+			if not unlocked or tier_of(entry_type.year, catalog.eras) > allowed_types then menu[entry_type.tag] = true end
 		end
 	end
 	return { menu = sorted_keys(menu), vehicles = sorted_keys(vehicles) }
