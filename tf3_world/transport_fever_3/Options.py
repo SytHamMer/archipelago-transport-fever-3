@@ -1,0 +1,111 @@
+from dataclasses import dataclass
+
+from Options import OptionError, PerGameCommonOptions, Range, Toggle
+
+
+def _ladder(prefix: str, label: str, checks: int, first: int, last: int, top: int):
+    """Three options describing a ladder of thresholds: how many, the first and the last value."""
+    count = type(f"{prefix.title().replace('_', '')}Checks", (Range,), {
+        "__doc__": f"Number of {label} milestones that are checks (0 disables them).",
+        "display_name": f"{label.capitalize()} checks",
+        "range_start": 0, "range_end": 30, "default": checks,
+    })
+    low = type(f"{prefix.title().replace('_', '')}First", (Range,), {
+        "__doc__": f"Value of the first {label} milestone.",
+        "display_name": f"First {label} milestone",
+        "range_start": 1, "range_end": top, "default": first,
+    })
+    high = type(f"{prefix.title().replace('_', '')}Last", (Range,), {
+        "__doc__": f"Value of the last {label} milestone.",
+        "display_name": f"Last {label} milestone",
+        "range_start": 1, "range_end": top, "default": last,
+    })
+    return count, low, high
+
+
+PopulationChecks, PopulationFirst, PopulationLast = _ladder("population", "population", 4, 500, 5000, 1_000_000)
+PassengersChecks, PassengersFirst, PassengersLast = _ladder("passengers", "passengers transported", 3, 100, 2000, 10_000_000)
+CargoChecks, CargoFirst, CargoLast = _ladder("cargo", "cargo transported", 3, 100, 2000, 10_000_000)
+
+
+class CompanyLevelChecks(Range):
+    """Number of company level milestones that are checks: levels 2, 3, 4... (0 disables them)."""
+    display_name = "Company level checks"
+    range_start = 0
+    range_end = 14
+    default = 4
+
+
+class DeliveryChecks(Range):
+    """Delivery tiers per cargo type that are checks (100, 500, 2000, 10000 units). 0 disables them."""
+    display_name = "Delivery checks per cargo"
+    range_start = 0
+    range_end = 4
+    default = 1
+
+
+class FirstLineChecks(Toggle):
+    """Building the first line of each transport mode is a check."""
+    display_name = "First line checks"
+    default = 1
+
+
+class GoalPopulation(Range):
+    """Goal: reach this many inhabitants in total. 0 disables this goal."""
+    display_name = "Goal: population"
+    range_start = 0
+    range_end = 1_000_000
+    default = 2500
+
+
+class GoalCompanyLevel(Range):
+    """Goal: reach this company level through experience. 0 disables this goal."""
+    display_name = "Goal: company level"
+    range_start = 0
+    range_end = 15
+    default = 0
+
+
+class GoalPassengers(Range):
+    """Goal: transport this many passengers in total. 0 disables this goal."""
+    display_name = "Goal: passengers transported"
+    range_start = 0
+    range_end = 10_000_000
+    default = 0
+
+
+class GoalCargo(Range):
+    """Goal: transport this many units of cargo in total. 0 disables this goal."""
+    display_name = "Goal: cargo transported"
+    range_start = 0
+    range_end = 10_000_000
+    default = 0
+
+
+@dataclass
+class TF3Options(PerGameCommonOptions):
+    population_checks: PopulationChecks
+    population_first: PopulationFirst
+    population_last: PopulationLast
+    company_level_checks: CompanyLevelChecks
+    passengers_checks: PassengersChecks
+    passengers_first: PassengersFirst
+    passengers_last: PassengersLast
+    cargo_checks: CargoChecks
+    cargo_first: CargoFirst
+    cargo_last: CargoLast
+    delivery_checks: DeliveryChecks
+    first_line_checks: FirstLineChecks
+    goal_population: GoalPopulation
+    goal_company_level: GoalCompanyLevel
+    goal_passengers: GoalPassengers
+    goal_cargo: GoalCargo
+
+
+def validate_goals(options: TF3Options) -> None:
+    goals = (options.goal_population, options.goal_company_level, options.goal_passengers, options.goal_cargo)
+    if not any(goal.value > 0 for goal in goals):
+        raise OptionError(
+            "Transport Fever 3: no goal is active. Set at least one of goal_population, goal_company_level, "
+            "goal_passengers or goal_cargo above 0."
+        )
