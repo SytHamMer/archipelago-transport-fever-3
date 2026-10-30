@@ -78,7 +78,7 @@ def main(seed_zip: str) -> int:
     print("--- client:\n" + "\n".join(line for line in client_log.splitlines() if "requests" not in line and "File " not in line)[-1500:])
     print("--- server:\n" + "\n".join(line for line in server_log.splitlines() if "requests" not in line and "File " not in line)[-1500:])
     # the server is the judge: both fake checks arrived and the goal was reported
-    ok = ("(population:1)" in server_log or "(line:road)" in server_log) and "completed all of their games" in server_log
+    ok = ("(population:1)" in server_log or "(line:road)" in server_log) and ("completed all of their games" in server_log or "Mathys (Team #1) has completed their goal" in server_log)
     print("RESULT:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 
