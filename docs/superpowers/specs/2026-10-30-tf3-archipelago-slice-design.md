@@ -152,3 +152,15 @@ Notifications et panneau dans le jeu, missions, cargos et ères comme items, aut
 - **Fragilité des canaux** : le canal par fichiers utilise des dossiers prévus pour l'éditeur de cartes et les presets de mods ; une mise à jour du jeu peut les changer. Les verrous passent par des événements du jeu utilisés par la campagne.
 - **Montants et bornes** : montants d'argent et du prêt, tranches d'années exactes, plafond de niveau d'entreprise, valeurs par défaut des options.
 - **Mod de test** `archipelago_probe_1` à retirer du dossier des mods du jeu une fois la tranche en développement.
+
+## 11. Année de départ tardive (décision du 2026-10-30, option A)
+
+**Constat.** Les filtres du mod ne font que cacher. Un véhicule (ou une station, une voie) dont l'année de sortie n'est pas arrivée est caché par le jeu lui-même : aucun item ne peut le montrer. Vérifié en jeu : un train de 1950 est inatteignable dans une partie de 1890. Cela contredit le but d'une partie plus rapide que le jeu de base.
+
+**Décision.**
+- Une partie Archipelago démarre à une **année tardive** (`MIN_START_YEAR = 2000` ou plus), choisie par le joueur à la création de la carte. Tout le contenu dont l'année est passée est alors disponible par la date, et ce sont nos items et nos filtres qui verrouillent.
+- Le mod retire la **date de fin** des véhicules au chargement (`ap_load.script.lua`, `addModifier("loadModel", ...)`, comme le mod officiel `urbangames_vehicles_no_end_year`) : les anciens véhicules restent en vente. La **première année** n'est pas modifiée, les tranches s'appuient dessus.
+- L'`outbox` contient `year` (année du jeu). Le client affiche un avertissement si elle est inférieure à `MIN_START_YEAR`.
+- **Option B différée** (phase 2) : imposer l'année par la commande de réglage de date du jeu au premier tour. Ses effets sur les villes et les prix ne sont pas vérifiés.
+
+**À vérifier en jeu** : l'année maximale proposée à la création d'une partie, les prix et coûts à partir de 2020, les bâtiments, et le verrouillage de tout le contenu moderne à l'état de départ.

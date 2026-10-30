@@ -149,3 +149,17 @@ def test_launch_args_without_anything_are_valid():
 
     args = parse_launch_args([])
     assert args.connect is None and args.name is None
+
+
+def test_low_game_year_raises_a_warning(sync, tmp_path):
+    sync.on_connected(slot(population=100), [])
+    outbox(tmp_path, year=1890)
+    assert sync.poll(NOW).year_warning is True
+
+
+def test_late_or_unknown_game_year_has_no_warning(sync, tmp_path):
+    sync.on_connected(slot(population=100), [])
+    outbox(tmp_path, year=2020)
+    assert sync.poll(NOW).year_warning is False
+    outbox(tmp_path)
+    assert sync.poll(NOW).year_warning is False

@@ -5,6 +5,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .. import data
 from ..Locations import location_table
 from .bridge import Bridge
 
@@ -37,6 +38,7 @@ class PollResult:
     new_checks: set = field(default_factory=set)
     goal_reached: bool = False
     status: str = "no_outbox"  # no_outbox, seed_mismatch, game_connected or game_idle
+    year_warning: bool = False  # the game's year is before data.MIN_START_YEAR
 
 
 class TF3Sync:
@@ -71,7 +73,9 @@ class TF3Sync:
         active = [name for name, value in self.slot_data["goals"].items() if value > 0]
         goal = bool(active) and all(outbox.goals.get(name) is True for name in active)
         status = "game_connected" if now - outbox.heartbeat <= HEARTBEAT_TIMEOUT else "game_idle"
-        return PollResult(new_checks=self.bridge.new_checks(self.sent), goal_reached=goal, status=status)
+        year_warning = outbox.year is not None and outbox.year < data.MIN_START_YEAR
+        return PollResult(new_checks=self.bridge.new_checks(self.sent), goal_reached=goal, status=status,
+                          year_warning=year_warning)
 
 
 def parse_launch_args(launch_args):
@@ -99,6 +103,7 @@ def launch(*launch_args) -> None:
             self.sync = TF3Sync(Bridge(userdata_dir))
             self.poll_task: asyncio.Task | None = None
             self.last_status = ""
+            self.warned_year = False
 
         async def server_auth(self, password_requested: bool = False):
             if password_requested and not self.password:
@@ -128,6 +133,11 @@ def launch(*launch_args) -> None:
                         "game_connected": "Game connected.",
                         "game_idle": "The game mod is not answering (is the game running with the mod?).",
                     }[result.status])
+                if result.year_warning and not self.warned_year:
+                    self.warned_year = True
+                    logger.warning(f"The game year is before {data.MIN_START_YEAR}: vehicles of later years stay hidden and "
+                                   "no item can unlock them. Create the game with a start year of "
+                                   f"{data.MIN_START_YEAR} or later.")
                 if result.new_checks:
                     sent = await self.check_locations(check_ids(result.new_checks))
                     self.sync.mark_sent(result.new_checks)

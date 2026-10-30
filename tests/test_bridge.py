@@ -119,3 +119,13 @@ def test_old_slot_data_without_eras_still_writes_an_inbox(bridge, tmp_path):
     bridge.write_inbox(old, [])
     config = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["config"]
     assert "eras" not in config
+
+
+def test_outbox_year_is_read_when_present(bridge, tmp_path):
+    write_outbox(tmp_path, {**OUTBOX, "year": 2020})
+    assert bridge.read_outbox().year == 2020
+
+
+def test_outbox_without_year_is_still_valid(bridge, tmp_path):
+    write_outbox(tmp_path, OUTBOX)
+    assert bridge.read_outbox().year is None

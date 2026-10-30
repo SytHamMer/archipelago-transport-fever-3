@@ -4,6 +4,7 @@
         "ap.gs.lua",
         "ap_checks.lua",
         "ap_effects.lua",
+        "ap_load.script.lua",
         "ap_locks.lua",
         "ap_main.script.lua"
     ]

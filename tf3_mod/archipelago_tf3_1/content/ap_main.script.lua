@@ -27,7 +27,7 @@ local state = {
 	last_tick = 0,
 	catalog = nil,
 	last_menu = nil, last_vehicles = nil,
-	seed = nil, checks = {}, goals = {}, applied = 0,
+	seed = nil, checks = {}, goals = {}, applied = 0, year = nil,
 	enforced = nil,
 	inflight = false,
 	logged = {},
@@ -127,7 +127,7 @@ end
 local function write_outbox()
 	app.saveUserdata(DIR, OUTBOX, {
 		version = FORMAT_VERSION, seed = state.seed or "", checks = state.checks, goals = state.goals,
-		applied = state.applied, heartbeat = os.time(),
+		applied = state.applied, heartbeat = os.time(), year = state.year,
 	})
 end
 
@@ -252,6 +252,7 @@ local function tick()
 	if not inbox then return end
 
 	adopt_seed(inbox.seed)
+	state.year = guarded("year", function() return api.engine.util.getYear() end)
 	local player = api.engine.util.getPlayer()
 	local readings = guarded("readings", take_readings, player)
 	if readings then

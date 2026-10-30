@@ -76,6 +76,7 @@
         "B": 1920,
         "C": 1960
     },
+    "min_start_year": 2000,
     "families": [
         "population",
         "company_level",

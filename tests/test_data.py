@@ -59,3 +59,8 @@ def test_constants_match_contract():
 def test_era_starts_are_increasing():
     assert data.ERA_STARTS == {"B": 1920, "C": 1960}
     assert data.ERA_STARTS["B"] < data.ERA_STARTS["C"]
+
+
+def test_minimum_start_year_is_late_enough_for_every_era():
+    assert data.MIN_START_YEAR == 2000
+    assert data.MIN_START_YEAR > data.ERA_STARTS["C"]

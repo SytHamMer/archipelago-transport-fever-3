@@ -18,6 +18,7 @@ class Outbox:
     goals: dict
     applied: int
     heartbeat: int
+    year: int | None = None  # in-game year, absent in outboxes written by older mod versions
 
 
 def _effect(index: int, name: str) -> dict | None:
@@ -72,6 +73,7 @@ class Bridge:
                 goals=dict(goals),
                 applied=int(raw["applied"]),
                 heartbeat=int(raw["heartbeat"]),
+                year=int(raw["year"]) if "year" in raw else None,
             )
         except (OSError, luafile.LuaFormatError, KeyError, TypeError, ValueError):
             return None
