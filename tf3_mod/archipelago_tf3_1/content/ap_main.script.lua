@@ -130,6 +130,60 @@ local function build_catalog()
 	return catalog
 end
 
+-- Diagnostic report of what the game contains, written once to the log (lines start with "ARCHIPELAGO catalog").
+local function catalog_report(catalog)
+	local function keys_of(table_)
+		local names = {}
+		if type(table_) == "table" then for key in pairs(table_) do names[#names + 1] = tostring(key) end end
+		table.sort(names)
+		return table.concat(names, ",")
+	end
+	local function names_matching(rep, fragments, limit)
+		local out = {}
+		for id, name in pairs(rep.getAll(true)) do
+			if type(name) == "string" then
+				for _, fragment in ipairs(fragments) do
+					if name:find(fragment, 1, true) then out[#out + 1] = name break end
+				end
+			end
+		end
+		table.sort(out)
+		local shown = {}
+		for index = 1, math.min(#out, limit) do shown[index] = out[index] end
+		return #out, table.concat(shown, " | ")
+	end
+
+	for mode, entry in pairs(catalog.modes) do
+		local histogram = {}
+		for _, entry_type in ipairs(entry.types or {}) do
+			local key = tostring(entry_type.year)
+			histogram[key] = (histogram[key] or 0) + 1
+		end
+		local parts = {}
+		for key, count in pairs(histogram) do parts[#parts + 1] = key .. ":" .. count end
+		table.sort(parts)
+		say("catalog " .. mode .. ": types=" .. #(entry.types or {}) .. " years{" .. table.concat(parts, " ") .. "} menu=" .. #entry.menu
+			.. " vehicles=" .. #entry.vehicles)
+	end
+	local rep = api.res.streetTemplateRep
+	for id, name in pairs(rep.getAll(true)) do
+		if type(name) == "string" and name:find("country_old_small", 1, true) then
+			local table_ = rep.getAsTable(id)
+			say("catalog sample " .. name .. " keys{" .. keys_of(table_) .. "} availability{" .. keys_of(table_ and table_.availability)
+				.. "} yearFrom=" .. tostring(table_ and table_.availability and table_.availability.yearFrom))
+			break
+		end
+	end
+	local count, names = names_matching(api.res.constructionRep, { "/infrastructure/street_construction/" }, 12)
+	say("catalog street constructions: " .. count .. " " .. names)
+	count, names = names_matching(api.res.genericRep, { "/gui/construction/tools/" }, 25)
+	say("catalog tools: " .. count .. " " .. names)
+	count, names = names_matching(api.res.edgeDecorationRep, { "barrier", "noise" }, 15)
+	say("catalog noise barriers: " .. count .. " " .. names)
+	count, names = names_matching(api.res.constructionRep, { "/infrastructure/signal/" }, 12)
+	say("catalog signals: " .. count .. " " .. names)
+end
+
 -- ===== inbox / outbox =====
 
 local function read_inbox()
@@ -169,7 +223,10 @@ end
 -- ===== locks =====
 
 local function apply_locks(items, eras)
-	if not state.catalog then state.catalog = build_catalog() end
+	if not state.catalog then
+		state.catalog = build_catalog()
+		guarded("catalog report", catalog_report, state.catalog)
+	end
 	state.catalog.eras = eras or ERAS
 	local result = locks.compute_locks(items or {}, state.catalog)
 	if not locks.deep_equal(result.menu, state.last_menu or {}) or state.last_menu == nil then
