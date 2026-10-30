@@ -1,0 +1,1 @@
+return { counter = 1 }

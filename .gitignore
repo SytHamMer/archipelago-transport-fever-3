@@ -1,0 +1,16 @@
+# external clones and local environment
+ap/
+m/
+venv/
+out/
+players/
+dist/
+build/
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# executing-plans workspace
+.superpowers/
