@@ -22,3 +22,15 @@ def test_mod_json_points_at_scripts_that_exist():
 def test_the_notification_icon_is_a_32_bit_tga():
     data = (MOD / "content" / "ap_icon@2x.tga").read_bytes()
     assert data[2] == 2 and data[16] == 32
+
+
+def test_every_lua_file_of_the_mod_is_valid_syntax():
+    import lupa
+    from pathlib import Path
+
+    runtime = lupa.LuaRuntime(unpack_returned_tuples=True)
+    check = runtime.eval("function(source, name) local chunk, err = load(source, name) return chunk ~= nil, err end")
+    root = Path(__file__).resolve().parent.parent / "tf3_mod" / "archipelago_tf3_1"
+    for path in sorted(root.rglob("*.lua")):
+        valid, error = check(path.read_text(encoding="utf-8"), path.name)
+        assert valid, f"{path.name}: {error}"

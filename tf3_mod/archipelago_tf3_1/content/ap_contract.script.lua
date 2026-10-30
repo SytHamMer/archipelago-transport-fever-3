@@ -5,8 +5,7 @@ contract.useDataState = function(params)
 	return {
 		title = "Archipelago contract",
 		-- the notifications tab only shows the description: the task first, then what completing it gives
-		description = params and ((params.title or "") .. "
-" .. (params.text or "")) or "",
+		description = params and ((params.title or "") .. "\n" .. (params.text or "")) or "",
 		icon = "archipelago_tf3_1::/ap_icon.tga",
 		hudIcon = "archipelago_tf3_1::/ap_icon.tga",
 		status = "Pending",
