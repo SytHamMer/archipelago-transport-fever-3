@@ -44,9 +44,12 @@ def main() -> None:
     parser.add_argument("--seed", default="manual-test-1")
     parser.add_argument("--dir", type=Path, default=DEFAULT_DIR)
     parser.add_argument("--eras", type=int, nargs=2, default=(1920, 1960), metavar=("B", "C"))
+    parser.add_argument("--sender", help="pretend every item comes from this other player (fills the notification log)")
+    parser.add_argument("--where", default="a faraway chest", help="source check shown with --sender")
     args = parser.parse_args()
     args.dir.mkdir(exist_ok=True)
-    load_bridge()(args.dir).write_inbox(slot_data(args.seed, tuple(args.eras)), args.items)
+    log = [{"item": item, "from": args.sender, "where": args.where} for item in args.items] if args.sender else None
+    load_bridge()(args.dir).write_inbox(slot_data(args.seed, tuple(args.eras)), args.items, log)
     print(f"inbox written to {args.dir} with {len(args.items)} items, seed {args.seed}")
 
 
