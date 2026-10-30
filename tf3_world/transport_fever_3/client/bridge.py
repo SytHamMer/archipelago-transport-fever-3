@@ -29,10 +29,8 @@ def _effect(index: int, name: str) -> dict | None:
     """One-shot effect for a received item (None for items that are state, not effects)."""
     if name in data.MONEY_ITEMS:
         return {"id": index, "kind": "money", "amount": data.MONEY_ITEMS[name]}
-    if name == "Money Loss":
+    if name in data.TRAPS:
         return {"id": index, "kind": "money_loss", "amount": data.TRAPS[name]}
-    if name == "Forced Loan":
-        return {"id": index, "kind": "loan", "amount": data.TRAPS[name]}
     return None
 
 

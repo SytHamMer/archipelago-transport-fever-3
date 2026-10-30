@@ -45,11 +45,13 @@ def test_inbox_counts_items_and_numbers_effects(bridge, tmp_path):
     assert inbox["config"]["eras"] == {"B": 1920, "C": 1960}
 
 
-def test_trap_effects_have_kinds(bridge, tmp_path):
-    bridge.write_inbox(SLOT_DATA, ["Money Loss", "Forced Loan"])
+def test_traps_are_money_loss_effects_with_their_amount(bridge, tmp_path):
+    bridge.write_inbox(SLOT_DATA, ["Money Loss (small)", "Money Loss (medium)"])
     effects = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["effects"]
-    assert [(e["id"], e["kind"]) for e in effects] == [(1, "money_loss"), (2, "loan")]
-    assert effects[0]["amount"] == 100000
+    assert effects == [
+        {"id": 1, "kind": "money_loss", "amount": 50000},
+        {"id": 2, "kind": "money_loss", "amount": 250000},
+    ]
 
 
 def test_resend_same_items_gives_identical_inbox(bridge, tmp_path):

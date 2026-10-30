@@ -12,7 +12,9 @@ MONEY_ITEMS = {
     "Money Grant (medium)": 250_000,
     "Money Grant (large)": 1_000_000,
 }
-TRAPS = {"Money Loss": 100_000, "Forced Loan": 0}
+# Traps take money away. The small loss is drawn three times out of four.
+TRAPS = {"Money Loss (small)": 50_000, "Money Loss (medium)": 250_000}
+TRAP_WEIGHTS = (3, 1)
 
 # Cargo types of the temperate climate (identifiers of the game's cargo files, passengers excluded).
 CARGOS = (
@@ -78,6 +80,7 @@ def contract() -> dict:
         "level_item": ITEM_LEVEL,
         "money_items": dict(MONEY_ITEMS),
         "traps": dict(TRAPS),
+        "trap_weights": list(TRAP_WEIGHTS),
         "cargos": list(CARGOS),
         "delivery_amounts": list(DELIVERY_AMOUNTS),
         "era_starts": dict(ERA_STARTS),

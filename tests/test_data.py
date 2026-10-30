@@ -64,3 +64,10 @@ def test_era_starts_are_increasing():
 def test_minimum_start_year_is_late_enough_for_every_era():
     assert data.MIN_START_YEAR == 2000
     assert data.MIN_START_YEAR > data.ERA_STARTS["C"]
+
+
+def test_traps_are_money_losses_in_two_sizes_and_the_loan_is_gone():
+    assert data.TRAPS == {"Money Loss (small)": 50_000, "Money Loss (medium)": 250_000}
+    assert len(data.TRAP_WEIGHTS) == len(data.TRAPS)
+    assert data.TRAP_WEIGHTS[0] > data.TRAP_WEIGHTS[1]  # the small loss is the common one
+    assert "Forced Loan" not in data.TRAPS

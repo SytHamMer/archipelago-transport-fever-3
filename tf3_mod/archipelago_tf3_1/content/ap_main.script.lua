@@ -242,10 +242,6 @@ local function apply_next_effect(player, inbox)
 			book_money(player, effect.amount, on_money)
 		elseif effect.kind == "money_loss" then
 			book_money(player, -effect.amount, on_money)
-		elseif effect.kind == "loan" then
-			local loan = ug_require("::/game_mechanics/finance/loan_util.tl").createSmallLoan()
-			api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "Loan", "Obtain", { loan, loan }))
-			done(effect.id)
 		else
 			say("unknown effect kind " .. tostring(effect.kind) .. ", skipped")
 			done(effect.id)

@@ -53,7 +53,7 @@ Il faut au moins autant de checks que d'items de progression : sinon la généra
 
 - Les effets ponctuels (argent, pièges) sont liés au **seed**, pas à la sauvegarde : recharger une vieille sauvegarde ne rend pas l'argent déjà reçu.
 - Les cargos sont ceux du climat tempéré.
-- Le mode Air, le tram, l'eau, les checks de première ligne et de livraison, le piège « prêt forcé » et la tranche 3 des véhicules n'ont pas tous été vérifiés dans le jeu (voir `docs/superpowers/plans/e2e-checklist.md`).
+- Le mode Air, le tram, l'eau, les checks de première ligne et de livraison, la tranche 3 des véhicules n'ont pas tous été vérifiés dans le jeu (voir `docs/superpowers/plans/e2e-checklist.md`).
 - Pas de notification ni de panneau dans le jeu (idée pour la phase 2).
 
 ## Développement

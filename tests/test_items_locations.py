@@ -64,3 +64,8 @@ def test_ids_are_unique_and_stable():
     snapshot = dict(location_table)
     reload(Locations)
     assert Locations.location_table == snapshot
+
+
+def test_the_item_table_has_the_two_money_losses_and_no_loan():
+    assert "Money Loss (small)" in item_table and "Money Loss (medium)" in item_table
+    assert "Forced Loan" not in item_table and "Money Loss" not in item_table

@@ -13,7 +13,7 @@ def test_roundtrip_nested():
         "off": False,
         "ratio": 0.5,
         "items": {"Rail Transport": 1, "Money Grant (small)": 2},
-        "effects": [{"id": 2, "kind": "money", "amount": 50000}, {"id": 3, "kind": "loan", "amount": 0}],
+        "effects": [{"id": 2, "kind": "money", "amount": 50000}, {"id": 3, "kind": "money_loss", "amount": 50000}],
         "checks": ["population:1", "line:rail"],
         "empty": [],
     }

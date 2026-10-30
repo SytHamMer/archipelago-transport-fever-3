@@ -33,9 +33,13 @@
         "Money Grant (large)": 1000000
     },
     "traps": {
-        "Money Loss": 100000,
-        "Forced Loan": 0
+        "Money Loss (small)": 50000,
+        "Money Loss (medium)": 250000
     },
+    "trap_weights": [
+        3,
+        1
+    ],
     "cargos": [
         "beverages",
         "bricks",

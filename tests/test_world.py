@@ -36,6 +36,22 @@ class TestDefaultWorld(TF3TestBase):
         assert data["eras"] == {"B": 1920, "C": 1960}
 
 
+class TestFillerAndTraps(TF3TestBase):
+    def test_filler_draws_only_known_items_with_about_fifteen_percent_traps(self):
+        names = [self.world.get_filler_item_name() for _ in range(2000)]
+        traps = [n for n in names if n.startswith("Money Loss")]
+        assert set(names) <= set(self.world.item_name_to_id)
+        assert "Forced Loan" not in names
+        assert 0.10 < len(traps) / len(names) < 0.20
+        assert traps.count("Money Loss (small)") > traps.count("Money Loss (medium)") > 0
+
+    def test_traps_are_classified_as_traps(self):
+        from BaseClasses import ItemClassification
+
+        assert self.world.create_item("Money Loss (small)").classification == ItemClassification.trap
+        assert self.world.create_item("Money Loss (medium)").classification == ItemClassification.trap
+
+
 class TestAllGoalsRequired(TF3TestBase):
     options = {"goal_population": 100, "goal_passengers": 100, "goal_cargo": 100, "goal_company_level": 2}
 

@@ -13,3 +13,8 @@ def test_game_script_registration_points_at_the_main_script():
     runtime.execute((MOD_CONTENT / "ap.gs.lua").read_text(encoding="utf-8"))
     table = runtime.globals().data()
     assert table["guiUpdateScript"]["fileName"] == "ap_main.script@guiUpdate"
+
+
+def test_main_script_has_no_loan_effect_any_more():
+    source = (MOD_CONTENT / "ap_main.script.lua").read_text(encoding="utf-8")
+    assert "loan" not in source.lower()

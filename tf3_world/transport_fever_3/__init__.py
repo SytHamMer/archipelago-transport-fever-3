@@ -90,7 +90,7 @@ class TF3World(World):
 
     def get_filler_item_name(self) -> str:
         if self.random.random() < 0.15:
-            return self.random.choice(list(data.TRAPS))
+            return self.random.choices(list(data.TRAPS), weights=data.TRAP_WEIGHTS)[0]
         return self.random.choices(list(data.MONEY_ITEMS), weights=(5, 3, 1))[0]
 
     def _rule(self, need: Need):

@@ -3,7 +3,7 @@ from lua_helpers import from_lua, load_module, to_lua
 EFFECTS = [
     {"id": 1, "kind": "money", "amount": 50000},
     {"id": 2, "kind": "money_loss", "amount": 100000},
-    {"id": 4, "kind": "loan", "amount": 0},
+    {"id": 4, "kind": "money_loss", "amount": 250000},
 ]
 
 
