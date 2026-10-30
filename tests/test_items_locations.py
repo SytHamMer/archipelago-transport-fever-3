@@ -82,3 +82,9 @@ def test_each_tool_is_a_single_item():
     counts = item_counts(opts())
     for tool in data.TOOLS:
         assert counts[tool] == 1 and tool in item_table
+
+
+def test_each_cargo_class_is_a_single_item():
+    counts = item_counts(opts())
+    for item in data.cargo_class_items():
+        assert counts[item] == 1 and item in item_table

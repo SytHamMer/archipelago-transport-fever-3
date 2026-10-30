@@ -84,3 +84,16 @@ class TestNoGoal(TF3TestBase):
     def test_no_goal_raises(self):
         with pytest.raises(OptionError, match="goal"):
             self.world_setup()
+
+
+class TestCargoClassItems(TF3TestBase):
+    def test_cargo_class_items_are_useful_not_progression(self):
+        from BaseClasses import ItemClassification
+
+        item = self.world.create_item("Cargo Class: Bulk")
+        assert item.classification == ItemClassification.useful
+
+    def test_deliveries_do_not_need_a_cargo_class_item(self):
+        # a universal road vehicle carries every cargo from the start
+        assert self.can_reach_location("delivered:coal:1")
+        assert self.can_reach_location("delivered:crude_oil:1")

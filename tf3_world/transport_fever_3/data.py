@@ -8,6 +8,10 @@ LINE_MODES = ("road", "tram", "rail", "water", "air")
 
 ITEM_LEVEL = "Company Level +1"
 # Road and track types come in steps by first year, like the vehicles (see ERA_STARTS).
+# Specialised freight vehicle classes. Universal vehicles (any cargo) and passenger vehicles are never gated by class,
+# so every cargo can be hauled by road from the start; a class item releases the vehicles made for that class only.
+CARGO_CLASSES = ("Bulk", "Flatbed", "Goods", "Liquid")
+
 # Construction tools, one item each: the tool stays locked until its item is received.
 TOOLS = ("Tool: Bus Lanes", "Tool: Tram Tracks", "Tool: Rail Signals", "Tool: Electrification", "Tool: Noise Barriers")
 ITEM_ROAD_TYPES = "Progressive Road Types"
@@ -74,6 +78,14 @@ def vehicle_items() -> list[str]:
     return [ITEM_VEHICLES(mode) for mode in ("Road", *MODES)]
 
 
+def ITEM_CARGO_CLASS(name: str) -> str:
+    return f"Cargo Class: {name}"
+
+
+def cargo_class_items() -> list[str]:
+    return [ITEM_CARGO_CLASS(name) for name in CARGO_CLASSES]
+
+
 def type_items() -> list[str]:
     return [ITEM_ROAD_TYPES, ITEM_RAIL_TRACKS]
 
@@ -88,6 +100,7 @@ def contract() -> dict:
         "vehicle_items": vehicle_items(),
         "type_items": type_items(),
         "tools": list(TOOLS),
+        "cargo_class_items": cargo_class_items(),
         "level_item": ITEM_LEVEL,
         "money_items": dict(MONEY_ITEMS),
         "traps": dict(TRAPS),

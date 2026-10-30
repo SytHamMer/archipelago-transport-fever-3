@@ -67,7 +67,7 @@ class TF3World(World):
             classification = ItemClassification.trap
         elif name in data.MONEY_ITEMS:
             classification = ItemClassification.filler
-        elif name == data.ITEM_LEVEL:
+        elif name == data.ITEM_LEVEL or name in data.cargo_class_items():
             classification = ItemClassification.useful
         else:
             classification = ItemClassification.progression

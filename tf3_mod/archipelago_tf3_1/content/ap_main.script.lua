@@ -92,6 +92,22 @@ local function scan(rep, fragments, add_templates, into)
 	end
 end
 
+-- Cargo classes a vehicle model declares (BULK, FLATBED, GOODS, LIQUID, UNIVERSAL, PASSENGERS), without duplicates.
+local function cargo_classes(model)
+	local seen, out = {}, {}
+	local vehicle = model and model.metadata and model.metadata.transportVehicle
+	for _, compartment in ipairs(vehicle and vehicle.compartments or {}) do
+		for _, load in ipairs(compartment.loadConfigs or {}) do
+			local set = load.cargoEntry and load.cargoEntry.cargoTypeSet
+			for _, class in ipairs(set and set.cargoClassesIncluded or {}) do
+				local name = tostring(class)
+				if not seen[name] then seen[name] = true out[#out + 1] = name end
+			end
+		end
+	end
+	return out
+end
+
 local function vehicles_of(kinds)
 	local out = {}
 	api.res.modelRep.forEachModelWithMetadata("transportVehicle", function(path)
@@ -100,7 +116,7 @@ local function vehicles_of(kinds)
 				local id = api.res.modelRep.find(path)
 				local table_ = api.res.modelRep.getAsTable(id)
 				local availability = table_ and table_.metadata and table_.metadata.availability
-				out[#out + 1] = { path = path, year = availability and availability.yearFrom or nil }
+				out[#out + 1] = { path = path, year = availability and availability.yearFrom or nil, classes = cargo_classes(table_) }
 				break
 			end
 		end
@@ -206,6 +222,15 @@ local function catalog_report(catalog)
 		local parts = {}
 		for key, count in pairs(histogram) do parts[#parts + 1] = key .. ":" .. count end
 		table.sort(parts)
+		local classes = {}
+		for _, vehicle in ipairs(entry.vehicles) do
+			local key = table.concat(vehicle.classes or {}, "+")
+			classes[key] = (classes[key] or 0) + 1
+		end
+		local class_parts = {}
+		for key, count in pairs(classes) do class_parts[#class_parts + 1] = (key == "" and "none" or key) .. ":" .. count end
+		table.sort(class_parts)
+		say("catalog " .. mode .. " vehicle classes{" .. table.concat(class_parts, " ") .. "}")
 		say("catalog " .. mode .. ": types=" .. #(entry.types or {}) .. " years{" .. table.concat(parts, " ") .. "} menu=" .. #entry.menu
 			.. " vehicles=" .. #entry.vehicles)
 	end

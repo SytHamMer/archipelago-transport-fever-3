@@ -84,3 +84,11 @@ def test_tool_items():
         "Tool: Bus Lanes", "Tool: Tram Tracks", "Tool: Rail Signals", "Tool: Electrification", "Tool: Noise Barriers",
     )
     assert len(set(data.TOOLS)) == len(data.TOOLS)
+
+
+def test_cargo_class_items_cover_the_four_specialised_classes():
+    assert data.CARGO_CLASSES == ("Bulk", "Flatbed", "Goods", "Liquid")
+    assert data.cargo_class_items() == [
+        "Cargo Class: Bulk", "Cargo Class: Flatbed", "Cargo Class: Goods", "Cargo Class: Liquid",
+    ]
+    assert data.ITEM_CARGO_CLASS("Bulk") == "Cargo Class: Bulk"

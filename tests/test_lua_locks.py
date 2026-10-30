@@ -171,3 +171,56 @@ def test_tool_tags_are_merged_without_duplicates():
         {"item": "Tool: Bus Lanes", "tags": ["t", "u"]}]}}}
     menu, _ = compute({}, catalog)
     assert menu == ["t", "u"]
+
+
+def vehicle(path, classes, year=1900):
+    return {"path": path, "year": year, "classes": classes}
+
+
+CLASS_CATALOG = {
+    "eras": {"B": 1920, "C": 1960},
+    "modes": {
+        "road": {"menu": [], "vehicles": [
+            vehicle("bulk_truck", ["BULK"]),
+            vehicle("goods_truck", ["GOODS"]),
+            vehicle("universal_truck", ["UNIVERSAL"]),
+            vehicle("coach", ["PASSENGERS"]),
+            vehicle("mixed", ["PASSENGERS", "UNIVERSAL"]),
+            vehicle("loco", []),
+            vehicle("old_style", None),
+            vehicle("multi_ship", ["BULK", "FLATBED", "GOODS"]),
+        ]},
+    },
+}
+
+
+def test_specialised_freight_vehicles_wait_for_their_class_item():
+    _, vehicles = compute({}, CLASS_CATALOG)
+    assert {"bulk_truck", "goods_truck", "multi_ship"} <= set(vehicles)
+    _, vehicles = compute({"Cargo Class: Bulk": 1}, CLASS_CATALOG)
+    assert "bulk_truck" not in vehicles and "goods_truck" in vehicles
+
+
+def test_a_vehicle_with_several_classes_is_released_by_any_of_them():
+    for item in ("Cargo Class: Bulk", "Cargo Class: Flatbed", "Cargo Class: Goods"):
+        _, vehicles = compute({item: 1}, CLASS_CATALOG)
+        assert "multi_ship" not in vehicles, item
+    _, vehicles = compute({"Cargo Class: Liquid": 1}, CLASS_CATALOG)
+    assert "multi_ship" in vehicles
+
+
+def test_universal_passenger_and_cargo_less_vehicles_are_never_class_gated():
+    _, vehicles = compute({}, CLASS_CATALOG)
+    assert not {"universal_truck", "coach", "mixed", "loco", "old_style"} & set(vehicles)
+
+
+def test_a_class_item_does_not_bypass_the_year_tier_or_the_mode():
+    catalog = {"eras": {"B": 1920, "C": 1960}, "modes": {
+        "road": {"menu": [], "vehicles": [vehicle("late_bulk", ["BULK"], year=1970)]},
+        "rail": {"menu": [], "vehicles": [vehicle("rail_bulk", ["BULK"], year=1900)]},
+    }}
+    _, vehicles = compute({"Cargo Class: Bulk": 1}, catalog)
+    assert "late_bulk" in vehicles  # tier C still waits for its progressive items
+    assert "rail_bulk" in vehicles  # the rail mode is still locked
+    _, vehicles = compute({"Cargo Class: Bulk": 1, "Rail Transport": 1, "Progressive Road Vehicles": 2}, catalog)
+    assert not vehicles

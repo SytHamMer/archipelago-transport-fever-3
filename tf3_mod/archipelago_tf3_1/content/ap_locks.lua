@@ -7,6 +7,7 @@
 -- }
 --   An entry may also have `types = { { tag = ..., year = ... }, ... }` and `type_item` (the name of the item that
 --   releases them by tier): road and track types, tiered by first year like the vehicles.
+--   Vehicles may carry `classes` (cargo classes such as BULK or UNIVERSAL), see class_locked.
 --   `tools = { { item = <item name>, tags = { ... } }, ... }`: menu tags released one tool at a time by their item.
 -- Modes are road, tram, rail, water, air. Road starts unlocked.
 local M = {}
@@ -38,6 +39,21 @@ local function sorted_keys(set)
 	return out
 end
 
+-- A specialised freight vehicle (bulk, flatbed, goods, liquid) needs the item of one of its classes. Vehicles that carry
+-- passengers or any cargo (universal), and vehicles without cargo (locomotives), are never gated by class.
+local function class_locked(vehicle, items)
+	local gated = {}
+	for _, class in ipairs(vehicle.classes or {}) do
+		if class == "PASSENGERS" or class == "UNIVERSAL" then return false end
+		gated[#gated + 1] = class
+	end
+	if #gated == 0 then return false end
+	for _, class in ipairs(gated) do
+		if (items["Cargo Class: " .. capitalize(class:lower())] or 0) >= 1 then return false end
+	end
+	return true
+end
+
 function M.compute_locks(items, catalog)
 	local menu, vehicles = {}, {}
 	for mode, entry in pairs(catalog.modes) do
@@ -48,7 +64,7 @@ function M.compute_locks(items, catalog)
 		else
 			local allowed = items[M.vehicle_item(mode)] or 0
 			for _, vehicle in ipairs(entry.vehicles or {}) do
-				if tier_of(vehicle.year, catalog.eras) > allowed then vehicles[vehicle.path] = true end
+				if tier_of(vehicle.year, catalog.eras) > allowed or class_locked(vehicle, items) then vehicles[vehicle.path] = true end
 			end
 		end
 		-- tools: one item each, and never available while their mode is locked
