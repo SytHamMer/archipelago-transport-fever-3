@@ -1,0 +1,15 @@
+{
+    "authors": [
+        {
+            "name": "Mathys",
+            "role": "CREATOR"
+        }
+    ],
+    "description": "Connects Transport Fever 3 to an Archipelago multiworld: locks and unlocks content, sends checks.",
+    "name": "Archipelago for Transport Fever 3",
+    "summary": "Archipelago multiworld support",
+    "tags": [
+        "Script Mod"
+    ],
+    "url": ""
+}

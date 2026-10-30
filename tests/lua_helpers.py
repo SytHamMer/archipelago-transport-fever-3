@@ -3,7 +3,7 @@ from pathlib import Path
 
 from lupa import LuaRuntime
 
-MOD_CONTENT = Path(__file__).resolve().parent.parent / "tf3_mod" / "archipelago_tf3" / "content"
+MOD_CONTENT = Path(__file__).resolve().parent.parent / "tf3_mod" / "archipelago_tf3_1" / "content"
 
 
 def new_runtime() -> LuaRuntime:
