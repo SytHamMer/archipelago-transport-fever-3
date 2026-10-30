@@ -2,7 +2,7 @@
 
 Ce guide s'adresse à un joueur qui n'a jamais vu le projet. Il décrit comment tout est installé, ce que chaque morceau fait, comment choisir l'année de départ, et quoi faire quand ça ne marche pas.
 
-> Statut : tranche minimale, testée en local sur Windows 11 avec Archipelago 0.6.8 et Transport Fever 3 (Steam). Ce n'est pas proposé au dépôt officiel d'Archipelago.
+> Statut : version 2, testée en local sur Windows 11 avec Archipelago 0.6.8 et Transport Fever 3 (Steam). Ce n'est pas proposé au dépôt officiel d'Archipelago.
 
 ## 1. Comment ça marche
 
@@ -12,7 +12,7 @@ Serveur Archipelago  <->  Client (dans le Launcher)  <->  deux fichiers  <->  Mo
 
 - Le **monde** (`transport_fever_3.apworld`) dit à Archipelago quels items et quels checks existent.
 - Le **client** se connecte au serveur et écrit dans un fichier `inbox` l'état voulu (items reçus, options). Il lit un fichier `outbox` pour envoyer les checks.
-- Le **mod** tourne dans le jeu. Toutes les 2 secondes, il lit l'`inbox`, verrouille ou déverrouille les modes et les véhicules, applique l'argent et les pièges, puis écrit l'`outbox` (checks atteints, année du jeu, battement).
+- Le **mod** tourne dans le jeu. Toutes les 2 secondes, il lit l'`inbox`, verrouille ou déverrouille les modes, les véhicules, les types de routes et de voies, les outils et les classes de cargo, applique l'argent et les pièges, puis écrit l'`outbox` (checks atteints, année du jeu, battement).
 
 Le jeu ne laisse pas les mods lire ou écrire des fichiers librement : ils n'ont accès qu'à un dossier fixe, `towns_industries`, dans les données utilisateur de TF3. C'est le dossier d'échange.
 
@@ -79,7 +79,7 @@ Principales options (voir le README pour la liste complète et un exemple) :
 - **Missions** : `mission_checks` (3 par défaut, 0 à 30) crée des contrats « N missions accomplies ». Une mission est une offre du jeu, par exemple relier deux villes ; elle compte une fois accomplie, quel que soit son type.
 - **Argent** : `money_scale` (en %, 100 par défaut) multiplie tous les gains et toutes les pertes d'argent (base : 50 000, 250 000 et 1 000 000 pour les gains ; 50 000 et 250 000 pour les pertes). Baissez-le pour une partie plus dure.
 - **Goals** : `goal_population`, `goal_company_level`, `goal_passengers`, `goal_cargo`. 0 désactive un goal. La partie est gagnée quand **tous** les goals actifs sont atteints. Au moins un doit rester actif.
-- **Checks** : paliers de population, de passagers et de fret (nombre, première et dernière valeur), niveaux d'entreprise, livraisons par cargo, première ligne de chaque mode.
+- **Checks** : paliers de population, de passagers et de fret (nombre, première et dernière valeur), niveaux d'entreprise, livraisons par cargo, première ligne de chaque mode, missions du jeu.
 - Il faut au moins autant de checks que d'items de progression, sinon la génération s'arrête avec un message qui donne le nombre.
 
 Les mesures du jeu : la **population** est lue par l'expérience de la compagnie (égale à la population totale), les passagers et le fret par les totaux historiques de la barre du jeu.
@@ -126,5 +126,6 @@ Fichiers utiles :
 
 - Cargos du climat tempéré uniquement.
 - Le tram, l'eau et l'air n'ont pas tous été vérifiés dans les menus ; voir `docs/superpowers/plans/e2e-checklist.md`.
-- Pas de fenêtre de suivi dans le jeu (seulement des notifications).
+- Pas de fenêtre de suivi dans le jeu (seulement des notifications) : la liste des contrats ouverts est donnée par la commande `/contracts` du client, avec les identifiants des checks.
+- Les missions du jeu comptent une fois accomplies, quel que soit leur type.
 - Plateforme : PC Windows uniquement.
