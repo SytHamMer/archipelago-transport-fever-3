@@ -21,7 +21,7 @@ local MODES = {
 }
 local TEMPLATE_SUFFIXES = 12 -- constructions are tagged "name@0" .. "name@11" in the menu
 
-local locks, checks, effects
+local locks, checks, effects, notify
 
 local state = {
 	last_tick = 0,
@@ -31,6 +31,7 @@ local state = {
 	enforced = nil,
 	inflight = false,
 	failures = {}, -- failed attempts per effect id
+	last_notified = nil, -- items and checks as of the last tick; nil until the first tick of a seed (silent baseline)
 	logged = {},
 }
 
@@ -55,7 +56,7 @@ end
 
 local function load_modules()
 	local function load(name) return require(MOD .. "::/" .. name .. ".lua") end
-	locks, checks, effects = load("ap_locks"), load("ap_checks"), load("ap_effects")
+	locks, checks, effects, notify = load("ap_locks"), load("ap_checks"), load("ap_effects"), load("ap_notify")
 end
 
 -- ===== catalog of lockable content, built once from the game's resources =====
@@ -124,6 +125,7 @@ local function adopt_seed(seed)
 	-- A different seed means a different game: start from the outbox of that seed, or from nothing.
 	state.seed = seed
 	state.checks, state.goals, state.applied, state.failures = {}, {}, 0, {}
+	state.last_notified = nil -- a new seed starts a new silent baseline
 	local previous = app.loadUserdata(DIR, outbox_name(seed))
 	if type(previous) == "table" and previous.seed == seed then
 		state.checks = previous.checks or {}
@@ -262,6 +264,34 @@ local function apply_level(items, earned)
 	state.enforced = wanted
 end
 
+-- ===== notifications =====
+
+local NOTIFICATION_TYPE = MOD .. "::/ap_notification.script"
+local NOTIFICATION_SECONDS = 8
+
+local function send_notification(message)
+	api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "Notifications", "add", {
+		type = NOTIFICATION_TYPE,
+		params = { title = message.title, text = message.text },
+		autoDismissDuration = NOTIFICATION_SECONDS * 1000,
+	}))
+end
+
+-- Tells the player about received items and sent checks. The first tick of a seed only records what is already
+-- there, so reloading a game does not replay everything.
+local function notify_changes(inbox)
+	local items, ids = {}, {}
+	for name, count in pairs(inbox.items or {}) do items[name] = count end
+	for _, id in ipairs(state.checks) do ids[#ids + 1] = id end
+	local current = { items = items, checks = ids }
+	local messages = notify.diff(state.last_notified, current, inbox.config)
+	state.last_notified = current
+	for _, message in ipairs(messages) do
+		local ok, err = pcall(send_notification, message)
+		if not ok then problem("notification", err) break end
+	end
+end
+
 -- ===== main loop =====
 
 local function tick()
@@ -288,6 +318,7 @@ local function tick()
 		state.goals = checks.merge_goals(state.goals, result.goals)
 	end
 	guarded("effects", apply_next_effect, player, inbox)
+	guarded("notify", notify_changes, inbox)
 	guarded("outbox", write_outbox)
 end
 
