@@ -12,6 +12,8 @@
         "ap_main.script.lua",
         "ap_notification.res.lua",
         "ap_notification.script.lua",
-        "ap_notify.lua"
+        "ap_notify.lua",
+        "ap_subvention.res.lua",
+        "ap_subvention.script.lua"
     ]
 }

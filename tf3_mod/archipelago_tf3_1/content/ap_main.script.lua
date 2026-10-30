@@ -275,6 +275,7 @@ local function adopt_seed(seed)
 	state.checks, state.goals, state.missions, state.applied, state.failures = {}, {}, {}, 0, {}
 	state.last_notified = nil -- a new seed starts a new silent baseline
 	state.last_contracts = nil
+	state.spawned = nil
 	local previous = app.loadUserdata(DIR, outbox_name(seed))
 	if type(previous) == "table" and previous.seed == seed then
 		state.checks = previous.checks or {}
@@ -471,6 +472,40 @@ local function publish_contracts(inbox)
 	state.last_contracts = signature
 end
 
+-- EXPERIMENT (only when the file archipelago_tf3_experiment.lua exists in the exchange folder): the first open
+-- contract also becomes a real game subvention, so the game shows its own contract window for it.
+local SUBVENTION_RES = MOD .. "::/ap_subvention.res"
+
+local function uid_of(key)
+	local sum = 910000
+	for index = 1, #key do sum = sum * 31 % 100000007 + key:byte(index) end
+	return sum
+end
+
+local function experiment_contracts(inbox)
+	if not inbox.contracts or type(app.loadUserdata(DIR, "archipelago_tf3_experiment.lua")) ~= "table" then return end
+	state.spawned = state.spawned or {}
+	local open = notify.open_contracts(inbox.contracts, state.checks, inbox.config)
+	local first = open[1]
+	if first and not state.spawned[first.key] then
+		state.spawned[first.key] = { uid = uid_of(first.key) }
+		api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "Subvention", "subventionSpawn", {
+			name = SUBVENTION_RES,
+			specific = { uid = state.spawned[first.key].uid, expireDurationProposed = -1, task = first.title, reward = first.text },
+		}))
+		say("experiment: spawned subvention " .. first.key .. " uid=" .. state.spawned[first.key].uid)
+	end
+	local reached = {}
+	for _, id in ipairs(state.checks) do reached[id] = true end
+	for key, entry in pairs(state.spawned) do
+		if reached[key] and not entry.sent then
+			entry.sent = true
+			api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "ArchipelagoContract", "reached", { uid = entry.uid }))
+			say("experiment: reached " .. key)
+		end
+	end
+end
+
 -- Tells the player about received items and sent checks. The first tick of a seed only records what is already
 -- there, so reloading a game does not replay everything.
 local function notify_changes(inbox)
@@ -520,6 +555,7 @@ local function tick()
 	guarded("effects", apply_next_effect, player, inbox)
 	guarded("notify", notify_changes, inbox)
 	guarded("contracts", publish_contracts, inbox)
+	guarded("experiment", experiment_contracts, inbox)
 	guarded("outbox", write_outbox)
 end
 
