@@ -3,6 +3,8 @@
     "files": [
         "ap.gs.lua",
         "ap_checks.lua",
+        "ap_contract.res.lua",
+        "ap_contract.script.lua",
         "ap_effects.lua",
         "ap_icon@2x.tga",
         "ap_load.script.lua",

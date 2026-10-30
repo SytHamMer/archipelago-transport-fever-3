@@ -160,3 +160,35 @@ def test_a_check_without_a_known_contract_keeps_the_plain_message():
 def test_a_mission_check_has_a_readable_text():
     config = {"checks": {"missions": [1, 2, 3]}}
     assert texts(diff(state(), state(checks=["mission:3"]), config)) == ["Missions completed: 3"]
+
+
+def open_contracts(contracts, done, config=CONFIG):
+    runtime, notify = load_module("ap_notify")
+    return from_lua(notify.open_contracts(to_lua(runtime, contracts), to_lua(runtime, done), to_lua(runtime, config)))
+
+
+def reward(item="Rail Transport", to="Me", own=True):
+    return {"item": item, "to": to, "own": own}
+
+
+def test_the_next_contract_of_each_ladder_is_open_with_its_reward():
+    contracts = {"population:1": reward(), "population:2": reward("Cargo Class: Bulk", "Alice", False),
+                 "company_level:2": reward("Money Grant (small)")}
+    result = open_contracts(contracts, ["population:1"])
+    assert result == [
+        {"key": "population:2", "title": "Contract: Population reached 2,500",
+         "text": "Reward: Cargo Class: Bulk for Alice"},
+        {"key": "company_level:2", "title": "Contract: Company level 2 reached", "text": "Reward: Money Grant (small)"},
+    ]
+
+
+def test_every_first_line_is_open_but_only_the_next_delivery_tier_of_each_cargo():
+    contracts = {"line:rail": reward(), "line:road": reward(), "delivered:grain:1": reward(),
+                 "delivered:grain:2": reward(), "delivered:coal:2": reward()}
+    keys = [c["key"] for c in open_contracts(contracts, ["delivered:coal:1"])]
+    assert sorted(keys) == ["delivered:coal:2", "delivered:grain:1", "line:rail", "line:road"]
+
+
+def test_no_contract_is_open_without_scouted_contracts_or_when_all_are_done():
+    assert open_contracts({}, []) == []
+    assert open_contracts({"population:1": reward()}, ["population:1"]) == []

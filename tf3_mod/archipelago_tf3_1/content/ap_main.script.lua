@@ -46,6 +46,7 @@ local state = {
 	enforced = nil,
 	inflight = false,
 	failures = {}, -- failed attempts per effect id
+	last_contracts = nil, -- signature of the open contracts last published to the notifications tab
 	last_notified = nil, -- items and checks as of the last tick; nil until the first tick of a seed (silent baseline)
 	logged = {},
 }
@@ -273,6 +274,7 @@ local function adopt_seed(seed)
 	state.seed = seed
 	state.checks, state.goals, state.missions, state.applied, state.failures = {}, {}, {}, 0, {}
 	state.last_notified = nil -- a new seed starts a new silent baseline
+	state.last_contracts = nil
 	local previous = app.loadUserdata(DIR, outbox_name(seed))
 	if type(previous) == "table" and previous.seed == seed then
 		state.checks = previous.checks or {}
@@ -440,6 +442,32 @@ local function send_notification(message)
 	}))
 end
 
+local CONTRACT_TYPE = MOD .. "::/ap_contract.script"
+
+-- Keeps one notification per open contract in the notifications tab (see ap_notify.open_contracts). The game replaces
+-- the notifications of a type that changed and dismisses the ones that are gone, so this only runs on changes.
+local function publish_contracts(inbox)
+	if not inbox.contracts then return end
+	local open = notify.open_contracts(inbox.contracts, state.checks, inbox.config)
+	local keys = {}
+	for _, contract in ipairs(open) do keys[#keys + 1] = contract.key end
+	local signature = table.concat(keys, ",")
+	if signature == state.last_contracts then return end
+
+	local entities = {}
+	local entity_util = ug_require("::/scripts/entity_util.tl")
+	local anchor = entity_util and entity_util.makeEntityAndRevision(api.engine.util.getPlayer())
+	if anchor then entities = { anchor } end -- a notification with no entity is not kept as persistent by the game
+	local entries = {}
+	for _, contract in ipairs(open) do
+		entries[#entries + 1] = { entities = entities, param = { title = contract.title, text = contract.text } }
+	end
+	api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "Notifications", "updatePersistent", {
+		type = CONTRACT_TYPE, passOnlyParam = true, entitiesAndParam = entries,
+	}))
+	state.last_contracts = signature
+end
+
 -- Tells the player about received items and sent checks. The first tick of a seed only records what is already
 -- there, so reloading a game does not replay everything.
 local function notify_changes(inbox)
@@ -488,6 +516,7 @@ local function tick()
 	end
 	guarded("effects", apply_next_effect, player, inbox)
 	guarded("notify", notify_changes, inbox)
+	guarded("contracts", publish_contracts, inbox)
 	guarded("outbox", write_outbox)
 end
 

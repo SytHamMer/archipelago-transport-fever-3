@@ -48,6 +48,51 @@ function M.describe_check(id, config)
 	return "Check reached: " .. id
 end
 
+local FAMILY_ORDER = { "population", "company_level", "passengers", "cargo", "mission", "line", "delivered" }
+
+-- The contracts still to do, for the notifications tab: { key, title, text } each, in a fixed order. Only the next
+-- step of each ladder (and the next delivery tier of each cargo) is listed, the first lines all are.
+-- `contracts` maps a check id to its reward { item, to, own }; `done` is the list of reached check ids.
+function M.open_contracts(contracts, done, config)
+	local finished = {}
+	for _, id in ipairs(done or {}) do finished[id] = true end
+
+	local ladder_next, rows = {}, {}
+	for id, reward in pairs(contracts or {}) do
+		if not finished[id] then
+			local parts = split(id)
+			local family = parts[1]
+			local group = (family == "delivered") and (family .. ":" .. tostring(parts[2])) or family
+			local step = tonumber(family == "delivered" and parts[3] or parts[2])
+			if family == "line" then
+				rows[#rows + 1] = { key = id, family = family, group = id, step = 0, reward = reward }
+			elseif step and (not ladder_next[group] or step < ladder_next[group].step) then
+				ladder_next[group] = { key = id, family = family, group = group, step = step, reward = reward }
+			end
+		end
+	end
+	for _, row in pairs(ladder_next) do rows[#rows + 1] = row end
+
+	local rank = {}
+	for index, family in ipairs(FAMILY_ORDER) do rank[family] = index end
+	table.sort(rows, function(a, b)
+		local ra, rb = rank[a.family] or 99, rank[b.family] or 99
+		if ra ~= rb then return ra < rb end
+		return a.key < b.key
+	end)
+
+	local out = {}
+	for _, row in ipairs(rows) do
+		local reward = row.reward
+		out[#out + 1] = {
+			key = row.key,
+			title = "Contract: " .. M.describe_check(row.key, config),
+			text = "Reward: " .. reward.item .. (reward.own and "" or (" for " .. reward.to)),
+		}
+	end
+	return out
+end
+
 -- Text of a received item: who sent it and for which check, when known. Our own checks are shown with the
 -- readable check text, the others by the name the server gives them.
 local function item_text(entry, config)
