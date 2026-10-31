@@ -23,7 +23,7 @@ def test_manifest_inside_the_archive_names_the_game(tmp_path):
     with zipfile.ZipFile(build_world.build(tmp_path)) as z:
         manifest = json.loads(z.read("transport_fever_3/archipelago.json"))
     assert manifest["game"] == "Transport Fever 3"
-    assert manifest["world_version"] == "2.0.0"
+    assert manifest["world_version"] == "0.1.0"
     assert manifest["version"] == 7 and manifest["compatible_version"] == 7
 
 

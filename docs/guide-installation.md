@@ -2,7 +2,7 @@
 
 This guide is for a player who has never seen the project. It describes how everything is installed, what each piece does, how to choose the start year, and what to do when something does not work.
 
-> Status: version 2, tested locally on Windows 11 with Archipelago 0.6.8 and Transport Fever 3 (Steam). It has not been proposed to the official Archipelago repository.
+> Status: version 0.1.0, tested locally on Windows 11 with Archipelago 0.6.8 and Transport Fever 3 (Steam). It has not been proposed to the official Archipelago repository.
 
 ## 1. How it works
 

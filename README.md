@@ -2,7 +2,7 @@
 
 Play Transport Fever 3 (PC, Steam) in an [Archipelago](https://archipelago.gg) multiworld, without the honor system: the game locks what has not been received and sends the checks itself.
 
-Status: version 2, tested locally. **Nothing has been proposed to the official Archipelago repository**: everything stays local until testing is finished.
+Status: version 0.1.0, tested locally. **Nothing has been proposed to the official Archipelago repository**: everything stays local until testing is finished.
 
 ## What you need
 
