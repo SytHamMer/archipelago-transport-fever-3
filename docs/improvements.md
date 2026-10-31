@@ -29,6 +29,25 @@ Newest at the end of each section. Nothing here is started unless it says so.
   - make the logic reflect it: hard cargos need more items (modes, vehicle tiers, the matching cargo class) than easy ones;
   - let the YAML choose how many of each level are checks.
 
+## Economy at a 2020 start
+
+### 3. Everything costs far more than in an early game
+
+- **Problem:** the game inflates prices with the year. Starting in 2020 (needed for vehicles, see the guide), a bus
+  stop costs about 300,000 where an early game has it at about 12,000. The whole game is unbalanced for a new company.
+- **Why it matters:** the cheap start of the base game (small first lines, growing slowly) does not exist any more;
+  the starting money covers almost nothing.
+- **Ideas:** find where the game applies the inflation (finance utilities) and offset it, for example by scaling
+  construction and vehicle costs back, or by giving the company a starting capital that fits the year; to be
+  measured in game before choosing.
+
+### 4. Money rewards are far too small for that economy
+
+- **Problem:** the money grants (50,000 / 250,000 / 1,000,000) and the losses (50,000 / 250,000) are tiny compared with
+  prices at 2020, so a grant buys almost nothing and a loss is not felt.
+- **Ideas:** scale the amounts with the same factor as the prices (the inflation of the current year), keeping
+  `money_scale` as the player's difficulty percentage; decide the base amounts from what a first line costs.
+
 ## Known minor issues (from earlier reviews)
 
 - The locks flicker for up to 2 seconds when the client reconnects.
