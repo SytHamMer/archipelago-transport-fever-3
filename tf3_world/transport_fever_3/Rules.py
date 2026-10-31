@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from . import data
+from . import cargos, data
 
 MODE_ITEMS = tuple(data.ITEM_MODE(mode) for mode in data.MODES)
 ROAD_VEHICLES = data.ITEM_VEHICLES("Road")
@@ -26,7 +26,7 @@ def _level_need(level: int) -> Need:
     return Need({ROAD_VEHICLES: tiers} if tiers else {}, modes)
 
 
-def need_for(location: str, ladder_sizes: dict[str, int]) -> Need:
+def need_for(location: str, ladder_sizes: dict[str, int], climate: str = "temperate") -> Need:
     """Requirements of a check, from its id (see data.location_id)."""
     family, *parts = location.split(":")
     if family in ("population", "passengers", "cargo"):
@@ -39,7 +39,11 @@ def need_for(location: str, ladder_sizes: dict[str, int]) -> Need:
     if family == "delivered":
         tier = int(parts[1])
         tiers = 0 if tier <= 1 else 1 if tier <= 2 else 2
-        return Need({ROAD_VEHICLES: tiers} if tiers else {})
+        items = {ROAD_VEHICLES: tiers} if tiers else {}
+        levels = cargos.required_level_items(parts[0], climate)  # its industries only exist from this company rank
+        if levels:
+            items[data.ITEM_LEVEL] = levels
+        return Need(items)
     if family == "mission":
         return Need()  # an offer can be completed with the starting road vehicles
     raise ValueError(f"unknown location {location}")

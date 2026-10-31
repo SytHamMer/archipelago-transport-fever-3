@@ -5,7 +5,7 @@ Newest at the end of each section. Nothing here is started unless it says so.
 
 ## Checks that fit the map and the game
 
-### 1. Only ask for cargos the map can produce
+### 1. Only ask for cargos the map can produce (done on the `cargo-balance` branch)
 
 - **Problem:** the delivery checks (`delivered:<cargo>:<tier>`) cover all 28 cargos of the temperate climate. Some
   biomes and maps have no industry for some of them, so the check can never be reached.
@@ -18,7 +18,7 @@ Newest at the end of each section. Nothing here is started unless it says so.
     climates);
   - at least a warning in the client when a check needs a cargo that the loaded map has no producer for.
 
-### 2. Cargo difficulty
+### 2. Cargo difficulty (done on the `cargo-balance` branch)
 
 - **Problem:** every cargo has the same delivery tiers (100, 500, 2,000, 10,000) and the same access rules. A car or
   a machine, which needs a whole production chain, is far harder to deliver than vegetables or grain.

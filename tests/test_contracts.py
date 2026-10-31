@@ -110,3 +110,10 @@ def test_an_unknown_check_is_listed_by_its_id_and_without_the_config_too():
 
 def test_the_report_without_contracts_says_so():
     assert contracts_report({}, done=set()) == ["No contracts known yet (waiting for the server)."]
+
+
+def test_a_delivery_contract_is_written_with_the_amount_of_its_cargo():
+    checks = {**CHECKS, "delivery_by_cargo": {"vehicles": [20, 100], "wool": [100, 500]}}
+    contracts = {"delivered:vehicles:1": reward(), "delivered:wool:2": reward()}
+    lines = contracts_report(contracts, done=set(), checks=checks)[1:]
+    assert sorted(lines) == ["Delivered 20 vehicles -> Rail Transport", "Delivered 500 wool -> Rail Transport"]

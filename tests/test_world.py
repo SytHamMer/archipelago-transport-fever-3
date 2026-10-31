@@ -95,9 +95,14 @@ class TestCargoClassItems(TF3TestBase):
         assert item.classification == ItemClassification.useful
 
     def test_deliveries_do_not_need_a_cargo_class_item(self):
-        # a universal road vehicle carries every cargo from the start
+        # a universal road vehicle carries every cargo from the start: only the company level matters
+        self.collect_by_name("Company Level +1")
         assert self.can_reach_location("delivered:coal:1")
         assert self.can_reach_location("delivered:crude_oil:1")
+
+    def test_a_delivery_needs_the_company_level_of_its_industries(self):
+        assert not self.can_reach_location("delivered:coal:1")  # the coal mine exists from company rank 3
+        assert self.can_reach_location("delivered:grain:1")  # farms exist from the start
 
 
 class TestMoneyScale(TF3TestBase):

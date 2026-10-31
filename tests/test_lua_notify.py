@@ -219,3 +219,16 @@ def test_an_open_contract_carries_its_progress_spec():
     by_key = {c["key"]: c for c in open_contracts(contracts, [])}
     assert by_key["delivered:wool:1"]["progress"] == {"kind": "delivered", "goal": 100, "cargo": "wool"}
     assert "progress" not in by_key["line:rail"]
+
+
+PER_CARGO_CONFIG = {"checks": {"delivery": [100], "delivery_by_cargo": {"vehicles": [20, 100], "coal": [100]}}}
+
+
+def test_a_delivery_check_names_the_amount_of_its_own_cargo():
+    assert texts(diff(state(), state(checks=["delivered:vehicles:1"]), PER_CARGO_CONFIG)) == ["Delivered 20 vehicles"]
+    assert texts(diff(state(), state(checks=["delivered:vehicles:2"]), PER_CARGO_CONFIG)) == ["Delivered 100 vehicles"]
+
+
+def test_the_progress_goal_of_a_delivery_uses_the_amount_of_its_own_cargo():
+    assert progress_spec("delivered:vehicles:2", PER_CARGO_CONFIG) == {"kind": "delivered", "goal": 100, "cargo": "vehicles"}
+    assert progress_spec("delivered:vehicles:1", PER_CARGO_CONFIG)["goal"] == 20

@@ -6,9 +6,9 @@ from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_component
 from worlds.generic.Rules import set_rule
 
-from . import data
+from . import cargos, data
 from .Items import item_counts, item_table
-from .Locations import active_locations, location_table
+from .Locations import active_locations, eligible_cargos, location_table
 from .Options import TF3Options, validate_goals
 from .Rules import GOAL_NEED, MODE_ITEMS, Need, need_for
 
@@ -72,7 +72,7 @@ class TF3World(World):
             classification = ItemClassification.trap
         elif name in data.MONEY_ITEMS:
             classification = ItemClassification.filler
-        elif name == data.ITEM_LEVEL or name in data.cargo_class_items():
+        elif name in data.cargo_class_items():
             classification = ItemClassification.useful
         else:
             classification = ItemClassification.progression
@@ -107,7 +107,7 @@ class TF3World(World):
     def set_rules(self) -> None:
         sizes = self._ladder_sizes()
         for name in active_locations(self.options):
-            set_rule(self.get_location(name), self._rule(need_for(name, sizes)))
+            set_rule(self.get_location(name), self._rule(need_for(name, sizes, self.options.climate.current_key)))
         set_rule(self.get_location("Goal"), self._rule(GOAL_NEED))
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Goal reached", self.player)
 
@@ -137,5 +137,9 @@ class TF3World(World):
                 "first_line": bool(options.first_line_checks.value),
                 "missions": list(range(1, options.mission_checks.value + 1)),
                 "delivery": list(data.DELIVERY_AMOUNTS[: options.delivery_checks.value]),
+                "delivery_by_cargo": {
+                    cargo: cargos.delivery_amounts(cargo, options.climate.current_key, options.delivery_checks.value)
+                    for cargo in eligible_cargos(options)
+                },
             },
         }

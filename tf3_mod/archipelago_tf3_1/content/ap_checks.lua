@@ -2,7 +2,7 @@
 --
 -- config   = the inbox `config`: { goals = {population, company_level, passengers, cargo},
 --            checks = {population = {...}, company_level = {...}, passengers = {...}, cargo = {...},
---                      first_line = boolean, delivery = {...}, missions = {...}} }
+--                      first_line = boolean, delivery = {...}, delivery_by_cargo = {[cargo] = {...}}, missions = {...}} }
 -- readings = { experience, earned_level, passengers, cargo, line_modes = {[TransportMode index] = true},
 --              delivered = {[cargo name] = amount} }   (any field may be missing)
 local M = {}
@@ -68,8 +68,12 @@ function M.evaluate(config, readings)
 		end
 	end
 
+	-- Every cargo has its own amounts when the seed gives them (harder cargos ask for less, and only the cargos that
+	-- have delivery checks are listed); older seeds share one list.
+	local per_cargo = checks.delivery_by_cargo
 	for cargo, amount in pairs(readings.delivered or {}) do
-		for tier, needed in ipairs(checks.delivery or {}) do
+		local amounts = per_cargo and per_cargo[cargo] or (not per_cargo and checks.delivery) or {}
+		for tier, needed in ipairs(amounts) do
 			if number(amount) >= needed then
 				reached[#reached + 1] = "delivered:" .. cargo .. ":" .. tier
 			end

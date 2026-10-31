@@ -154,3 +154,24 @@ def test_a_newer_or_missing_or_invalid_inbox_format_is_not_supported():
     assert format_supported(2) is False
     assert format_supported(None) is False
     assert format_supported("1") is False
+
+
+PER_CARGO = {
+    "goals": {}, "checks": {"delivery": [100, 500], "delivery_by_cargo": {"coal": [100, 500], "vehicles": [20, 100]}},
+}
+
+
+def test_deliveries_use_the_amounts_of_their_own_cargo():
+    reached, _ = evaluate({"delivered": {"coal": 150, "vehicles": 150}}, PER_CARGO)
+    assert "delivered:coal:1" in reached and "delivered:coal:2" not in reached
+    assert "delivered:vehicles:1" in reached and "delivered:vehicles:2" in reached
+
+
+def test_a_cargo_without_checks_in_the_per_cargo_table_has_no_delivery_check():
+    reached, _ = evaluate({"delivered": {"fish": 99999}}, PER_CARGO)
+    assert not [check for check in reached if check.startswith("delivered:")]
+
+
+def test_without_a_per_cargo_table_the_shared_list_still_applies():
+    reached, _ = evaluate({"delivered": {"fish": 600}})
+    assert "delivered:fish:1" in reached and "delivered:fish:2" in reached

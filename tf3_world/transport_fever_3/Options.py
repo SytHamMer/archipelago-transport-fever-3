@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import OptionError, PerGameCommonOptions, Range, Toggle
+from Options import Choice, OptionError, PerGameCommonOptions, Range, Toggle
 
 
 def _ladder(prefix: str, label: str, checks: int, first: int, last: int, top: int) -> tuple[type, type, type]:
@@ -53,6 +53,17 @@ class MissionChecks(Range):
     range_start = 0
     range_end = 30
     default = 3
+
+
+class Climate(Choice):
+    """Climate of the map you will play: delivery checks only ask for cargos that climate can produce, and only
+    for those whose industries exist at the company rank your level items guarantee."""
+    display_name = "Map climate"
+    option_temperate = 0
+    option_dry = 1
+    option_subarctic = 2
+    option_tropical = 3
+    default = 0
 
 
 class FirstLineChecks(Toggle):
@@ -123,6 +134,7 @@ class TF3Options(PerGameCommonOptions):
     cargo_last: CargoLast
     delivery_checks: DeliveryChecks
     first_line_checks: FirstLineChecks
+    climate: Climate
     mission_checks: MissionChecks
     goal_population: GoalPopulation
     goal_company_level: GoalCompanyLevel

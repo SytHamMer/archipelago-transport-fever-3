@@ -29,6 +29,11 @@ function M.describe_check(id, config)
 	local parts = split(id)
 	local family = parts[1]
 	local function threshold(list, index) return list and list[tonumber(index)] end
+	-- the delivery amounts of a cargo: its own list when the seed gives one, the shared list otherwise
+	local function delivery(cargo)
+		local per_cargo = checks.delivery_by_cargo
+		return per_cargo and per_cargo[cargo] or checks.delivery
+	end
 
 	if family == "population" and threshold(checks.population, parts[2]) then
 		return "Population reached " .. with_separators(threshold(checks.population, parts[2]))
@@ -42,8 +47,8 @@ function M.describe_check(id, config)
 		return "Missions completed: " .. with_separators(threshold(checks.missions, parts[2]))
 	elseif family == "line" and parts[2] then
 		return "First " .. parts[2] .. " line built"
-	elseif family == "delivered" and parts[2] and threshold(checks.delivery, parts[3]) then
-		return "Delivered " .. with_separators(threshold(checks.delivery, parts[3])) .. " " .. parts[2]:gsub("_", " ")
+	elseif family == "delivered" and parts[2] and threshold(delivery(parts[2]), parts[3]) then
+		return "Delivered " .. with_separators(threshold(delivery(parts[2]), parts[3])) .. " " .. parts[2]:gsub("_", " ")
 	end
 	return "Check reached: " .. id
 end
@@ -61,7 +66,8 @@ function M.progress_spec(id, config)
 	elseif family == "company_level" and tonumber(parts[2]) then
 		return { kind = family, goal = tonumber(parts[2]) }
 	elseif family == "delivered" and parts[2] then
-		local goal = threshold(checks.delivery, parts[3])
+		local per_cargo = checks.delivery_by_cargo
+		local goal = threshold(per_cargo and per_cargo[parts[2]] or checks.delivery, parts[3])
 		return goal and { kind = family, goal = goal, cargo = parts[2] } or nil
 	end
 	return nil

@@ -1,6 +1,6 @@
 from helpers import make_options
 
-from transport_fever_3 import data
+from transport_fever_3 import cargos, data
 from transport_fever_3.Items import item_counts, item_table
 from transport_fever_3.Locations import active_locations, location_table
 from transport_fever_3.Options import TF3Options
@@ -47,7 +47,7 @@ def test_first_line_checks_toggle():
 def test_delivery_checks_scale_with_tiers():
     assert not any(name.startswith("delivered:") for name in active_locations(opts(delivery_checks=0)))
     delivered = [name for name in active_locations(opts(delivery_checks=3)) if name.startswith("delivered:")]
-    assert len(delivered) == 3 * len(data.CARGOS)
+    assert len(delivered) == 3 * len(cargos.eligible_cargos("temperate", level_items=4))
 
 
 def test_zero_checks_disables_family():

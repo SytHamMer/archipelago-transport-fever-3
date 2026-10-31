@@ -100,6 +100,12 @@ def contracts_from_scout(
 FAMILY_ORDER = ("population", "company_level", "passengers", "cargo", "mission", "line", "delivered")
 
 
+def delivery_amount(checks: dict, cargo: str, tier: str) -> int | None:
+    """The amount of a delivery check: the cargo's own list when the seed gives one, the shared list otherwise."""
+    amounts = (checks.get("delivery_by_cargo") or {}).get(cargo) or checks.get("delivery") or []
+    return amounts[int(tier) - 1] if tier.isdigit() and 0 < int(tier) <= len(amounts) else None
+
+
 def describe_check(check: str, checks: dict | None) -> str:
     """Readable text of a check id, as the in-game contract shows it (the id itself when it is not known)."""
     checks = checks or {}
@@ -121,8 +127,10 @@ def describe_check(check: str, checks: dict | None) -> str:
         return f"Missions completed: {threshold('missions', parts[0]):,}"
     if family == "line" and parts:
         return f"First {parts[0]} line built"
-    if family == "delivered" and len(parts) == 2 and threshold("delivery", parts[1]) is not None:
-        return f"Delivered {threshold('delivery', parts[1]):,} {parts[0].replace('_', ' ')}"
+    if family == "delivered" and len(parts) == 2:
+        amount = delivery_amount(checks, parts[0], parts[1])
+        if amount is not None:
+            return f"Delivered {amount:,} {parts[0].replace('_', ' ')}"
     return check
 
 

@@ -27,6 +27,20 @@ Step by step instructions, the choice of the start year and troubleshooting are 
 - **Checks**: population, company levels, passengers and cargo transported, the first line of each mode, deliveries per cargo and missions completed. Every check is a **contract**, see below.
 - **Goals**: population, company level, passengers or cargo; the game is won when all the active goals are reached.
 
+### Delivery checks fit the map and the cargo
+
+- **Climate.** Each climate can produce only some cargos (for example the dry climate has no fish, the subarctic one
+  has no vegetables, clay or bricks). Set `climate` to the climate of the map you will play, and deliveries only ask
+  for cargos that exist there.
+- **Company rank.** An industry only appears once the company reaches a rank (stone from rank 2, coal and steel 3, oil 5,
+  forests and sawmills 7, chemicals and machines 10, glass and furniture 13). A delivery check is only created when the
+  "Company Level +1" items of your seed guarantee that rank (`company_level_checks` levels give rank
+  `1 + company_level_checks`), and it needs those items in the logic. The default (4 level items) covers about half of
+  the cargos; raise `company_level_checks` for more.
+- **Difficulty.** The amounts depend on how many industries a cargo needs: easy cargos (grain, coal, stone...) use
+  100 / 500 / 2,000 / 10,000, medium ones (steel, fabric, furniture...) 50 / 250 / 1,000 / 5,000, hard ones (machines,
+  tools, clothes, vehicles...) 20 / 100 / 400 / 2,000.
+
 ### Contracts
 
 Each open check is shown as a real game contract, with the game's own window (task, and what completing it gives: the item and the player who receives it), icon and notification, like the game's own subsidies. A contract has no deadline and no penalty.
@@ -45,7 +59,8 @@ The format of a YAML file, weights and random options are explained in the [offi
 | `passengers_checks` / `_first` / `_last` | 3, 100, 2000 | passengers transported in total |
 | `cargo_checks` / `_first` / `_last` | 3, 100, 2000 | cargo transported in total |
 | `company_level_checks` | 4 | company levels 2, 3, 4... |
-| `delivery_checks` | 1 | delivery tiers per cargo type (100, 500, 2,000, 10,000) |
+| `delivery_checks` | 1 | delivery tiers per cargo (up to 4; the amounts depend on how hard the cargo is, see below) |
+| `climate` | temperate | climate of your map (temperate, dry, subarctic, tropical): deliveries only ask for cargos it can produce |
 | `first_line_checks` | yes | first line of each mode |
 | `mission_checks` | 3 | number of "N game missions completed" checks (0 to 30) |
 | `money_scale` | 100 | percentage applied to every money grant and loss (10 to 1000) |
