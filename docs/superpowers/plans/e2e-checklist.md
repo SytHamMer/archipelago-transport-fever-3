@@ -46,10 +46,12 @@ Automatique : 280 tests, monde reconstruit, multiworld deux joueurs régénéré
 Vérifié en jeu : contrats réels du jeu (fenêtre, progression, fin sans acceptation, récompense pour un autre joueur), notifications, missions, emprunts à l'échelle (départ et renouvellement), `/contracts` avec le vrai serveur.
 
 À refaire avec le vrai Launcher (nouvelle version du client) :
-1. [ ] **Install APWorld** (`dist/transport_fever_3.apworld`), redémarrer le Launcher.
-2. [ ] **Host Game** avec `out/AP_71905630507863958534.zip`.
-3. [ ] Client en Mathys connecté, partie libre neuve en 2020.
-4. [ ] `/contracts` en texte clair (prochain palier de chaque famille) et `/contracts all`.
-5. [ ] Un check réel : contrat terminé, item reçu et appliqué, annonce bleue.
-6. [ ] Fermer et rouvrir le client (reconnexion) puis la partie : rien rejoué, checks conservés.
+1. [x] **Install APWorld** (`dist/transport_fever_3.apworld`), redémarrer le Launcher.
+2. [x] **Host Game** avec `out/AP_71905630507863958534.zip`.
+3. [x] Client en Mathys connecté, partie libre neuve en 2020.
+4. [x] `/contracts` en texte clair (prochain palier de chaque famille) et `/contracts all`.
+5. [x] Un check réel : contrat terminé, item reçu et appliqué (perte de 50 000), annonce bleue.
+6. [x] Fermer et rouvrir le client (reconnexion) puis la partie : rien rejoué, checks conservés.
 7. [ ] Multiworld avec un autre jeu (à faire quand un second monde est disponible) : le nom de l'item de l'autre jeu apparaît dans le contrat.
+
+Fait le 2026-10-31 avec le vrai Launcher, le vrai serveur et le vrai jeu : points 1 à 6. Le point 7 (autre jeu) reste à faire quand un second monde sera disponible.
