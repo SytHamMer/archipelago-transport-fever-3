@@ -133,12 +133,14 @@ class TestLoanScaleOption(TF3TestBase):
 
 
 class TestDeathLinkOption(TF3TestBase):
-    options = {"death_link": 1}
+    options = {"death_link": 1, "death_link_loss": 7_500_000}
 
     def test_the_death_link_option_reaches_the_slot_data(self):
-        assert self.world.fill_slot_data()["death_link"] is True
+        data = self.world.fill_slot_data()
+        assert data["death_link"] is True and data["death_link_loss"] == 7_500_000
 
 
 class TestDeathLinkIsOffByDefault(TF3TestBase):
     def test_death_link_is_off_unless_asked_for(self):
-        assert self.world.fill_slot_data()["death_link"] is False
+        data = self.world.fill_slot_data()
+        assert data["death_link"] is False and data["death_link_loss"] == 1_000_000

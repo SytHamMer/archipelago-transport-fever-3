@@ -120,6 +120,15 @@ class LoanScale(Range):
     default = 10
 
 
+class DeathLinkLoss(Range):
+    """Money the company loses each time another player's DeathLink arrives (needs death_link). This is the exact
+    amount: money_scale is not applied to it. The game's prices are in the hundreds of thousands in 2020."""
+    display_name = "Death link loss"
+    range_start = 10_000
+    range_end = 1_000_000_000
+    default = 1_000_000
+
+
 @dataclass
 class TF3Options(PerGameCommonOptions):
     population_checks: PopulationChecks
@@ -143,6 +152,7 @@ class TF3Options(PerGameCommonOptions):
     money_scale: MoneyScale
     loan_scale: LoanScale
     death_link: DeathLink
+    death_link_loss: DeathLinkLoss
 
 
 def validate_goals(options: TF3Options) -> None:

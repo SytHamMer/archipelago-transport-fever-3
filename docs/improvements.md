@@ -56,7 +56,7 @@ Newest at the end of each section. Nothing here is started unless it says so.
 ## DeathLink
 
 - Receive only for now. A TF3 "death" to send (for example going bankrupt) is an open question.
-- The loss is fixed at "Money Loss (small)"; a YAML amount could be added.
+- The loss amount is set by the YAML option `death_link_loss` (exact, not scaled).
 - The effect is applied when the mod next reads the inbox; a death received while the game is closed is lost (the server does not replay deaths).
 
 ## Known minor issues (from earlier reviews)

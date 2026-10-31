@@ -17,6 +17,7 @@ EXCHANGE_FOLDER = "towns_industries"  # one of the two userdata folders the game
 HEARTBEAT_TIMEOUT = 10  # seconds without a mod heartbeat before the game counts as idle
 COOLDOWN_SECONDS = 15  # DeathLinks closer together than this are one loss, not a burst
 MAX_PENDING_DEATHS = 20
+DEFAULT_DEATH_LOSS = 1_000_000  # seeds generated before the death_link_loss option
 
 
 def find_userdata_dir(steam_root: Path | None = None, override: str | None = None) -> Path | None:
@@ -99,7 +100,7 @@ def contracts_from_scout(
     return contracts
 
 
-def death_effect(payload: dict, own_name: str, money_scale: int) -> dict | None:
+def death_effect(payload: dict, own_name: str, loss: int) -> dict | None:
     """The money loss of a DeathLink received from another player, or None when it must be ignored.
 
     The id comes from the time of the death, so it only grows: the mod keeps the highest id it has applied. Our own
@@ -108,8 +109,7 @@ def death_effect(payload: dict, own_name: str, money_scale: int) -> dict | None:
     source, moment = payload.get("source"), payload.get("time")
     if not isinstance(moment, (int, float)) or not isinstance(source, str) or source == own_name:
         return None
-    amount = data.TRAPS["Money Loss (small)"] * money_scale // 100
-    return {"id": int(moment * 1000), "amount": amount, "source": source, "cause": str(payload.get("cause") or "")}
+    return {"id": int(moment * 1000), "amount": loss, "source": source, "cause": str(payload.get("cause") or "")}
 
 
 FAMILY_ORDER = ("population", "company_level", "passengers", "cargo", "mission", "line", "delivered")
@@ -272,7 +272,7 @@ class TF3Sync:
         """A DeathLink from another player: the mod makes the company lose money (once, in order)."""
         if self.slot_data is None or not self.slot_data.get("death_link"):
             return
-        effect = death_effect(payload, self.own_name, self.slot_data.get("money_scale", 100))
+        effect = death_effect(payload, self.own_name, self.slot_data.get("death_link_loss", DEFAULT_DEATH_LOSS))
         if effect is None or any(item["id"] == effect["id"] for item in self.deaths):
             return
         if effect["id"] / 1000 - self.last_death_time < COOLDOWN_SECONDS:
