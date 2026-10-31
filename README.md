@@ -49,7 +49,10 @@ The format of a YAML file, weights and random options are explained in the [offi
 | `first_line_checks` | yes | first line of each mode |
 | `mission_checks` | 3 | number of "N game missions completed" checks (0 to 30) |
 | `money_scale` | 100 | percentage applied to every money grant and loss (10 to 1000) |
+| `loan_scale` | 10 | percentage applied to the amount of every bank loan (1 to 200; 100 = the game's amounts, very large in 2020) |
 | `goal_population`, `goal_company_level`, `goal_passengers`, `goal_cargo` | 2500, 0, 0, 0 | goals; 0 disables a goal; the game is won when **all** active goals are reached |
+
+Bank loans are scaled by `loan_scale`: the game multiplies its loan amounts by 2.4 in 2020 (tens of millions each), which would make the multiworld's money meaningless. Loans the game already made when the game starts keep their amount until it renews them (about every 6 months of game time).
 
 The base money amounts (grants 50,000 / 250,000 / 1,000,000, losses 50,000 / 250,000) are multiplied by `money_scale`.
 

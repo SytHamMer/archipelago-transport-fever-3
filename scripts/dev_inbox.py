@@ -35,6 +35,7 @@ def slot_data(seed: str, eras: tuple[int, int] = (1920, 1960)) -> dict:
         "goals": {"population": 2500, "company_level": 0, "passengers": 0, "cargo": 0},
         "checks": {"population": [500, 501, 700], "company_level": [2, 3], "passengers": [50, 100], "cargo": [20],
                    "first_line": True, "delivery": [100], "missions": [1, 2, 3]},
+        "loan_scale": 10,
     }
 
 

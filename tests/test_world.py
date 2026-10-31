@@ -113,3 +113,15 @@ class TestMissionChecks(TF3TestBase):
     def test_missions_are_reachable_from_the_start_and_in_the_slot_data(self):
         assert self.can_reach_location("mission:1") and self.can_reach_location("mission:2")
         assert self.world.fill_slot_data()["checks"]["missions"] == [1, 2]
+
+
+class TestLoanScale(TF3TestBase):
+    def test_the_default_loan_scale_is_ten_percent(self):
+        assert self.world.fill_slot_data()["loan_scale"] == 10
+
+
+class TestLoanScaleOption(TF3TestBase):
+    options = {"loan_scale": 100}
+
+    def test_the_loan_scale_reaches_the_slot_data(self):
+        assert self.world.fill_slot_data()["loan_scale"] == 100

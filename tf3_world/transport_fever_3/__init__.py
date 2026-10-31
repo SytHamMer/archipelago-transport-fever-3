@@ -111,6 +111,7 @@ class TF3World(World):
             "seed": self.multiworld.seed_name,
             "eras": dict(data.ERA_STARTS),
             "money_scale": options.money_scale.value,
+            "loan_scale": options.loan_scale.value,
             "goals": {
                 "population": options.goal_population.value,
                 "company_level": options.goal_company_level.value,

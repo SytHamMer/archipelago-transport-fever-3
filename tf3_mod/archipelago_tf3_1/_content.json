@@ -7,6 +7,7 @@
         "ap_effects.lua",
         "ap_icon@2x.tga",
         "ap_load.script.lua",
+        "ap_loans.lua",
         "ap_locks.lua",
         "ap_main.script.lua",
         "ap_notification.res.lua",

@@ -15,6 +15,7 @@ def test_game_script_registration_points_at_the_main_script():
     assert table["guiUpdateScript"]["fileName"] == "ap_main.script@guiUpdate"
 
 
-def test_main_script_has_no_loan_effect_any_more():
-    source = (MOD_CONTENT / "ap_main.script.lua").read_text(encoding="utf-8")
-    assert "loan" not in source.lower()
+def test_main_script_has_no_forced_loan_effect_any_more():
+    # the loan trap was replaced by money losses; scaling the game's own loans (ap_loans) is a different thing
+    source = (MOD_CONTENT / "ap_main.script.lua").read_text(encoding="utf-8").lower()
+    assert "forced_loan" not in source and "forced loan" not in source and "makeloan" not in source

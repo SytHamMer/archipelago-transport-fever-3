@@ -199,3 +199,15 @@ def test_slot_data_without_a_money_scale_keeps_the_base_amounts(bridge, tmp_path
     bridge.write_inbox(SLOT_DATA, ["Money Grant (small)"])
     effects = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["effects"]
     assert effects[0]["amount"] == 50000
+
+
+def test_the_loan_scale_reaches_the_mod_through_the_config(bridge, tmp_path):
+    bridge.write_inbox({**SLOT_DATA, "loan_scale": 10}, [])
+    inbox = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))
+    assert inbox["config"]["loan_scale"] == 10
+
+
+def test_slot_data_without_a_loan_scale_leaves_the_loans_alone(bridge, tmp_path):
+    bridge.write_inbox(SLOT_DATA, [])
+    inbox = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))
+    assert "loan_scale" not in inbox["config"]

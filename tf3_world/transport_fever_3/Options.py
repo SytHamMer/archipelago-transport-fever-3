@@ -99,6 +99,14 @@ class MoneyScale(Range):
     default = 100
 
 
+class LoanScale(Range):
+    """Percentage applied to the amount of every bank loan (100 = the game's amounts, which are very large in 2020)."""
+    display_name = "Loan scale (%)"
+    range_start = 1
+    range_end = 200
+    default = 10
+
+
 @dataclass
 class TF3Options(PerGameCommonOptions):
     population_checks: PopulationChecks
@@ -119,6 +127,7 @@ class TF3Options(PerGameCommonOptions):
     goal_passengers: GoalPassengers
     goal_cargo: GoalCargo
     money_scale: MoneyScale
+    loan_scale: LoanScale
 
 
 def validate_goals(options: TF3Options) -> None:

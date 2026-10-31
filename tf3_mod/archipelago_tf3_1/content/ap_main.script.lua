@@ -36,7 +36,7 @@ local MODES = {
 }
 local TEMPLATE_SUFFIXES = 12 -- constructions are tagged "name@0" .. "name@11" in the menu
 
-local locks, checks, effects, notify, contract_sync
+local locks, checks, effects, notify, contract_sync, loans
 
 local state = {
 	last_tick = 0,
@@ -73,6 +73,7 @@ local function load_modules()
 	local function load(name) return require(MOD .. "::/" .. name .. ".lua") end
 	locks, checks, effects, notify = load("ap_locks"), load("ap_checks"), load("ap_effects"), load("ap_notify")
 	contract_sync = load("ap_contract_sync")
+	loans = load("ap_loans")
 end
 
 -- ===== catalog of lockable content, built once from the game's resources =====
@@ -275,6 +276,7 @@ local function adopt_seed(seed)
 	state.checks, state.goals, state.missions, state.applied, state.failures = {}, {}, {}, 0, {}
 	state.last_notified = nil -- a new seed starts a new silent baseline
 	state.spawned = nil
+	state.sent_loan_scale = nil
 	local previous = app.loadUserdata(DIR, outbox_name(seed))
 	if type(previous) == "table" and previous.seed == seed then
 		state.checks = previous.checks or {}
@@ -486,6 +488,39 @@ local function sync_contracts(inbox)
 	end
 end
 
+-- ===== bank loans =====
+-- The loans are made by the game's loan script (simulation side): their amounts are scaled by wrapping the functions
+-- that make them. The GUI side sends the wanted percentage as an event; the simulation side keeps it in its state so
+-- that it is applied again after a load. Loans the game already made keep their amount until it renews them.
+
+local LOAN_MAKERS = { "createSmallLoan", "createMediumLoan", "createLargeLoan", "createExtraLargeLoan" }
+
+local function patch_loans(percent)
+	if not loans then load_modules() end
+	local loan_util = ug_require("::/game_mechanics/finance/loan_util.tl")
+	if not loan_util.archipelago_wrapped then
+		loan_util.archipelago_wrapped = true
+		for _, name in ipairs(LOAN_MAKERS) do
+			local original = loan_util[name]
+			loan_util[name] = function(...)
+				local loan = original(...)
+				loan.amount = loans.scale_amount(loan.amount, loan_util.archipelago_percent)
+				return loan
+			end
+		end
+	end
+	loan_util.archipelago_percent = percent
+end
+
+-- GUI side: tell the simulation side the wanted percentage whenever it changes.
+local function send_loan_scale(inbox)
+	local percent = inbox.config and inbox.config.loan_scale
+	if type(percent) ~= "number" or percent == state.sent_loan_scale then return end
+	state.sent_loan_scale = percent
+	api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "ArchipelagoLoans", "scale", { percent = percent }))
+	say("loan scale sent: " .. percent)
+end
+
 -- Tells the player about received items and sent checks. The first tick of a seed only records what is already
 -- there, so reloading a game does not replay everything.
 local function notify_changes(inbox)
@@ -535,13 +570,27 @@ local function tick()
 	guarded("effects", apply_next_effect, player, inbox)
 	guarded("notify", notify_changes, inbox)
 	guarded("sync", sync_contracts, inbox)
+	guarded("loans", send_loan_scale, inbox)
 	guarded("outbox", write_outbox)
 end
 
 function data()
 	return {
-		update = function(_userParams, _state, _dt) end,
-		handleEvent = function(_userParams, _state, _src, _id, _name, _param) end,
+		update = function(_userParams, game_state, _dt)
+			if not game_state:hasEventSubscriptions() then game_state:subscribeToEvent("scale") end
+			local saved = game_state:get()
+			local percent = type(saved) == "table" and saved.loan_percent or nil
+			if percent then
+				local ok, loan_util = pcall(ug_require, "::/game_mechanics/finance/loan_util.tl")
+				if ok and loan_util.archipelago_percent ~= percent then pcall(patch_loans, percent) end
+			end
+		end,
+		handleEvent = function(_userParams, game_state, _src, id, name, param)
+			if id == "ArchipelagoLoans" and name == "scale" and type(param) == "table" and type(param.percent) == "number" then
+				game_state:set({ loan_percent = param.percent })
+				pcall(patch_loans, param.percent)
+			end
+		end,
 		guiUpdate = function(...) guarded("tick", tick) end,
 		guiHandleEvent = function(...) end,
 	}
