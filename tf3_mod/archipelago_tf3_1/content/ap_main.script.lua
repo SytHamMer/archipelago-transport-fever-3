@@ -18,7 +18,8 @@ local MODES = {
 	-- and `edges` are fragments searched in the construction and edge decoration resources.
 	-- `era_cons` are the depots and stations that come in several eras (a mode that is not locked has no `cons`).
 	road = { vehicles = { "bus", "truck", "car" }, type_item = "Progressive Road Types",
-		era_cons = { "/depots/road/road_depot/", "/depots/road/road_maint_station", "/stations/street/small_stops/" },
+		era_cons = { "/depots/road/road_depot/", "/depots/road/road_maint_station", "/stations/street/small_stops/",
+			"/stations/street/modular_street_station/" },
 		types = { "/infrastructure/street/country/", "/infrastructure/street/town/", "/infrastructure/street/highway/" },
 		con_types = { "/infrastructure/street_construction/" },
 		tools = {
@@ -27,13 +28,14 @@ local MODES = {
 		} },
 	tram = { cons = { "/depots/road/tram_depot/" }, streets = { "/infrastructure/street/tram/" }, vehicles = { "tram" },
 		tools = { { item = "Tool: Tram Tracks", tags = { "::/gui/construction/tools/tram_track_tool.res" } } } },
-	rail = { cons = { "/stations/rail/", "/depots/rail/" }, meta = { "/stations/rail/" },
+	rail = { cons = { "/stations/rail/", "/depots/rail/" }, meta = { "/stations/rail/" }, era_cons = { "/depots/rail/" },
 		vehicles = { "train", "waggon" }, type_item = "Progressive Rail Tracks", types = { "/infrastructure/track/" },
 		tools = {
 			{ item = "Tool: Rail Signals", cons = { "/infrastructure/signal/" } },
 			{ item = "Tool: Electrification", tags = { "::/gui/construction/tools/rail_electrification_tool.res" } },
 		} },
-	water = { cons = { "/stations/water/", "/depots/water/" }, meta = { "/stations/water/" }, vehicles = { "ship" } },
+	water = { cons = { "/stations/water/", "/depots/water/" }, meta = { "/stations/water/" }, era_cons = { "/depots/water/" },
+		vehicles = { "ship" } },
 	air = { cons = { "/stations/air/airfield", "/stations/air/airport", "/depots/air/" }, meta = { "/stations/air/" },
 		streets = { "/infrastructure/street/airport/" }, vehicles = { "plane", "helicopter", "zeppelin" } },
 }
@@ -157,6 +159,9 @@ end
 --   that order, so the later ones are tiered by their index.
 -- * Other stations, such as the small bus stops, are separate constructions with their own first year.
 local ERA_TEMPLATE_YEARS = { [1] = 1940, [2] = 1980 }
+-- The street terminal (bus, truck and tram platforms) has six templates: three passenger ones, then three cargo ones,
+-- each trio in the eras 1900, 1950 and 1990.
+local TERMINAL_TEMPLATE_YEARS = { [1] = 1950, [2] = 1990, [4] = 1950, [5] = 1990 }
 
 local function construction_variants(fragments)
 	local out = {}
@@ -170,7 +175,8 @@ local function construction_variants(fragments)
 						local year = years.original(table_.availability)
 						if year and year > 0 then out[#out + 1] = { tag = name, year = year } end
 					else
-						for index, year in pairs(ERA_TEMPLATE_YEARS) do
+						local template_years = name:find("modular_terminal", 1, true) and TERMINAL_TEMPLATE_YEARS or ERA_TEMPLATE_YEARS
+						for index, year in pairs(template_years) do
 							out[#out + 1] = { tag = name .. "@" .. index, year = year }
 						end
 					end
