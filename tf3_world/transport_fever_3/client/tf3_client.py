@@ -71,10 +71,12 @@ def contracts_from_scout(infos, own_slot: int, location_name, item_name, player_
     """The reward of each check from the server's scout reply, keyed by check id.
 
     `infos` is a list of (location id, item id, receiving slot); an id that cannot be named is skipped.
+    `item_name(item id, slot)` must look the item up in the game of the receiving slot: item ids are numbered per
+    game, so the receiver may play another game than ours.
     """
     contracts = {}
     for location, item, receiver in infos:
-        check, reward = location_name(location), item_name(item)
+        check, reward = location_name(location), item_name(item, receiver)
         if check is None or reward is None:
             continue
         contracts[check] = {"item": reward, "to": player_name(receiver) or f"Player {receiver}",
@@ -317,7 +319,7 @@ def launch(*launch_args) -> None:
                 self.contracts = contracts_from_scout(
                     infos, own_slot=self.slot,
                     location_name=lambda code: self.location_names.lookup_in_slot(code, self.slot),
-                    item_name=lambda code: self.item_names.lookup_in_slot(code, self.slot),
+                    item_name=lambda code, slot: self.item_names.lookup_in_slot(code, slot),
                     player_name=lambda slot: self.player_names.get(slot))
                 if self.sync:
                     self.sync.set_contracts(self.contracts)

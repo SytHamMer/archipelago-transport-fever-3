@@ -7,13 +7,15 @@ SLOT = {
     "checks": {"population": [500], "company_level": [], "passengers": [], "cargo": [], "first_line": False, "delivery": []},
 }
 LOCATIONS = {10: "population:1", 11: "company_level:2"}
-ITEMS = {100: "Rail Transport", 101: "Cargo Class: Bulk"}
+# Item ids are numbered per game: the same id names a different item in each player's game.
+ITEMS_BY_SLOT = {1: {100: "Rail Transport", 101: "Cargo Class: Bulk"},
+                 2: {100: "Hookshot", 101: "Master Sword"}}
 PLAYERS = {1: "Me", 2: "Alice"}
 
 
 def scout(infos):
-    return contracts_from_scout(infos, own_slot=1, location_name=LOCATIONS.get, item_name=ITEMS.get,
-                                player_name=PLAYERS.get)
+    return contracts_from_scout(infos, own_slot=1, location_name=LOCATIONS.get,
+                                item_name=lambda code, slot: ITEMS_BY_SLOT[slot].get(code), player_name=PLAYERS.get)
 
 
 def test_an_own_reward_is_marked_own():
@@ -21,7 +23,20 @@ def test_an_own_reward_is_marked_own():
 
 
 def test_a_reward_for_another_player_names_the_receiver():
-    assert scout([(11, 101, 2)]) == {"company_level:2": {"item": "Cargo Class: Bulk", "to": "Alice", "own": False}}
+    assert scout([(11, 101, 2)]) == {"company_level:2": {"item": "Master Sword", "to": "Alice", "own": False}}
+
+
+def test_the_item_name_comes_from_the_game_of_the_receiver_not_ours():
+    # the same item id 100 is "Rail Transport" for us and "Hookshot" for a player of another game
+    assert scout([(10, 100, 1)])["population:1"]["item"] == "Rail Transport"
+    assert scout([(10, 100, 2)])["population:1"]["item"] == "Hookshot"
+
+
+def test_names_from_other_games_survive_the_inbox_file(tmp_path):
+    contracts = {"population:1": {"item": 'Zelda "Master" Swordé — 100%', "to": "Alice (Zélda)", "own": False}}
+    Bridge(tmp_path).write_inbox(SLOT, [], contracts=contracts)
+    written = luafile.loads((tmp_path / INBOX_NAME).read_text(encoding="utf-8"))
+    assert written["contracts"] == contracts
 
 
 def test_a_location_or_item_that_cannot_be_named_is_skipped():
