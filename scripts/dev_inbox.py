@@ -33,7 +33,7 @@ def slot_data(seed: str, eras: tuple[int, int] = (1920, 1960)) -> dict:
     return {
         "version": 1, "seed": seed, "eras": {"B": eras[0], "C": eras[1]},
         "goals": {"population": 2500, "company_level": 0, "passengers": 0, "cargo": 0},
-        "checks": {"population": [500, 501, 2000], "company_level": [2, 3], "passengers": [50, 100], "cargo": [20],
+        "checks": {"population": [500, 501, 700], "company_level": [2, 3], "passengers": [50, 100], "cargo": [20],
                    "first_line": True, "delivery": [100], "missions": [1, 2, 3]},
     }
 
@@ -52,6 +52,7 @@ def main() -> None:
     contracts = {
         "population:1": {"item": "Progressive Rail Vehicles", "to": "Me", "own": True},
         "population:2": {"item": "Cargo Class: Bulk", "to": "Alice", "own": False},
+        "population:3": {"item": "Money Grant (large)", "to": "Me", "own": True},
         "company_level:2": {"item": "Money Grant (small)", "to": "Me", "own": True},
     } if args.contracts else None
     log = [{"item": item, "from": args.sender, "where": args.where} for item in args.items] if args.sender else None
