@@ -45,12 +45,52 @@ def test_setting_contracts_rewrites_the_inbox(tmp_path):
     assert written["contracts"]["population:1"]["to"] == "Me"
 
 
-def test_the_report_lists_open_contracts_and_the_progress():
-    contracts = {"population:1": {"item": "Rail Transport", "to": "Me", "own": True},
-                 "company_level:2": {"item": "Cargo Class: Bulk", "to": "Alice", "own": False}}
-    lines = contracts_report(contracts, done={"population:1"})
-    assert lines[0] == "Contracts: 1/2 done"
-    assert lines[1:] == ["company_level:2 -> Cargo Class: Bulk for Alice"]
+CHECKS = {"population": [500, 1000, 2500], "company_level": [2, 3], "passengers": [100], "cargo": [50],
+          "first_line": True, "delivery": [100, 500], "missions": [1, 2]}
+
+
+def reward(item="Rail Transport", to="Me", own=True):
+    return {"item": item, "to": to, "own": own}
+
+
+def test_the_report_lists_the_next_contracts_in_readable_text_with_their_reward():
+    contracts = {"population:1": reward(), "population:2": reward("Cargo Class: Bulk", "Alice", False),
+                 "company_level:2": reward("Money Grant (small)")}
+    lines = contracts_report(contracts, done={"population:1"}, checks=CHECKS)
+    assert lines[0] == "Contracts: 1/3 done"
+    assert lines[1:] == ["Population reached 1,000 -> Cargo Class: Bulk for Alice",
+                         "Company level 2 reached -> Money Grant (small)"]
+
+
+def test_only_the_next_step_of_each_ladder_and_delivery_is_listed_but_every_first_line():
+    contracts = {"population:1": reward(), "population:2": reward(), "line:rail": reward(), "line:road": reward(),
+                 "delivered:wool:1": reward(), "delivered:wool:2": reward()}
+    lines = contracts_report(contracts, done=set(), checks=CHECKS)
+    assert len(lines) == 1 + 4  # header, population:1, both lines, delivered:wool:1
+    assert "Population reached 500 -> Rail Transport" in lines
+    assert "First rail line built -> Rail Transport" in lines
+    assert "Delivered 100 wool -> Rail Transport" in lines
+    assert lines[0] == "Contracts: 0/6 done (2 later contracts not shown, /contracts all lists everything)"
+
+
+def test_all_lists_every_open_contract():
+    contracts = {"population:1": reward(), "population:2": reward()}
+    lines = contracts_report(contracts, done=set(), checks=CHECKS, show_all=True)
+    assert lines == ["Contracts: 0/2 done", "Population reached 500 -> Rail Transport",
+                     "Population reached 1,000 -> Rail Transport"]
+
+
+def test_every_check_family_has_a_readable_text():
+    contracts = {c: reward() for c in ("passengers:1", "cargo:1", "mission:2", "delivered:iron_ore:2")}
+    lines = contracts_report(contracts, done=set(), checks=CHECKS)[1:]
+    assert sorted(lines) == sorted([
+        "Passengers transported: 100 -> Rail Transport", "Cargo transported: 50 -> Rail Transport",
+        "Missions completed: 2 -> Rail Transport", "Delivered 500 iron ore -> Rail Transport"])
+
+
+def test_an_unknown_check_is_listed_by_its_id_and_without_the_config_too():
+    lines = contracts_report({"mystery:1": reward()}, done=set(), checks=None)
+    assert lines[1:] == ["mystery:1 -> Rail Transport"]
 
 
 def test_the_report_without_contracts_says_so():

@@ -109,7 +109,7 @@ Every open check is a **contract**, shown with the game's own contract interface
 - **Contracts do not need to be accepted to be completed.** The check is reached when the game reaches its value; the mod then accepts and finishes the contract by itself, and the reward goes out. Accepting a contract only moves it to "contract in progress". The game's own subsidies are separate and keep appearing as usual, **as long as fewer than 5 contracts are active**: the game only proposes new subsidies while fewer than 5 are active, and it counts ours. So do not accept more than 5 Archipelago contracts at the same time, or its own subsidies (such as "Connect towns") stop appearing until some of ours are finished.
 - Only the next step of each ladder is shown (the next population level, the next company level, the next delivery tier of each cargo, every first line), so the game is not flooded with contracts.
 - If you **decline** a contract, it comes back with a new identifier until its check is reached.
-- The client command `/contracts` lists the open contracts with their reward.
+- The client command `/contracts` lists the next open contracts in plain text with their reward (the same ones the game shows); `/contracts all` lists every open contract.
 - Each item received and each check sent is also announced by a **notification** with the Archipelago logo (top of the screen, then the notifications tab): "Rail Transport from Alice (their check)", "Population reached 2,500"... When a game is loaded, nothing that was already received is announced again. Items and checks also appear in the client window.
 
 ## 9. When it does not work

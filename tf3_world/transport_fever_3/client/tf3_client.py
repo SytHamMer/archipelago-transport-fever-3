@@ -82,16 +82,76 @@ def contracts_from_scout(infos, own_slot: int, location_name, item_name, player_
     return contracts
 
 
-def contracts_report(contracts: dict, done) -> list[str]:
-    """Console lines for /contracts: the progress, then the open contracts with their reward."""
+FAMILY_ORDER = ("population", "company_level", "passengers", "cargo", "mission", "line", "delivered")
+
+
+def describe_check(check: str, checks: dict | None) -> str:
+    """Readable text of a check id, as the in-game contract shows it (the id itself when it is not known)."""
+    checks = checks or {}
+    family, *parts = check.split(":")
+
+    def threshold(name: str, index: str):
+        values = checks.get(name) or []
+        return values[int(index) - 1] if index.isdigit() and 0 < int(index) <= len(values) else None
+
+    if family == "population" and threshold("population", parts[0]) is not None:
+        return f"Population reached {threshold('population', parts[0]):,}"
+    if family == "company_level" and parts:
+        return f"Company level {parts[0]} reached"
+    if family == "passengers" and threshold("passengers", parts[0]) is not None:
+        return f"Passengers transported: {threshold('passengers', parts[0]):,}"
+    if family == "cargo" and threshold("cargo", parts[0]) is not None:
+        return f"Cargo transported: {threshold('cargo', parts[0]):,}"
+    if family == "mission" and threshold("missions", parts[0]) is not None:
+        return f"Missions completed: {threshold('missions', parts[0]):,}"
+    if family == "line" and parts:
+        return f"First {parts[0]} line built"
+    if family == "delivered" and len(parts) == 2 and threshold("delivery", parts[1]) is not None:
+        return f"Delivered {threshold('delivery', parts[1]):,} {parts[0].replace('_', ' ')}"
+    return check
+
+
+def _next_contracts(open_ids: list[str]) -> list[str]:
+    """The next step of each ladder and of each cargo's deliveries, and every first line (as the game shows them)."""
+    best: dict[str, tuple[int, str]] = {}
+    chosen = []
+    for check in open_ids:
+        family, *parts = check.split(":")
+        if family == "line" or not parts or not parts[-1].isdigit():
+            chosen.append(check)
+            continue
+        group = f"{family}:{parts[0]}" if family == "delivered" else family
+        step = int(parts[-1])
+        if group not in best or step < best[group][0]:
+            best[group] = (step, check)
+    chosen += [check for _, check in best.values()]
+    return chosen
+
+
+def _order(check: str):
+    family = check.split(":")[0]
+    return FAMILY_ORDER.index(family) if family in FAMILY_ORDER else len(FAMILY_ORDER), check
+
+
+def contracts_report(contracts: dict, done, checks: dict | None = None, show_all: bool = False) -> list[str]:
+    """Console lines for /contracts: the progress, then the next open contracts with their reward.
+
+    `checks` holds the thresholds of the slot data (to write the contracts in plain text); `show_all` lists every
+    open contract, not only the next step of each ladder.
+    """
     if not contracts:
         return ["No contracts known yet (waiting for the server)."]
-    open_ids = sorted(check for check in contracts if check not in done)
-    lines = [f"Contracts: {len(contracts) - len(open_ids)}/{len(contracts)} done"]
-    for check in open_ids:
+    open_ids = [check for check in contracts if check not in done]
+    shown = sorted(open_ids if show_all else _next_contracts(open_ids), key=_order)
+    hidden = len(open_ids) - len(shown)
+    header = f"Contracts: {len(contracts) - len(open_ids)}/{len(contracts)} done"
+    if hidden:
+        header += f" ({hidden} later contracts not shown, /contracts all lists everything)"
+    lines = [header]
+    for check in shown:
         reward = contracts[check]
         suffix = "" if reward["own"] else f" for {reward['to']}"
-        lines.append(f"{check} -> {reward['item']}{suffix}")
+        lines.append(f"{describe_check(check, checks)} -> {reward['item']}{suffix}")
     return lines
 
 
@@ -188,9 +248,10 @@ def launch(*launch_args) -> None:
             self.output(f"Using {folder}")
             return True
 
-        def _cmd_contracts(self) -> bool:
-            """List the open contracts with their reward."""
-            for line in contracts_report(self.ctx.contracts, done=self.ctx.checked_names()):
+        def _cmd_contracts(self, what: str = "") -> bool:
+            """List the next open contracts with their reward (/contracts all: every open contract)."""
+            for line in contracts_report(self.ctx.contracts, done=self.ctx.checked_names(),
+                                         checks=self.ctx.slot_checks(), show_all=what.strip().lower() == "all"):
                 self.output(line)
             return True
 
@@ -208,6 +269,9 @@ def launch(*launch_args) -> None:
             self.warned_year = False
             self.warned_folder = False
             self.contracts: dict = {}  # check id -> reward, filled from the server's scout reply
+
+        def slot_checks(self) -> dict | None:
+            return self.pending_slot[0].get("checks") if self.pending_slot else None
 
         def checked_names(self) -> set:
             return {self.location_names.lookup_in_slot(code, self.slot) for code in self.checked_locations}

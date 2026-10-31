@@ -33,7 +33,7 @@ Each open check is shown as a real game contract, with the game's own window (ta
 
 **Contracts do not need to be accepted to be completed.** A check is reached as soon as the game reaches its value, whether or not the contract was accepted; the mod then accepts and finishes the contract by itself. Accepting only makes it appear under "contract in progress". **Do not accept more than 5 Archipelago contracts at the same time**: the game only proposes its own subsidies while fewer than 5 contracts are active, so accepting more of ours stops its subsidies (such as "Connect towns") from appearing until some of ours are finished. The game's own subsidies (for example "Connect towns") keep appearing as usual as long as you do not accept too many contracts, see below. If you decline a contract it comes back, until its check is reached.
 
-Only the next step of each ladder is shown (the next population level, the next company level, the next delivery tier of each cargo, every first line), so the game does not fill up with contracts. The client command `/contracts` lists the open contracts with their reward.
+Only the next step of each ladder is shown (the next population level, the next company level, the next delivery tier of each cargo, every first line), so the game does not fill up with contracts. The client command `/contracts` lists the next open contracts in plain text with their reward; `/contracts all` lists every open contract.
 
 ## YAML options
 
