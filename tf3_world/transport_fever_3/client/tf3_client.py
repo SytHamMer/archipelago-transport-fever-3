@@ -15,6 +15,8 @@ STEAM_ROOT = Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")
 TF3_APP_ID = "3493540"
 EXCHANGE_FOLDER = "towns_industries"  # one of the two userdata folders the game lets mods use
 HEARTBEAT_TIMEOUT = 10  # seconds without a mod heartbeat before the game counts as idle
+COOLDOWN_SECONDS = 15  # DeathLinks closer together than this are one loss, not a burst
+MAX_PENDING_DEATHS = 20
 
 
 def find_userdata_dir(steam_root: Path | None = None, override: str | None = None) -> Path | None:
@@ -95,6 +97,19 @@ def contracts_from_scout(
         contracts[check] = {"item": reward, "to": player_name(receiver) or f"Player {receiver}",
                             "own": receiver == own_slot}
     return contracts
+
+
+def death_effect(payload: dict, own_name: str, money_scale: int) -> dict | None:
+    """The money loss of a DeathLink received from another player, or None when it must be ignored.
+
+    The id comes from the time of the death, so it only grows: the mod keeps the highest id it has applied. Our own
+    deaths bounce back to us and are ignored.
+    """
+    source, moment = payload.get("source"), payload.get("time")
+    if not isinstance(moment, (int, float)) or not isinstance(source, str) or source == own_name:
+        return None
+    amount = data.TRAPS["Money Loss (small)"] * money_scale // 100
+    return {"id": int(moment * 1000), "amount": amount, "source": source, "cause": str(payload.get("cause") or "")}
 
 
 FAMILY_ORDER = ("population", "company_level", "passengers", "cargo", "mission", "line", "delivered")
@@ -218,8 +233,11 @@ class PollResult:
 class TF3Sync:
     """The logic of the client, independent of the network: slot state in, checks and goal status out."""
 
-    def __init__(self, bridge: Bridge) -> None:
+    def __init__(self, bridge: Bridge, own_name: str = "") -> None:
         self.bridge = bridge
+        self.own_name = own_name  # our slot name: our own DeathLinks come back to us
+        self.deaths: list[dict] = []
+        self.last_death_time = 0.0
         self.slot_data: dict | None = None
         self.received: list[str] = []
         self.log: list[dict] | None = None
@@ -231,7 +249,7 @@ class TF3Sync:
         if self.slot_data is None:
             return
         try:
-            self.bridge.write_inbox(self.slot_data, self.received, self.log, self.contracts)
+            self.bridge.write_inbox(self.slot_data, self.received, self.log, self.contracts, self.deaths)
             self.inbox_dirty = False
         except OSError:
             self.inbox_dirty = True
@@ -250,6 +268,23 @@ class TF3Sync:
         self.log = log
         self._write_inbox()
 
+    def on_death(self, payload: dict) -> None:
+        """A DeathLink from another player: the mod makes the company lose money (once, in order)."""
+        if self.slot_data is None or not self.slot_data.get("death_link"):
+            return
+        effect = death_effect(payload, self.own_name, self.slot_data.get("money_scale", 100))
+        if effect is None or any(item["id"] == effect["id"] for item in self.deaths):
+            return
+        if effect["id"] / 1000 - self.last_death_time < COOLDOWN_SECONDS:
+            return
+        self.last_death_time = effect["id"] / 1000
+        self.deaths = [*self.deaths, effect][-MAX_PENDING_DEATHS:]
+        self._write_inbox()
+
+    def acknowledge_deaths(self, applied: int) -> None:
+        """Forget the deaths the mod has applied, so the inbox does not carry them forever."""
+        self.deaths = [death for death in self.deaths if death["id"] > applied]
+
     def set_contracts(self, contracts: dict) -> None:
         self.contracts = contracts
         self._write_inbox()
@@ -266,6 +301,7 @@ class TF3Sync:
         outbox = self.bridge.read_outbox()
         if outbox is None or self.slot_data is None:
             return PollResult()
+        self.acknowledge_deaths(outbox.applied_deaths)
         active = [name for name, value in self.slot_data["goals"].items() if value > 0]
         goal = bool(active) and all(outbox.goals.get(name) is True for name in active)
         status = "game_connected" if now - outbox.heartbeat <= HEARTBEAT_TIMEOUT else "game_idle"
@@ -329,7 +365,7 @@ def launch(*launch_args) -> None:
             return {self.location_names.lookup_in_slot(code, self.slot) for code in self.checked_locations}
 
         def set_folder(self, folder: Path) -> None:
-            self.sync = TF3Sync(Bridge(folder))
+            self.sync = TF3Sync(Bridge(folder), own_name=self.player_names.get(self.slot, ""))
             if self.pending_slot:
                 self.sync.on_connected(*self.pending_slot)
 
@@ -356,7 +392,10 @@ def launch(*launch_args) -> None:
             if cmd == "Connected":
                 self.pending_slot = (args["slot_data"], *self.received_with_sources())
                 if self.sync:
+                    self.sync.own_name = self.player_names.get(self.slot, "")
                     self.sync.on_connected(*self.pending_slot)
+                asyncio.create_task(self.update_death_link(bool(args["slot_data"].get("death_link"))),
+                                    name="TF3 death link tag")
                 if self.poll_task is None or self.poll_task.done():
                     self.poll_task = asyncio.create_task(self.poll_loop(), name="TF3 outbox poll")
                 everything = sorted(set(args.get("missing_locations", [])) | set(args.get("checked_locations", [])))
@@ -377,6 +416,12 @@ def launch(*launch_args) -> None:
                 self.pending_slot = (self.pending_slot[0], *self.received_with_sources())
                 if self.sync:
                     self.sync.on_items(*self.pending_slot[1:])
+
+        def on_deathlink(self, data: dict) -> None:
+            """Another player died: the company loses money (see TF3Sync.on_death)."""
+            super().on_deathlink(data)
+            if self.sync:
+                self.sync.on_death(data)
 
         def connected_to_server(self) -> bool:
             return self.server is not None and self.slot is not None

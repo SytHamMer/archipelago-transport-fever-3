@@ -119,6 +119,7 @@ class TF3World(World):
             "eras": dict(data.ERA_STARTS),
             "money_scale": options.money_scale.value,
             "loan_scale": options.loan_scale.value,
+            "death_link": bool(options.death_link.value),
             "goals": {
                 "population": options.goal_population.value,
                 "company_level": options.goal_company_level.value,

@@ -7,6 +7,7 @@ import argparse
 import importlib.util
 import os
 import sys
+import time
 import types
 from pathlib import Path
 
@@ -64,6 +65,7 @@ def main() -> None:
     parser.add_argument("--eras", type=int, nargs=2, default=(1920, 1960), metavar=("B", "C"))
     parser.add_argument("--sender", help="pretend every item comes from this other player (fills the notification log)")
     parser.add_argument("--where", default="a faraway chest", help="source check shown with --sender")
+    parser.add_argument("--death-from", help="add a DeathLink loss from this player (the mod must lose money once)")
     parser.add_argument("--contracts", action="store_true", help="add fake contract rewards for the population and level checks")
     args = parser.parse_args()
     if args.dir is None:
@@ -76,7 +78,9 @@ def main() -> None:
         "company_level:2": {"item": "Money Grant (small)", "to": "Me", "own": True},
     } if args.contracts else None
     log = [{"item": item, "from": args.sender, "where": args.where} for item in args.items] if args.sender else None
-    load_bridge()(args.dir).write_inbox(slot_data(args.seed, tuple(args.eras)), args.items, log, contracts)
+    deaths = [{"id": int(time.time() * 1000), "amount": 1_000_000, "source": args.death_from,
+               "cause": f"{args.death_from} fell into lava"}] if args.death_from else None
+    load_bridge()(args.dir).write_inbox(slot_data(args.seed, tuple(args.eras)), args.items, log, contracts, deaths)
     print(f"inbox written to {args.dir} with {len(args.items)} items, seed {args.seed}")
 
 

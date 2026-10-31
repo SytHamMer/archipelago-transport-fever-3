@@ -99,11 +99,11 @@ def test_failed_inbox_write_is_kept_for_a_retry_not_raised(sync, tmp_path, monke
     calls = []
     real = sync.bridge.write_inbox
 
-    def flaky(slot_data, received, log=None, contracts=None):
+    def flaky(slot_data, received, log=None, contracts=None, deaths=None):
         calls.append(1)
         if len(calls) == 1:
             raise PermissionError("busy")
-        real(slot_data, received, log, contracts)
+        real(slot_data, received, log, contracts, deaths)
 
     monkeypatch.setattr(sync.bridge, "write_inbox", flaky)
     sync.on_connected(slot(population=100), ["Rail Transport"])  # must not raise

@@ -23,6 +23,7 @@ class Outbox:
     applied: int
     heartbeat: int
     year: int | None = None  # in-game year, absent in outboxes written by older mod versions
+    applied_deaths: int = 0  # the highest DeathLink effect the mod has applied
 
 
 def _effect(index: int, name: str, scale: int = 100) -> dict | None:
@@ -48,11 +49,12 @@ class Bridge:
         return self.dir / f"{OUTBOX_PREFIX}{safe_seed(self.seed or '')}.lua"
 
     def write_inbox(self, slot_data: dict, received: list[str], log: list[dict] | None = None,
-                    contracts: dict | None = None) -> None:
+                    contracts: dict | None = None, deaths: list[dict] | None = None) -> None:
         """Write the complete wanted state. `received` is the full ordered list of items received so far.
 
         `log` (optional) says who sent each of them and for which check, for the in-game notifications.
         `contracts` (optional) maps each check id to its reward `{item, to, own}`.
+        `deaths` (optional) are the DeathLink effects to apply: `{id, amount, source, cause}`, `id` growing with time.
         """
         self.seed = slot_data["seed"]
         items: dict[str, int] = {}
@@ -78,6 +80,8 @@ class Bridge:
             inbox["log"] = log
         if contracts is not None:
             inbox["contracts"] = contracts
+        if deaths:
+            inbox["deaths"] = deaths
         target = self.dir / INBOX_NAME
         temporary = self.dir / (INBOX_NAME + ".tmp")
         temporary.write_text(luafile.dumps(inbox), encoding="utf-8")
@@ -107,6 +111,7 @@ class Bridge:
                 applied=int(raw["applied"]),
                 heartbeat=int(raw["heartbeat"]),
                 year=int(raw["year"]) if "year" in raw else None,
+                applied_deaths=int(raw["applied_deaths"]) if "applied_deaths" in raw else 0,
             )
         except (OSError, luafile.LuaFormatError, KeyError, TypeError, ValueError):
             return None

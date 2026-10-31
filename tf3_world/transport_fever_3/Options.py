@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Choice, OptionError, PerGameCommonOptions, Range, Toggle
+from Options import Choice, DeathLink, OptionError, PerGameCommonOptions, Range, Toggle
 
 
 def _ladder(prefix: str, label: str, checks: int, first: int, last: int, top: int) -> tuple[type, type, type]:
@@ -142,6 +142,7 @@ class TF3Options(PerGameCommonOptions):
     goal_cargo: GoalCargo
     money_scale: MoneyScale
     loan_scale: LoanScale
+    death_link: DeathLink
 
 
 def validate_goals(options: TF3Options) -> None:

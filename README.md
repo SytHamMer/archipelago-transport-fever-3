@@ -72,6 +72,7 @@ The format of a YAML file, weights and random options are explained in the [offi
 | `mission_checks` | 3 | number of "N game missions completed" checks (0 to 30) |
 | `money_scale` | 100 | percentage applied to every money grant and loss (10 to 1000) |
 | `loan_scale` | 10 | percentage applied to the amount of every bank loan (1 to 200; 100 = the game's amounts, very large in 2020) |
+| `death_link` | off | when another player's game sends a DeathLink, the company loses money (the loss of "Money Loss (small)", scaled by `money_scale`) |
 | `goal_population`, `goal_company_level`, `goal_passengers`, `goal_cargo` | 2500, 0, 0, 0 | goals; 0 disables a goal; the game is won when **all** active goals are reached |
 
 Bank loans are scaled by `loan_scale`: the game multiplies its loan amounts by 2.4 in 2020 (tens of millions each), which would make the multiworld's money meaningless. The four loans the game creates when the game starts use the default scale (10%) because the game makes them before the mod can read your YAML value; your `loan_scale` applies to every loan the game makes afterwards (about every 6 months of game time, or after you take one).

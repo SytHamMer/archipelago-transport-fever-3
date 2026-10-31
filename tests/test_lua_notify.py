@@ -232,3 +232,19 @@ def test_a_delivery_check_names_the_amount_of_its_own_cargo():
 def test_the_progress_goal_of_a_delivery_uses_the_amount_of_its_own_cargo():
     assert progress_spec("delivered:vehicles:2", PER_CARGO_CONFIG) == {"kind": "delivered", "goal": 100, "cargo": "vehicles"}
     assert progress_spec("delivered:vehicles:1", PER_CARGO_CONFIG)["goal"] == 20
+
+
+def death_message(effect):
+    runtime, notify = load_module("ap_notify")
+    return from_lua(notify.death_message(to_lua(runtime, effect)))
+
+
+def test_a_death_message_names_who_died_and_what_it_costs():
+    message = death_message({"id": 1, "amount": 1_000_000, "source": "Alice", "cause": "Alice fell into lava"})
+    assert message == {"title": "Archipelago: DeathLink",
+                       "text": "Alice fell into lava - the company loses 1,000,000"}
+
+
+def test_a_death_message_without_a_cause_uses_the_name():
+    message = death_message({"id": 1, "amount": 500_000, "source": "Alice", "cause": ""})
+    assert message["text"] == "Alice died - the company loses 500,000"

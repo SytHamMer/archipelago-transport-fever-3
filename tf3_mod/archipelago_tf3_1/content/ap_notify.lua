@@ -10,6 +10,7 @@ M.ITEM_TITLE = "Archipelago: item received"
 M.CHECK_TITLE = "Archipelago: check sent"
 M.CONTRACT_TITLE = "Archipelago: contract completed"
 M.SUMMARY_TITLE = "Archipelago"
+M.DEATH_TITLE = "Archipelago: DeathLink"
 
 local function with_separators(number)
 	local digits = tostring(math.floor(number))
@@ -117,6 +118,13 @@ function M.open_contracts(contracts, done, config)
 		}
 	end
 	return out
+end
+
+-- The message for a DeathLink effect { amount, source, cause }: who died, and what the company loses.
+function M.death_message(effect)
+	local cause = effect.cause
+	if type(cause) ~= "string" or cause == "" then cause = tostring(effect.source) .. " died" end
+	return { title = M.DEATH_TITLE, text = cause .. " - the company loses " .. with_separators(effect.amount) }
 end
 
 -- Text of a received item: who sent it and for which check, when known. Our own checks are shown with the

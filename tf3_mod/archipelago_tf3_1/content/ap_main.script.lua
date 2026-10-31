@@ -43,7 +43,8 @@ local state = {
 	last_tick = 0,
 	catalog = nil,
 	last_menu = nil, last_vehicles = nil,
-	seed = nil, checks = {}, goals = {}, missions = {}, applied = 0, year = nil,
+	seed = nil, checks = {}, goals = {}, missions = {}, applied = 0, applied_deaths = 0, year = nil,
+	messages = {}, -- notifications waiting to be sent (DeathLink losses)
 	enforced = nil,
 	inflight = false,
 	failures = {}, -- failed attempts per effect id
@@ -279,6 +280,7 @@ local function adopt_seed(seed)
 	-- A different seed means a different game: start from the outbox of that seed, or from nothing.
 	state.seed = seed
 	state.checks, state.goals, state.missions, state.applied, state.failures = {}, {}, {}, 0, {}
+	state.applied_deaths, state.messages = 0, {}
 	state.last_notified = nil -- a new seed starts a new silent baseline
 	state.spawned = nil
 	state.sent_loan_scale = nil
@@ -288,6 +290,7 @@ local function adopt_seed(seed)
 		state.goals = previous.goals or {}
 		state.missions = previous.missions or {}
 		state.applied = previous.applied or 0
+		state.applied_deaths = previous.applied_deaths or 0
 	end
 end
 
@@ -295,7 +298,7 @@ local function write_outbox()
 	if not state.seed then return end
 	app.saveUserdata(DIR, outbox_name(state.seed), {
 		version = FORMAT_VERSION, seed = state.seed, checks = state.checks, goals = state.goals, missions = state.missions,
-		applied = state.applied, heartbeat = os.time(), year = state.year,
+		applied = state.applied, applied_deaths = state.applied_deaths, heartbeat = os.time(), year = state.year,
 	})
 end
 
@@ -390,9 +393,11 @@ local function book_money(player, amount, on_done)
 	api.cmd.sendCommand(api.cmd.makeJournalBookAssetCmd(player, entry, api.type.Vec3f.new(0, 0, 0)), on_done)
 end
 
-local function apply_next_effect(player, inbox)
+-- Applies the next effect of `list` that the cursor `state[field]` has not passed: the effects of the received items
+-- (`applied`) or the DeathLink losses (`applied_deaths`, ids that come from the time of the death).
+local function apply_next_effect(player, list, field)
 	if state.inflight then return end
-	local effect = effects.pending(inbox.effects, state.applied)[1]
+	local effect = effects.pending(list, state[field])[1]
 	if not effect then return end
 	local seed = state.seed -- a callback arriving after a seed change must not move the new seed's cursor
 
@@ -402,7 +407,7 @@ local function apply_next_effect(player, inbox)
 	local function done(id)
 		release()
 		if state.seed ~= seed then return end
-		state.applied = id
+		state[field] = id
 		guarded("outbox", write_outbox) -- persist the cursor immediately so a crash cannot repeat the effect
 	end
 	-- A failing effect is retried a few times, then skipped, so it can never block the effects after it.
@@ -415,14 +420,18 @@ local function apply_next_effect(player, inbox)
 		end
 	end
 	local function on_money(_, success)
-		if success then done(effect.id) else failed("the game refused the command") end
+		if not success then failed("the game refused the command") return end
+		if field == "applied_deaths" and state.seed == seed then
+			state.messages[#state.messages + 1] = notify.death_message(effect)
+		end
+		done(effect.id)
 	end
 
 	state.inflight = true
 	local ok, err = pcall(function()
 		if effect.kind == "money" then
 			book_money(player, effect.amount, on_money)
-		elseif effect.kind == "money_loss" then
+		elseif effect.kind == "money_loss" or field == "applied_deaths" then
 			book_money(player, -effect.amount, on_money)
 		else
 			say("unknown effect kind " .. tostring(effect.kind) .. ", skipped")
@@ -550,6 +559,8 @@ local function notify_changes(inbox)
 	end
 	local messages = notify.diff(state.last_notified, current, inbox.config, nil, inbox.contracts)
 	state.last_notified = current
+	for _, message in ipairs(state.messages) do messages[#messages + 1] = message end -- DeathLink losses
+	state.messages = {}
 	for _, message in ipairs(messages) do
 		local ok, err = pcall(send_notification, message)
 		if not ok then problem("notification", err) break end
@@ -583,7 +594,8 @@ local function tick()
 		state.checks = checks.merge_monotonic(state.checks, result.checks)
 		state.goals = checks.merge_goals(state.goals, result.goals)
 	end
-	guarded("effects", apply_next_effect, player, inbox)
+	guarded("effects", apply_next_effect, player, inbox.effects, "applied")
+	guarded("deaths", apply_next_effect, player, inbox.deaths, "applied_deaths")
 	guarded("notify", notify_changes, inbox)
 	guarded("sync", sync_contracts, inbox)
 	guarded("loans", send_loan_scale, inbox)

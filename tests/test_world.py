@@ -130,3 +130,15 @@ class TestLoanScaleOption(TF3TestBase):
 
     def test_the_loan_scale_reaches_the_slot_data(self):
         assert self.world.fill_slot_data()["loan_scale"] == 100
+
+
+class TestDeathLinkOption(TF3TestBase):
+    options = {"death_link": 1}
+
+    def test_the_death_link_option_reaches_the_slot_data(self):
+        assert self.world.fill_slot_data()["death_link"] is True
+
+
+class TestDeathLinkIsOffByDefault(TF3TestBase):
+    def test_death_link_is_off_unless_asked_for(self):
+        assert self.world.fill_slot_data()["death_link"] is False

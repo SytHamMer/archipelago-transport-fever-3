@@ -53,6 +53,12 @@ Newest at the end of each section. Nothing here is started unless it says so.
 - **Ideas:** scale the amounts with the same factor as the prices (the inflation of the current year), keeping
   `money_scale` as the player's difficulty percentage; decide the base amounts from what a first line costs.
 
+## DeathLink
+
+- Receive only for now. A TF3 "death" to send (for example going bankrupt) is an open question.
+- The loss is fixed at "Money Loss (small)"; a YAML amount could be added.
+- The effect is applied when the mod next reads the inbox; a death received while the game is closed is lost (the server does not replay deaths).
+
 ## Known minor issues (from earlier reviews)
 
 - The locks flicker for up to 2 seconds when the client reconnects.
