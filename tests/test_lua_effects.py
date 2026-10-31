@@ -60,3 +60,38 @@ def test_failures_are_counted_per_effect_and_skip_after_the_limit():
     skipped = [module.register_failure(failures, 7) for _ in range(module.MAX_FAILURES)]
     assert skipped == [False] * (module.MAX_FAILURES - 1) + [True]
     assert module.register_failure(failures, 8) is False  # another effect starts from zero
+
+
+def inflation(year):
+    runtime, effects = load_module("ap_effects")
+    return effects.inflation(year)
+
+
+def scaled(amount, year):
+    runtime, effects = load_module("ap_effects")
+    return effects.scale_money(amount, year)
+
+
+def test_inflation_goes_from_one_in_1900_to_six_in_2020_exponentially():
+    assert inflation(1900) == 1
+    assert abs(inflation(2020) - 6) < 1e-9
+    assert abs(inflation(1960) - 6 ** 0.5) < 1e-9
+
+
+def test_inflation_is_clamped_outside_the_years_the_game_scales():
+    assert inflation(1850) == 1 and inflation(1000) == 1
+    assert abs(inflation(2100) - 6) < 1e-9
+
+
+def test_a_missing_year_means_no_inflation():
+    assert inflation(None) == 1
+
+
+def test_a_money_amount_follows_the_inflation_and_is_rounded_to_a_thousand():
+    assert scaled(50_000, 1900) == 50_000
+    assert scaled(50_000, 2020) == 300_000
+    assert scaled(250_000, 1960) == 612_000  # 250,000 x 2.449 rounded to a thousand
+
+
+def test_a_small_amount_never_rounds_to_zero():
+    assert scaled(100, 1900) == 1_000

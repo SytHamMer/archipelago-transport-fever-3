@@ -45,13 +45,13 @@
     ],
     "level_item": "Company Level +1",
     "money_items": {
-        "Money Grant (small)": 1000000,
-        "Money Grant (medium)": 5000000,
-        "Money Grant (large)": 20000000
+        "Money Grant (small)": 50000,
+        "Money Grant (medium)": 250000,
+        "Money Grant (large)": 1000000
     },
     "traps": {
-        "Money Loss (small)": 1000000,
-        "Money Loss (medium)": 5000000
+        "Money Loss (small)": 50000,
+        "Money Loss (medium)": 250000
     },
     "trap_weights": [
         3,

@@ -17,7 +17,7 @@ EXCHANGE_FOLDER = "towns_industries"  # one of the two userdata folders the game
 HEARTBEAT_TIMEOUT = 10  # seconds without a mod heartbeat before the game counts as idle
 COOLDOWN_SECONDS = 15  # DeathLinks closer together than this are one loss, not a burst
 MAX_PENDING_DEATHS = 20
-DEFAULT_DEATH_LOSS = 1_000_000  # seeds generated before the death_link_loss option
+DEFAULT_DEATH_LOSS = 50_000  # seeds generated before the death_link_loss option (1900 money)
 
 
 def find_userdata_dir(steam_root: Path | None = None, override: str | None = None) -> Path | None:

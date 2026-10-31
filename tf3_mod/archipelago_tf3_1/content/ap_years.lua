@@ -12,6 +12,8 @@ M.FIRST_YEAR, M.LAST_YEAR = 1800, 2200 -- a sort key in this range is a year we 
 function M.free(availability)
 	if type(availability) ~= "table" then return end
 	local year = availability.yearFrom
+	-- The game hides its placeholder models with a first year of 100000 (or -1): they must stay hidden.
+	if type(year) == "number" and (year < 0 or year > M.LAST_YEAR) then return end
 	if type(year) == "number" and year > 0 then
 		availability.notificationSortKey = year
 		availability.yearFrom = 0

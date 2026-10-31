@@ -60,23 +60,15 @@ To remove it: delete that folder from `mods` (game closed).
 An Archipelago game is a **dedicated game**: one slot, one seed. The mod is not attached to an existing save.
 
 1. New free-play (sandbox) game, with the mod enabled.
-2. **Start year: as late as possible, 2000 or later.** The maximum offered is 2020.
+2. **Start year: any year.** An early year (for example 1900) gives the game's early prices, a late one a rich economy.
 
-### Experiment: any start year
+### Why the start year does not matter
 
-The mod can also remove the first year of every vehicle, road and track type, station and depot when the game loads
-(`ap_years.lua`), and keeps the real year to build its tiers. With that, the start year no longer limits what the
-items can unlock, and an early start year gives the early prices (the game's prices follow the date). The client does
-not warn about an early year when the mod reports it did this. This is being tested: if you see vehicles that should be
-locked, or a missing menu, start in 2020 as described below.
+The game hides vehicles (and stations, tracks...) whose release year has not come yet, and its prices follow the date. When the game loads, the mod removes those first years (`ap_years.lua`: every vehicle, road and track type, station and depot can be built at any date) and keeps the real year in the content, so that its tiers of unlocks are still built on it. The items of the multiworld do the locking: with no item received, only the vehicles before 1920 are on sale, the second tier opens 1920 to 1960, the third the later ones. The mod also removes the end dates, so that old vehicles stay on sale, and leaves the game's hidden placeholder models alone.
 
-### Why the start year matters
+Each depot and station keeps its three styles (1900, 1940 and 1980); the later styles come with the second and third tier of vehicles of their mode.
 
-The game hides vehicles (and stations, tracks...) whose release year has not come yet. The mod's filters can only hide **more**: they cannot show a vehicle the game already hides. In a game that starts in 1890, a train from 1950 would be out of reach of any item, and waiting for years to pass defeats the idea of a faster game.
-
-Starting in 2020, everything is available by date, and the items of the multiworld do the locking. The mod also removes the end dates of vehicles and roads (like the official "vehicles without end year" mod), so that old vehicles stay on sale.
-
-If the year is before 2000, the client shows a warning in its window: recreate the game with a later year. The mod never sets the date itself.
+The money rewards and traps are written in 1900 money and multiplied when they are booked by the same growth as the game's prices (1 in 1900, 6 in 2020, exponentially in between), so they keep their weight at any start year. The client no longer warns about an early year when the mod says it removed the dates.
 
 ## 6. Set the options (YAML)
 
@@ -85,9 +77,9 @@ How YAML files work (the Launcher template, the `Players` folder, weights and ra
 Main options (see the README for the full list and an example):
 
 - **Missions**: `mission_checks` (3 by default, 0 to 30) creates contracts "N missions completed". A mission is an offer of the game, for example connecting two towns; it counts once completed, whatever its type.
-- **Money**: `money_scale` (in %, 100 by default) multiplies every money grant and every money loss (base: 1,000,000, 5,000,000 and 20,000,000 for grants; 1,000,000 and 5,000,000 for losses, sized for the prices of a 2020 start). Lower it for a harder game.
-- **Loans**: `loan_scale` (in %, 10 by default, 1 to 200) scales the amount of every bank loan. The game multiplies its loan amounts by 2.4 in 2020 (12 to 144 million each), which would make the money of the multiworld meaningless. The four loans the game creates when the game starts use the default scale (10%) because the game makes them before the mod can read your YAML value; your `loan_scale` applies to every loan the game makes afterwards (about every 6 months of game time, or after you take one).
-- **DeathLink**: `death_link` (off by default). When it is on and a player of another game dies, Archipelago tells your client, and the company loses the exact amount of `death_link_loss` (1,000,000 by default, `money_scale` is not applied), with a notification that names who died. Deaths of your own slot are ignored, two deaths less than 15 seconds apart count as one, and a company never sends a death: Transport Fever 3 has none.
+- **Money**: `money_scale` (in %, 100 by default) multiplies every money grant and every money loss (base, in 1900 money: 50,000, 250,000 and 1,000,000 for grants; 50,000 and 250,000 for losses; they are multiplied by the game's inflation of the year of the game). Lower it for a harder game.
+- **Loans**: `loan_scale` (in %, 100 by default, 1 to 200) scales the amount of every bank loan; 100 leaves the game's amounts, which already follow the year (small in 1900, tens of millions in 2020). Lower it in a game that starts late. The four loans the game creates when the game starts always use the game's amounts, because the game makes them before the mod can read your YAML value; your `loan_scale` applies to every loan the game makes afterwards.
+- **DeathLink**: `death_link` (off by default). When it is on and a player of another game dies, Archipelago tells your client, and the company loses `death_link_loss` (50,000 by default, in 1900 money, multiplied by the game's inflation; `money_scale` is not applied), with a notification that names who died. Deaths of your own slot are ignored, two deaths less than 15 seconds apart count as one, and a company never sends a death: Transport Fever 3 has none.
 - **Goals**: `goal_population`, `goal_company_level`, `goal_passengers`, `goal_cargo`. 0 disables a goal. The game is won when **all** active goals are reached. At least one must stay active.
 - **Map climate**: `climate` (temperate by default) is the climate of the map you will play. Delivery checks only ask for cargos it can produce and whose industries appear at the company rank your level items guarantee; harder cargos ask for smaller amounts. See the README.
 - **Checks**: population, passengers and cargo steps (count, first and last value), company levels, deliveries per cargo, first line of each mode, game missions.
@@ -109,7 +101,7 @@ These steps are Archipelago's in general: see the [official documentation](https
 - Five **tools** are unlocked by their own item: **Tool: Bus Lanes**, **Tool: Tram Tracks** (tram tracks on roads), **Tool: Rail Signals**, **Tool: Electrification** and **Tool: Noise Barriers**. A tool of a locked mode stays closed even with its item. Roundabouts and interchanges follow the road types, by year.
 - Four **cargo class** items (`Cargo Class: Bulk`, `Flatbed`, `Goods`, `Liquid`) unlock the specialised freight vehicles of that class (bulk wagons, tankers...). **Universal** vehicles (any cargo) and passenger vehicles are never locked by class: a universal cart or truck of the first tier carries every cargo from the start.
 - The "**company level +1**" items grant a level, with the game's usual benefits.
-- **Money** arrives as accounting entries; traps remove money (a loss of 1,000,000 or 5,000,000).
+- **Money** arrives as accounting entries; traps remove money (a loss of 50,000 or 250,000 in 1900 money).
 - Money effects are applied **only once**, but they are tied to the seed, not to the save: if you reload an old save, the money already received does not come back.
 
 ### Contracts

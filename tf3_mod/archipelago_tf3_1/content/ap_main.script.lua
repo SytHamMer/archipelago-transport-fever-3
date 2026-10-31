@@ -149,6 +149,30 @@ local function street_types(fragments)
 	return out
 end
 
+-- The era variants of the constructions matching the fragments (depots, stations): each template of a construction is
+-- a menu entry "<name>@<index>" with its own first year. Constructions with a single template have no variants.
+local function construction_variants(fragments)
+	local out = {}
+	local rep = api.res.constructionRep
+	for id, name in pairs(rep.getAll(true)) do
+		if type(name) == "string" then
+			for _, fragment in ipairs(fragments) do
+				if name:find(fragment, 1, true) then
+					local table_ = rep.getAsTable(id)
+					local templates = table_ and table_.constructionTemplates
+					if type(templates) == "table" and #templates > 1 then
+						for index, template in ipairs(templates) do
+							out[#out + 1] = { tag = name .. "@" .. (index - 1), year = years.original(template.availability) }
+						end
+					end
+					break
+				end
+			end
+		end
+	end
+	return out
+end
+
 -- Constructions matching the fragments, each with its first year (interchanges, roundabouts).
 local function construction_types(fragments)
 	local out = {}
@@ -191,7 +215,8 @@ local function build_catalog()
 		local types = street_types(def.types or {})
 		for _, entry_type in ipairs(construction_types(def.con_types or {})) do types[#types + 1] = entry_type end
 		catalog.modes[mode] = { menu = menu, vehicles = vehicles_of(def.vehicles),
-			type_item = def.type_item, types = types, tools = tool_list(def.tools) }
+			type_item = def.type_item, types = types, tools = tool_list(def.tools),
+			variants = construction_variants(def.cons or {}) }
 	end
 	return catalog
 end
@@ -245,6 +270,11 @@ local function catalog_report(catalog)
 		for key, count in pairs(classes) do class_parts[#class_parts + 1] = (key == "" and "none" or key) .. ":" .. count end
 		table.sort(class_parts)
 		say("catalog " .. mode .. " vehicle classes{" .. table.concat(class_parts, " ") .. "}")
+		local sample = {}
+		for index, variant in ipairs(entry.variants or {}) do
+			if index <= 6 then sample[#sample + 1] = tostring(variant.tag):match("([^/]+)$") .. ":" .. tostring(variant.year) end
+		end
+		say("catalog " .. mode .. " era variants: " .. #(entry.variants or {}) .. " " .. table.concat(sample, " "))
 		say("catalog " .. mode .. ": types=" .. #(entry.types or {}) .. " years{" .. table.concat(parts, " ") .. "} menu=" .. #entry.menu
 			.. " vehicles=" .. #entry.vehicles)
 	end
@@ -444,10 +474,12 @@ local function apply_next_effect(player, list, field)
 
 	state.inflight = true
 	local ok, err = pcall(function()
+		-- the amounts are in 1900 money: the game's prices (and so their weight) follow the year of the game
+		local amount = effects.scale_money(effect.amount or 0, api.engine.util.getYear())
 		if effect.kind == "money" then
-			book_money(player, effect.amount, on_money)
+			book_money(player, amount, on_money)
 		elseif effect.kind == "money_loss" or field == "applied_deaths" then
-			book_money(player, -effect.amount, on_money)
+			book_money(player, -amount, on_money)
 		else
 			say("unknown effect kind " .. tostring(effect.kind) .. ", skipped")
 			done(effect.id)
@@ -530,8 +562,9 @@ end
 -- that it is applied again after a load. Loans the game already made keep their amount until it renews them.
 
 -- The game makes its first four loans when the game is created, before the mod can read the YAML value: the
--- replacement is installed as soon as the script is loaded, with this default (the default of the loan_scale option).
-local DEFAULT_LOAN_PERCENT = 10
+-- replacement is installed as soon as the script is loaded, with this default (the default of the loan_scale option,
+-- which leaves the game's own amounts as they are).
+local DEFAULT_LOAN_PERCENT = 100
 
 local LOAN_MAKERS = { "createSmallLoan", "createMediumLoan", "createLargeLoan", "createExtraLargeLoan" }
 

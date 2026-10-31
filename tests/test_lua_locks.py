@@ -224,3 +224,32 @@ def test_a_class_item_does_not_bypass_the_year_tier_or_the_mode():
     assert "rail_bulk" in vehicles  # the rail mode is still locked
     _, vehicles = compute({"Cargo Class: Bulk": 1, "Rail Transport": 1, "Progressive Road Vehicles": 2}, catalog)
     assert not vehicles
+
+
+VARIANTS_CATALOG = {
+    "eras": {"B": 1920, "C": 1960},
+    "modes": {
+        "road": {"menu": [], "vehicles": [], "variants": [
+            {"tag": "depot@0", "year": 1900}, {"tag": "depot@1", "year": 1940}, {"tag": "depot@2", "year": 1980},
+        ]},
+        "rail": {"menu": ["rail_depot@0"], "vehicles": [], "variants": [
+            {"tag": "rail_depot@0", "year": 1900}, {"tag": "rail_depot@1", "year": 1960},
+        ]},
+    },
+}
+
+
+def test_the_era_variants_of_a_building_follow_the_vehicle_tiers():
+    menu, _ = compute({}, VARIANTS_CATALOG)
+    assert "depot@0" not in menu and "depot@1" in menu and "depot@2" in menu
+    menu, _ = compute({"Progressive Road Vehicles": 1}, VARIANTS_CATALOG)
+    assert "depot@1" not in menu and "depot@2" in menu
+    menu, _ = compute({"Progressive Road Vehicles": 2}, VARIANTS_CATALOG)
+    assert not [tag for tag in menu if tag.startswith("depot")]
+
+
+def test_the_variants_of_a_locked_mode_stay_locked_whatever_the_tier():
+    menu, _ = compute({"Progressive Rail Vehicles": 2}, VARIANTS_CATALOG)
+    assert "rail_depot@0" in menu and "rail_depot@1" in menu
+    menu, _ = compute({"Rail Transport": 1}, VARIANTS_CATALOG)
+    assert "rail_depot@0" not in menu and "rail_depot@1" in menu

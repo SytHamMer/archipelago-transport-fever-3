@@ -113,20 +113,22 @@ class MoneyScale(Range):
 
 
 class LoanScale(Range):
-    """Percentage applied to the amount of every bank loan (100 = the game's amounts, which are very large in 2020)."""
+    """Percentage applied to the amount of every bank loan (100 = the game's amounts, which follow the year of the game
+    and are very large in a game that starts in 2020)."""
     display_name = "Loan scale (%)"
     range_start = 1
     range_end = 200
-    default = 10
+    default = 100
 
 
 class DeathLinkLoss(Range):
-    """Money the company loses each time another player's DeathLink arrives (needs death_link). This is the exact
-    amount: money_scale is not applied to it. The game's prices are in the hundreds of thousands in 2020."""
+    """Money the company loses each time another player's DeathLink arrives (needs death_link), in 1900 money: it is
+    multiplied by the game's inflation of the year of the game, like every amount of this world. money_scale is not
+    applied to it."""
     display_name = "Death link loss"
-    range_start = 10_000
-    range_end = 1_000_000_000
-    default = 1_000_000
+    range_start = 1_000
+    range_end = 100_000_000
+    default = 50_000
 
 
 @dataclass

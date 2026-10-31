@@ -76,3 +76,9 @@ def test_a_construction_has_its_templates_freed_too():
     assert [t["availability"]["yearFrom"] for t in result["constructionTemplates"]] == [0, 0]
     assert [t["availability"]["yearTo"] for t in result["constructionTemplates"]] == [0, 0]
     assert module.original(table["constructionTemplates"][2]["availability"]) == 1980
+
+
+def test_placeholder_models_are_left_hidden():
+    # the game's "missing vehicle" models are available from the year 100000 to the year 1, which hides them
+    assert freed({"yearFrom": 100000, "yearTo": 1}) == {"yearFrom": 100000, "yearTo": 1}
+    assert freed({"yearFrom": -1, "yearTo": -1}) == {"yearFrom": -1, "yearTo": -1}

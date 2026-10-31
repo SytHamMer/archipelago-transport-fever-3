@@ -15,7 +15,7 @@ Installing Archipelago, adding a world, generating, hosting and connecting a cli
 
 - The world to install is `dist/transport_fever_3.apworld` (`python scripts/build_world.py`). The client is called **Transport Fever 3 Client** in the Launcher.
 - The mod `tf3_mod/archipelago_tf3_1` is installed with `python scripts/install_mod.py` (game closed). The script only writes one new folder into `...\3493540\local\mods\`.
-- Create a **new free-play game** with the "Archipelago for Transport Fever 3" mod enabled and a **start year of 2000 or later** (2020 is the maximum offered). Without that, no item can unlock vehicles newer than the game's date.
+- Create a **new free-play game** with the "Archipelago for Transport Fever 3" mod enabled, **in any start year**. An early year (for example 1900) gives the game's early prices; see "Start year and prices" below.
 
 The client and the mod exchange two files in `...\3493540\local\towns_industries\` (the game only lets mods use that folder and `mod_presets`). Set the `TF3_USERDATA_DIR` variable to change the folder.
 
@@ -41,12 +41,17 @@ Step by step instructions, the choice of the start year and troubleshooting are 
   100 / 500 / 2,000 / 10,000, medium ones (steel, fabric, furniture...) 50 / 250 / 1,000 / 5,000, hard ones (machines,
   tools, clothes, vehicles...) 20 / 100 / 400 / 2,000.
 
-### A 2020 start and the game's prices
+### Start year and prices
 
-Starting in 2020 keeps every vehicle available, but the game then only offers its recent depots and stations, whose
-price is multiplied by an era coefficient (1 before 1940, 3 from 1940, 9 from 1980). The mod divides that coefficient
-back out for depots, stations and terminals, so they cost what they cost in the first era. The money rewards and traps are sized for
-that economy (see `money_scale`). Vehicle prices are computed by the game and are not changed.
+The game hides vehicles, road and track types, stations and depots until their year, and its prices follow the date
+(a game that starts in 2020 costs about six times what one in 1900 does). The mod removes those first years when the
+game loads, so everything can be built at any date, and keeps the real years to build its tiers: the items of the
+multiworld do the locking, whatever the start year. Start early for early prices, or late for a rich economy.
+
+Each depot and station keeps its three styles (1900, 1940, 1980); the later ones come with the second and third tier of
+vehicles of their mode. The money rewards and traps are written in 1900 money and multiplied, when they are booked, by
+the same growth as the game's prices (1 in 1900, 6 in 2020, exponentially in between), so they keep their weight at
+any start year. The game's own bank loans already follow the year and are left alone.
 
 ### Contracts
 
@@ -71,26 +76,14 @@ The format of a YAML file, weights and random options are explained in the [offi
 | `first_line_checks` | yes | first line of each mode |
 | `mission_checks` | 3 | number of "N game missions completed" checks (0 to 30) |
 | `money_scale` | 100 | percentage applied to every money grant and loss (10 to 1000) |
-| `loan_scale` | 10 | percentage applied to the amount of every bank loan (1 to 200; 100 = the game's amounts, very large in 2020) |
+| `loan_scale` | 100 | percentage applied to the amount of every bank loan (1 to 200; 100 leaves the game's amounts, which follow the year and are very large in 2020) |
 | `death_link` | off | when another player's game sends a DeathLink, the company loses money (see `death_link_loss`) |
-| `death_link_loss` | 1,000,000 | exact amount lost for each DeathLink received (10,000 to 1,000,000,000); `money_scale` is not applied to it |
+| `death_link_loss` | 50,000 | amount lost for each DeathLink received, in 1900 money (1,000 to 100,000,000); `money_scale` is not applied to it |
 | `goal_population`, `goal_company_level`, `goal_passengers`, `goal_cargo` | 2500, 0, 0, 0 | goals; 0 disables a goal; the game is won when **all** active goals are reached |
 
-Bank loans are scaled by `loan_scale`: the game multiplies its loan amounts by 2.4 in 2020 (tens of millions each), which would make the multiworld's money meaningless. The four loans the game creates when the game starts use the default scale (10%) because the game makes them before the mod can read your YAML value; your `loan_scale` applies to every loan the game makes afterwards (about every 6 months of game time, or after you take one).
+Bank loans are scaled by `loan_scale` (100 by default: the game's amounts, which already follow the year). Lower it in a game that starts late, where the game's loans are tens of millions each. The four loans the game creates when the game starts always use the game's amounts, because the game makes them before the mod can read your YAML value; your `loan_scale` applies to every loan the game makes afterwards.
 
-The base money amounts (grants 1,000,000 / 5,000,000 / 20,000,000, losses 1,000,000 / 5,000,000) are tuned for a 2020 start, where the game's prices are in the hundreds of thousands, and are multiplied by `money_scale`.
-
-Example:
-
-```yaml
-name: MyName
-game: Transport Fever 3
-Transport Fever 3:
-  goal_population: 5000
-  goal_passengers: 1000
-  population_checks: 6
-  population_last: 8000
-```
+The base money amounts (grants 50,000 / 250,000 / 1,000,000, losses 50,000 / 250,000, all in 1900 money) are multiplied by the game's inflation of the year of the game and by `money_scale`.
 
 There must be at least as many checks as progression items: otherwise generation stops with a message that says how many.
 

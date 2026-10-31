@@ -8,6 +8,7 @@
 --   An entry may also have `types = { { tag = ..., year = ... }, ... }` and `type_item` (the name of the item that
 --   releases them by tier): road and track types, tiered by first year like the vehicles.
 --   Vehicles may carry `classes` (cargo classes such as BULK or UNIVERSAL), see class_locked.
+--   `variants = { { tag = ..., year = ... }, ... }`: the era variants of depots and stations, tiered like the vehicles.
 --   `tools = { { item = <item name>, tags = { ... } }, ... }`: menu tags released one tool at a time by their item.
 -- Modes are road, tram, rail, water, air. Road starts unlocked.
 local M = {}
@@ -66,6 +67,11 @@ function M.compute_locks(items, catalog)
 			for _, vehicle in ipairs(entry.vehicles or {}) do
 				if tier_of(vehicle.year, catalog.eras) > allowed or class_locked(vehicle, items) then vehicles[vehicle.path] = true end
 			end
+		end
+		-- era variants of depots and stations: the style of a later era comes with the same tier as its vehicles
+		local tier_items = items[M.vehicle_item(mode)] or 0
+		for _, variant in ipairs(entry.variants or {}) do
+			if not unlocked or tier_of(variant.year, catalog.eras) > tier_items then menu[variant.tag] = true end
 		end
 		-- tools: one item each, and never available while their mode is locked
 		for _, tool in ipairs(entry.tools or {}) do

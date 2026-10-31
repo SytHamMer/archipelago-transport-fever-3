@@ -121,8 +121,8 @@ class TestMissionChecks(TF3TestBase):
 
 
 class TestLoanScale(TF3TestBase):
-    def test_the_default_loan_scale_is_ten_percent(self):
-        assert self.world.fill_slot_data()["loan_scale"] == 10
+    def test_the_default_loan_scale_leaves_the_games_loans_as_they_are(self):
+        assert self.world.fill_slot_data()["loan_scale"] == 100
 
 
 class TestLoanScaleOption(TF3TestBase):
@@ -143,4 +143,4 @@ class TestDeathLinkOption(TF3TestBase):
 class TestDeathLinkIsOffByDefault(TF3TestBase):
     def test_death_link_is_off_unless_asked_for(self):
         data = self.world.fill_slot_data()
-        assert data["death_link"] is False and data["death_link_loss"] == 1_000_000
+        assert data["death_link"] is False and data["death_link_loss"] == 50_000

@@ -37,8 +37,8 @@ def test_inbox_counts_items_and_numbers_effects(bridge, tmp_path):
     assert inbox["items"]["Rail Transport"] == 1
     assert inbox["items"]["Money Grant (small)"] == 2
     assert inbox["effects"] == [
-        {"id": 2, "kind": "money", "amount": 1_000_000},
-        {"id": 3, "kind": "money", "amount": 1_000_000},
+        {"id": 2, "kind": "money", "amount": 50_000},
+        {"id": 3, "kind": "money", "amount": 50_000},
     ]
     assert inbox["config"]["goals"]["population"] == 2500
     assert inbox["config"]["checks"]["population"] == [500, 1000]
@@ -49,8 +49,8 @@ def test_traps_are_money_loss_effects_with_their_amount(bridge, tmp_path):
     bridge.write_inbox(SLOT_DATA, ["Money Loss (small)", "Money Loss (medium)"])
     effects = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["effects"]
     assert effects == [
-        {"id": 1, "kind": "money_loss", "amount": 1_000_000},
-        {"id": 2, "kind": "money_loss", "amount": 5_000_000},
+        {"id": 1, "kind": "money_loss", "amount": 50_000},
+        {"id": 2, "kind": "money_loss", "amount": 250_000},
     ]
 
 
@@ -192,13 +192,13 @@ def test_inbox_without_a_log_has_no_log_field(bridge, tmp_path):
 def test_money_scale_multiplies_grants_and_losses(bridge, tmp_path):
     bridge.write_inbox({**SLOT_DATA, "money_scale": 50}, ["Money Grant (small)", "Money Loss (medium)"])
     effects = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["effects"]
-    assert [effect["amount"] for effect in effects] == [500_000, 2_500_000]
+    assert [effect["amount"] for effect in effects] == [25_000, 125_000]
 
 
 def test_slot_data_without_a_money_scale_keeps_the_base_amounts(bridge, tmp_path):
     bridge.write_inbox(SLOT_DATA, ["Money Grant (small)"])
     effects = luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["effects"]
-    assert effects[0]["amount"] == 1_000_000
+    assert effects[0]["amount"] == 50_000
 
 
 def test_the_loan_scale_reaches_the_mod_through_the_config(bridge, tmp_path):

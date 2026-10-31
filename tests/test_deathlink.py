@@ -30,7 +30,7 @@ def test_an_older_seed_without_the_setting_loses_the_default_amount(tmp_path):
     old = {key: value for key, value in SLOT.items() if key != "death_link_loss"}
     sync.on_connected(old, [])
     sync.on_death(death())
-    assert written(tmp_path)["deaths"][0]["amount"] == 1_000_000
+    assert written(tmp_path)["deaths"][0]["amount"] == 50_000
 
 
 def test_our_own_deaths_and_malformed_ones_are_ignored():

@@ -29,4 +29,20 @@ function M.granted_level(items, earned_level)
 	return math.min(level, M.MAX_LEVEL)
 end
 
+-- The game's prices follow the date: a game that starts in 2020 costs six times what one in 1900 does, growing
+-- exponentially between the two (its bank loans use the same 0.4 to 2.4 curve). Money amounts of the multiworld are
+-- written in 1900 money and multiplied by this factor when they are booked, so they keep their weight at any start year.
+M.INFLATION_FIRST_YEAR, M.INFLATION_LAST_YEAR, M.INFLATION_TOTAL = 1900, 2020, 6
+
+function M.inflation(year)
+	if type(year) ~= "number" then return 1 end
+	local clamped = math.max(M.INFLATION_FIRST_YEAR, math.min(M.INFLATION_LAST_YEAR, year))
+	return M.INFLATION_TOTAL ^ ((clamped - M.INFLATION_FIRST_YEAR) / (M.INFLATION_LAST_YEAR - M.INFLATION_FIRST_YEAR))
+end
+
+-- An amount in 1900 money as it is booked in the year `year`, rounded to a thousand and never below a thousand.
+function M.scale_money(amount, year)
+	return math.max(1000, math.floor(amount * M.inflation(year) / 1000 + 0.5) * 1000)
+end
+
 return M
