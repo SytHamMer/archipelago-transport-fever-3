@@ -6,6 +6,15 @@ local subvention_util = ug_require("::/game_mechanics/subventions/subvention_uti
 local ICON = "archipelago_tf3_1::/ap_icon.tga"
 local FOREVER_MONTHS = 1200 -- no deadline: a hundred years
 
+-- The game only shows an offer (notification, icon, window) that points at an entity of the world: the first town.
+local function anchor_town()
+	local town
+	api.engine.forEachEntityWithComponent(function(entity)
+		if not town then town = entity end
+	end, api.type.ComponentType.TOWN)
+	return town
+end
+
 local function text_of(params)
 	return params and params.text or ""
 end
@@ -59,8 +68,14 @@ local contract = {
 			function() return "" end)
 	end,
 
-	getRelevantEntities = function() return {}, {} end,
-	getRelevantEntityNames = function() return {} end,
+	getRelevantEntities = function()
+		local town = anchor_town()
+		return town and { town } or {}, {}
+	end,
+	getRelevantEntityNames = function()
+		local town = anchor_town()
+		return town and { [town] = api.engine.util.getEntityName(town) or "" } or {}
+	end,
 
 	-- The card the game shows: the task as the description, what completing it gives under "on completion".
 	getCardData = function(state)
@@ -69,6 +84,8 @@ local contract = {
 		card.deadline, card.expireDuration = nil, nil
 		card.upfront, card.failure = {}, {}
 		card.complete = { { text = state.data.reward or "" } }
+		local town = anchor_town()
+		if town then card.location = { to = { town, api.engine.util.getEntityName(town) or "" } } end
 		return card
 	end,
 }
