@@ -305,7 +305,7 @@ class TF3Sync:
         active = [name for name, value in self.slot_data["goals"].items() if value > 0]
         goal = bool(active) and all(outbox.goals.get(name) is True for name in active)
         status = "game_connected" if now - outbox.heartbeat <= HEARTBEAT_TIMEOUT else "game_idle"
-        year_warning = outbox.year is not None and outbox.year < data.MIN_START_YEAR
+        year_warning = outbox.year is not None and outbox.year < data.MIN_START_YEAR and not outbox.years_freed
         return PollResult(new_checks=self.bridge.new_checks(self.sent), goal_reached=goal, status=status,
                           year_warning=year_warning)
 

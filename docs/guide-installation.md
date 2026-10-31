@@ -62,6 +62,14 @@ An Archipelago game is a **dedicated game**: one slot, one seed. The mod is not 
 1. New free-play (sandbox) game, with the mod enabled.
 2. **Start year: as late as possible, 2000 or later.** The maximum offered is 2020.
 
+### Experiment: any start year
+
+The mod can also remove the first year of every vehicle, road and track type, station and depot when the game loads
+(`ap_years.lua`), and keeps the real year to build its tiers. With that, the start year no longer limits what the
+items can unlock, and an early start year gives the early prices (the game's prices follow the date). The client does
+not warn about an early year when the mod reports it did this. This is being tested: if you see vehicles that should be
+locked, or a missing menu, start in 2020 as described below.
+
 ### Why the start year matters
 
 The game hides vehicles (and stations, tracks...) whose release year has not come yet. The mod's filters can only hide **more**: they cannot show a vehicle the game already hides. In a game that starts in 1890, a train from 1950 would be out of reach of any item, and waiting for years to pass defeats the idea of a faster game.

@@ -53,6 +53,14 @@ Newest at the end of each section. Nothing here is started unless it says so.
 - **Ideas:** scale the amounts with the same factor as the prices (the inflation of the current year), keeping
   `money_scale` as the player's difficulty percentage; decide the base amounts from what a first line costs.
 
+## Start year
+
+- **Experiment on the `free-years` branch:** the first years of vehicles, road and track types, stations and depots are
+  set to 0 at load, with the real year kept in `notificationSortKey`, so any start year works and an early start gets
+  the early prices (which follow the date). To check in game: that the tiers still follow the real years, that nothing
+  that should be locked shows up, that the menus are not cluttered by the era variants of depots and stations, and that
+  towns and industries behave in an early year.
+
 ## DeathLink
 
 - Receive only for now. A TF3 "death" to send (for example going bankrupt) is an open question.

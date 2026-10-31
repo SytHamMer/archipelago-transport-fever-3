@@ -24,6 +24,7 @@ class Outbox:
     heartbeat: int
     year: int | None = None  # in-game year, absent in outboxes written by older mod versions
     applied_deaths: int = 0  # the highest DeathLink effect the mod has applied
+    years_freed: bool = False  # the mod removed the first years of the content: any start year works
 
 
 def _effect(index: int, name: str, scale: int = 100) -> dict | None:
@@ -112,6 +113,7 @@ class Bridge:
                 heartbeat=int(raw["heartbeat"]),
                 year=int(raw["year"]) if "year" in raw else None,
                 applied_deaths=int(raw["applied_deaths"]) if "applied_deaths" in raw else 0,
+                years_freed=raw.get("years_freed") is True,
             )
         except (OSError, luafile.LuaFormatError, KeyError, TypeError, ValueError):
             return None

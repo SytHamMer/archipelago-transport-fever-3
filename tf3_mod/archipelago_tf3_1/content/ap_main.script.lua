@@ -37,13 +37,13 @@ local MODES = {
 }
 local TEMPLATE_SUFFIXES = 12 -- constructions are tagged "name@0" .. "name@11" in the menu
 
-local locks, checks, effects, notify, contract_sync, loans
+local locks, checks, effects, notify, contract_sync, loans, years
 
 local state = {
 	last_tick = 0,
 	catalog = nil,
 	last_menu = nil, last_vehicles = nil,
-	seed = nil, checks = {}, goals = {}, missions = {}, applied = 0, applied_deaths = 0, year = nil,
+	seed = nil, checks = {}, goals = {}, missions = {}, applied = 0, applied_deaths = 0, year = nil, years_freed = false,
 	messages = {}, -- notifications waiting to be sent (DeathLink losses)
 	enforced = nil,
 	inflight = false,
@@ -76,6 +76,7 @@ local function load_modules()
 	locks, checks, effects, notify = load("ap_locks"), load("ap_checks"), load("ap_effects"), load("ap_notify")
 	contract_sync = load("ap_contract_sync")
 	loans = load("ap_loans")
+	years = load("ap_years")
 end
 
 -- ===== catalog of lockable content, built once from the game's resources =====
@@ -120,7 +121,8 @@ local function vehicles_of(kinds)
 				local id = api.res.modelRep.find(path)
 				local table_ = api.res.modelRep.getAsTable(id)
 				local availability = table_ and table_.metadata and table_.metadata.availability
-				out[#out + 1] = { path = path, year = availability and availability.yearFrom or nil, classes = cargo_classes(table_) }
+				out[#out + 1] = { path = path, year = years.original(availability), classes = cargo_classes(table_),
+					freed = years.freed(availability) }
 				break
 			end
 		end
@@ -138,7 +140,7 @@ local function street_types(fragments)
 				if name:find(fragment, 1, true) then
 					local table_ = rep.getAsTable(id)
 					local availability = table_ and table_.availability
-					out[#out + 1] = { tag = name, year = availability and availability.yearFrom or nil }
+					out[#out + 1] = { tag = name, year = years.original(availability) }
 					break
 				end
 			end
@@ -157,7 +159,7 @@ local function construction_types(fragments)
 				if name:find(fragment, 1, true) then
 					local table_ = rep.getAsTable(id)
 					local availability = table_ and table_.availability
-					out[#out + 1] = { tag = name, year = availability and availability.yearFrom or nil }
+					out[#out + 1] = { tag = name, year = years.original(availability) }
 					break
 				end
 			end
@@ -196,6 +198,14 @@ end
 
 -- Diagnostic report of what the game contains, written once to the log (lines start with "ARCHIPELAGO catalog").
 local function catalog_report(catalog)
+	local freed, total = 0, 0
+	for _, entry in pairs(catalog.modes) do
+		for _, vehicle in ipairs(entry.vehicles or {}) do
+			total = total + 1
+			if vehicle.freed then freed = freed + 1 end
+		end
+	end
+	say("catalog dates freed by the mod: " .. freed .. " of " .. total .. " vehicles (the rest was available from the start)")
 	local function keys_of(table_)
 		local names = {}
 		if type(table_) == "table" then for key in pairs(table_) do names[#names + 1] = tostring(key) end end
@@ -298,7 +308,7 @@ local function write_outbox()
 	if not state.seed then return end
 	app.saveUserdata(DIR, outbox_name(state.seed), {
 		version = FORMAT_VERSION, seed = state.seed, checks = state.checks, goals = state.goals, missions = state.missions,
-		applied = state.applied, applied_deaths = state.applied_deaths, heartbeat = os.time(), year = state.year,
+		applied = state.applied, applied_deaths = state.applied_deaths, heartbeat = os.time(), year = state.year, years_freed = state.years_freed,
 	})
 end
 
@@ -314,6 +324,11 @@ local function apply_locks(items, eras)
 			error(catalog, 0)
 		end
 		state.catalog = catalog
+		for _, entry in pairs(catalog.modes) do
+			for _, vehicle in ipairs(entry.vehicles or {}) do
+				if vehicle.freed then state.years_freed = true end
+			end
+		end
 		guarded("catalog report", catalog_report, state.catalog)
 	end
 	state.catalog.eras = eras or ERAS

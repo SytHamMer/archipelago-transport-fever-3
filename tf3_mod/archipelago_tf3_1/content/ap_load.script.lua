@@ -1,62 +1,39 @@
--- Load-time script: keeps every vehicle on sale once its first year has passed.
--- The game hides vehicles whose end year is behind the current date, and the mod's filters can only hide things,
--- never bring one back. Removing the end years (as the official "vehicles without end year" mod does) leaves
--- the first year, which the mod's tiers are built on, untouched.
+-- Load-time script: makes content available whatever the start year of the game is.
+-- The game hides vehicles, road and track types, stations and depots until their first year and after their end year,
+-- and its prices follow the date (a game that starts in 2020 costs several times what one in 1900 does). Instead of
+-- forcing a late start year, this script sets their first and end years to 0 (see ap_years.lua), which also keeps the
+-- old ones on sale as the official "vehicles without end year" mod does. The real first year is stored in the content
+-- and read back by ap_main.script.lua, whose tiers of unlocks are built on it; the items of the multiworld lock the
+-- content the player has not earned yet.
 function data()
 	return {
 		runFn = function(captureParams, settings)
-			-- PROBE (temporary): what does the load-time script have access to?
-			local function say(text) pcall(debugPrint, "ARCHIPELAGO load probe: " .. text) end
-			say("app=" .. type(app) .. " io=" .. type(io) .. " os=" .. type(os) .. " require=" .. type(require))
-			if type(app) == "table" then
-				local ok, value = pcall(app.loadUserdata, "towns_industries", "archipelago_tf3_inbox")
-				say("loadUserdata ok=" .. tostring(ok) .. " type=" .. type(value) .. " loan_scale=" ..
-					tostring(type(value) == "table" and value.config and value.config.loan_scale))
-			end
-			local sampled = 0
-			addModifier("loadConstruction", function(fileName, data)
-				local name = tostring(fileName)
-				if sampled < 6 and (name:find("bus_station", 1, true) or name:find("road_depot", 1, true)) then
-					sampled = sampled + 1
-					local keys = {}
-					for key in pairs(data) do keys[#keys + 1] = tostring(key) end
-					table.sort(keys)
-					say(name .. " keys{" .. table.concat(keys, ",") .. "} cost=" .. tostring(data.cost and (data.cost.price or data.cost[1])) ..
-						" availability.yearFrom=" .. tostring(data.availability and data.availability.yearFrom))
-				end
-				return data
-			end)
+			local found, years = pcall(require, "archipelago_tf3_1::/ap_years.lua")
+			if not found then pcall(debugPrint, "ARCHIPELAGO years module unavailable: " .. tostring(years)) end
+
+			-- Vehicles.
 			addModifier("loadModel", function(fileName, data)
 				local metadata = data.metadata
 				if metadata and metadata.transportVehicle and metadata.availability then
-					metadata.availability.yearTo = 0
+					if found then years.free(metadata.availability) else metadata.availability.yearTo = 0 end
 				end
 				return data
 			end)
-			-- Roads and tracks: the old types have an end year too (for example the old country roads end in 1940),
-			-- and the game hides them from a late start year on.
+			-- Roads and tracks: the old types have an end year too (for example the old country roads end in 1940).
 			addModifier("loadStreetTemplate", function(fileName, data)
-				if data.availability then data.availability.yearTo = 0 end
+				if found then years.free(data.availability) elseif data.availability then data.availability.yearTo = 0 end
 				return data
 			end)
-			-- Modern depots and stations cost nine times their first-era price (an era coefficient in their files): bring
-			-- them back, or a game that starts in 2020 has no cheap way to build a first line (see ap_costs.lua).
-			local found, costs = pcall(require, "archipelago_tf3_1::/ap_costs.lua")
-			if not found then pcall(debugPrint, "ARCHIPELAGO costs module unavailable: " .. tostring(costs)) end
-			-- Interchanges, roundabouts, signals: only the infrastructure constructions, never buildings or industries.
+			-- Interchanges, roundabouts, signals, stations and depots (with their era variants): never buildings or
+			-- industries.
 			addModifier("loadConstruction", function(fileName, data)
-				if data.availability and tostring(fileName):find("/infrastructure/", 1, true) then
-					data.availability.yearTo = 0
-				end
-				if found then pcall(costs.normalise, fileName, data) end
-				if tostring(fileName):find("road_depot", 1, true) or tostring(fileName):find("small_new_twosided", 1, true) then
-					local parts = {}
-					for index, template in ipairs(data.constructionTemplates or {}) do
-						local attributes = template.description and template.description.attributes
-						parts[#parts + 1] = tostring(template.availability and template.availability.yearFrom) .. ":" ..
-							tostring(attributes and attributes.cost and attributes.cost[1])
+				local name = tostring(fileName)
+				if name:find("/infrastructure/", 1, true) or name:find("/stations/", 1, true) or name:find("/depots/", 1, true) then
+					if found then
+						years.free_construction(data)
+					elseif data.availability and name:find("/infrastructure/", 1, true) then
+						data.availability.yearTo = 0
 					end
-					pcall(debugPrint, "ARCHIPELAGO costs after: " .. tostring(fileName) .. " templates{" .. table.concat(parts, ",") .. "}")
 				end
 				return data
 			end)

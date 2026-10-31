@@ -280,3 +280,15 @@ def test_the_first_status_is_always_reported_and_real_changes_are_immediate():
     assert tracker.update("no_outbox") == "no_outbox"
     assert tracker.update("game_idle") == "game_idle"
     assert tracker.update("game_connected") == "game_connected"
+
+
+def test_an_early_game_year_is_fine_when_the_mod_freed_the_content_dates(sync, tmp_path):
+    sync.on_connected(slot(population=100), [])
+    outbox(tmp_path, year=1900, years_freed=True)
+    assert sync.poll(NOW).year_warning is False
+
+
+def test_an_outbox_without_the_flag_is_an_old_mod_and_still_warns(sync, tmp_path):
+    sync.on_connected(slot(population=100), [])
+    outbox(tmp_path, year=1900)
+    assert sync.poll(NOW).year_warning is True
