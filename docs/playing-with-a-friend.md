@@ -37,10 +37,21 @@ game (Satisfactory is in the Launcher already).
 Pick one of the two ways. The Archipelago server listens on port **38281** by default.
 
 **Option 1: a private network (recommended, nothing is exposed on the internet).**
-Install a private network tool on both computers, for example [Tailscale](https://tailscale.com/) or
-[ZeroTier](https://www.zerotier.com/). Invite your friend to your network (Tailscale: share your machine with them;
-ZeroTier: create a network and give them its id, then authorise them). Each computer gets a private address
-(for example `100.x.y.z` for Tailscale): write down yours. Your friend connects to `<your private address>:38281`.
+This uses [Tailscale](https://tailscale.com/) (its free personal plan covers two computers; check its pricing page).
+[ZeroTier](https://www.zerotier.com/) works the same way if you prefer it.
+
+1. Install Tailscale on your computer and sign in (an existing Google, Microsoft or GitHub account is enough).
+2. Find your private address: in the Tailscale icon menu it is listed under your device name, an address of the form
+   `100.x.y.z`. Write it down.
+3. Share your computer with your friend: open the Tailscale admin console in a browser (login.tailscale.com),
+   go to **Machines**, open the menu of your computer, choose **Share**, and send the link to your friend. They
+   accept it with their own Tailscale account, after which your computer appears on their side.
+4. Allow the Archipelago port in the Windows firewall for the Tailscale network. In an administrator PowerShell:
+   `New-NetFirewallRule -DisplayName "Archipelago 38281" -Direction Inbound -Protocol TCP -LocalPort 38281 -Action Allow`
+5. Once the server runs (step 5), check from your friend's computer that it is reachable:
+   `Test-NetConnection <your private address> -Port 38281` in PowerShell must say `TcpTestSucceeded : True`.
+
+Your friend connects to `<your private address>:38281`.
 
 **Option 2: open the port on your router.**
 Forward TCP port 38281 of your router to your computer, and allow it in the Windows firewall (accept the Windows
@@ -88,8 +99,11 @@ mod. The official guide is in the Archipelago documentation (Satisfactory setup 
    - In the Mod Manager, install the mod **Archipelago Randomizer**.
 2. **Make your YAML file.** On <https://archipelago.gg/games/Satisfactory/player-options> choose your options,
    set your player name (for example `Friend`), download the YAML and send it to the host. No other file is needed.
-3. **Join the private network** (if the host chose option 1): install the same tool (Tailscale or ZeroTier) and
-   accept the host's invitation. Ask the host for the address to use.
+3. **Join the private network** (if the host chose option 1): install Tailscale from <https://tailscale.com/download>,
+   sign in with your own account (Google, Microsoft or GitHub), then open the sharing link the host sent you and
+   accept it. The host's computer then appears in your Tailscale list: its private address (`100.x.y.z`) is the
+   address to use. Once the host says the server runs, you can check it with `Test-NetConnection <that address> -Port 38281`
+   in PowerShell (it must say `TcpTestSucceeded : True`).
 4. **Wait for the host to say the server is running**, then start Satisfactory through the Mod Manager or your usual
    shortcut and create a **new game**.
 5. In the new game screen, click **Mod Savegame Settings** (bottom right) and fill in:
