@@ -20,21 +20,21 @@ The game does not let mods read or write files freely: they only get one fixed f
 
 - Transport Fever 3 (Steam), the version with the mod tools (the normal version has them).
 - Archipelago 0.6.x, installed as described in the [official documentation](https://archipelago.gg/tutorial/Archipelago/setup/en).
-- The two deliverables of the project:
-  - `dist/transport_fever_3.apworld` (the world);
-  - `tf3_mod/archipelago_tf3_1/` (the mod).
+- The two deliverables of the project, on the **Releases** page of the repository:
+  - `transport_fever_3.apworld` (the world);
+  - `archipelago_tf3_1.zip` (the mod).
 
-To rebuild the world: `python scripts/build_world.py`.
+From a clone of the repository, `python scripts/build_world.py` and `python scripts/build_mod.py` build them into `dist/`.
 
 ## 3. Install the world
 
-Adding an `.apworld` to Archipelago is described in the [official documentation](https://archipelago.gg/tutorial/Archipelago/setup/en) (Launcher, **Install APWorld**, then restart the Launcher). Here the file is `dist/transport_fever_3.apworld`, and the tool to look for afterwards in the Launcher is called **Transport Fever 3 Client**.
+Adding an `.apworld` to Archipelago is described in the [official documentation](https://archipelago.gg/tutorial/Archipelago/setup/en) (Launcher, **Install APWorld**, then restart the Launcher). Here the file is `transport_fever_3.apworld`, and the tool to look for afterwards in the Launcher is called **Transport Fever 3 Client**.
 
 ## 4. Install the mod in the game
 
 **Close Transport Fever 3 first.** The mod is installed as a **new folder** in the user mods folder; neither the game installation nor your saves are touched.
 
-With the script (recommended):
+From the release, extract `archipelago_tf3_1.zip` into the mods folder (see "By hand" below). From a clone of the repository, the script is recommended:
 
 ```
 python scripts/install_mod.py          # first installation
@@ -43,7 +43,7 @@ python scripts/install_mod.py --update # update of an already installed copy
 
 The script refuses to run while the game is running, and only copies one folder. It detects the mods folder; otherwise pass `--mods-dir`.
 
-By hand: copy the `tf3_mod/archipelago_tf3_1` folder into
+By hand: extract `archipelago_tf3_1.zip` so that its `archipelago_tf3_1` folder is in
 
 ```
 C:\Program Files (x86)\Steam\userdata\<your Steam id>\3493540\local\mods\

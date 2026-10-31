@@ -2,7 +2,7 @@
 
 Play Transport Fever 3 (PC, Steam) in an [Archipelago](https://archipelago.gg) multiworld, without the honor system: the game locks what has not been received and sends the checks itself.
 
-Status: version 0.1.0, tested locally. **Nothing has been proposed to the official Archipelago repository**: everything stays local until testing is finished.
+Status: version 0.1.0, an unofficial world that is open for testing. It has not been proposed to the official Archipelago repository yet: it waits for feedback from real games first (see "Status and feedback" below). Licensed under the MIT License.
 
 ## What you need
 
@@ -13,8 +13,8 @@ Status: version 0.1.0, tested locally. **Nothing has been proposed to the offici
 
 Installing Archipelago, adding a world, generating, hosting and connecting a client are covered by the [official Archipelago documentation](https://archipelago.gg/tutorial/Archipelago/setup/en), so they are not repeated here. What is specific to this world:
 
-- The world to install is `dist/transport_fever_3.apworld` (`python scripts/build_world.py`). The client is called **Transport Fever 3 Client** in the Launcher.
-- The mod `tf3_mod/archipelago_tf3_1` is installed with `python scripts/install_mod.py` (game closed). The script only writes one new folder into `...\3493540\local\mods\`.
+- Download `transport_fever_3.apworld` and `archipelago_tf3_1.zip` from the **Releases** page of this repository. The world is `transport_fever_3.apworld` (to build it yourself: `python scripts/build_world.py`). The client is called **Transport Fever 3 Client** in the Launcher.
+- The mod is the folder `archipelago_tf3_1` inside `archipelago_tf3_1.zip`: extract the zip into `...\3493540\local\mods\` (game closed), which adds one new folder. From a clone of this repository, `python scripts/install_mod.py` does the same (`python scripts/build_mod.py` builds the zip).
 - Create a **new free-play game** with the "Archipelago for Transport Fever 3" mod enabled, **in any start year**. An early year (for example 1900) gives the game's early prices; see "Start year and prices" below.
 
 The client and the mod exchange two files in `...\3493540\local\towns_industries\` (the game only lets mods use that folder and `mod_presets`). Set the `TF3_USERDATA_DIR` variable to change the folder.
@@ -124,6 +124,7 @@ games with different options are worth more than one long game. The known proble
 ```
 venv\Scripts\python -m pytest                       # tests (world, client, Lua modules through lupa)
 venv\Scripts\python scripts\build_world.py          # dist/transport_fever_3.apworld
+venv\Scripts\python scripts\build_mod.py            # dist/archipelago_tf3_1.zip
 venv\Scripts\python scripts\install_mod.py --update # installs the mod (game closed)
 venv\Scripts\python scripts\dev_inbox.py --seed s1 "Rail Transport"   # simulates the client (--contracts: fake contracts)
 venv\Scripts\python scripts\e2e_headless.py out\AP_xxx.zip            # server + client + fake mod

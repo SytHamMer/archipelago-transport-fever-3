@@ -6,7 +6,8 @@
 - [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) 0.6.x, with this world installed (**Install
   APWorld** in the Launcher).
 - The mod `archipelago_tf3_1`, installed as a new folder in `...\3493540\local\mods\` (never in the game folder, and
-  never over a save). The installation guide of the project describes it step by step.
+  never over a save). It is the `archipelago_tf3_1.zip` file of the Releases page of the project, which also hosts the
+  world and the installation guide that describes everything step by step.
 
 ## Configuring your YAML file
 
