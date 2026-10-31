@@ -36,7 +36,7 @@ local MODES = {
 }
 local TEMPLATE_SUFFIXES = 12 -- constructions are tagged "name@0" .. "name@11" in the menu
 
-local locks, checks, effects, notify
+local locks, checks, effects, notify, contract_sync
 
 local state = {
 	last_tick = 0,
@@ -73,6 +73,7 @@ end
 local function load_modules()
 	local function load(name) return require(MOD .. "::/" .. name .. ".lua") end
 	locks, checks, effects, notify = load("ap_locks"), load("ap_checks"), load("ap_effects"), load("ap_notify")
+	contract_sync = load("ap_contract_sync")
 end
 
 -- ===== catalog of lockable content, built once from the game's resources =====
@@ -443,12 +444,17 @@ local function send_notification(message)
 	}))
 end
 
+-- Experiment switch: the file archipelago_tf3_experiment in the exchange folder (see scripts/dev_experiment.py).
+local function experiment_enabled()
+	return type(app.loadUserdata(DIR, "archipelago_tf3_experiment")) == "table"
+end
+
 local CONTRACT_TYPE = MOD .. "::/ap_contract.script"
 
 -- Keeps one notification per open contract in the notifications tab (see ap_notify.open_contracts). The game replaces
 -- the notifications of a type that changed and dismisses the ones that are gone, so this only runs on changes.
 local function publish_contracts(inbox)
-	if not inbox.contracts then return end
+	if not inbox.contracts or experiment_enabled() then return end
 	local open = notify.open_contracts(inbox.contracts, state.checks, inbox.config)
 	local keys = {}
 	for _, contract in ipairs(open) do keys[#keys + 1] = contract.key end
@@ -472,61 +478,46 @@ local function publish_contracts(inbox)
 	state.last_contracts = signature
 end
 
--- EXPERIMENT (only when the file archipelago_tf3_experiment.lua exists in the exchange folder): the first open
--- contract also becomes a real game subvention, so the game shows its own contract window for it.
+-- EXPERIMENT (only when the file archipelago_tf3_experiment exists in the exchange folder): every open contract
+-- becomes a real game subvention, so the game shows its own contract window, icon and notification for it.
 local SUBVENTION_RES = MOD .. "::/ap_subvention.res"
 
-local function uid_of(key)
-	local sum = 910000
-	for index = 1, #key do sum = sum * 31 % 100000007 + key:byte(index) end
-	return sum
-end
-
--- Counts of the game's subventions by list, logged when they change (experiment diagnosis).
-local function log_subvention_counts()
+-- Uids of the subventions the game lists as proposed, active or completed.
+local function listed_subvention_uids()
+	local uids = {}
 	local script = api.engine.system.gameScriptSystem.getEntityForGameScript("::/game_mechanics/subventions/subventions.gs")
 	local component = script and api.engine.getComponent(script, api.type.ComponentType.GAME_SCRIPT)
 	local native = component and component.state_native
-	if not native then return end
-	local parts = {}
-	for _, name in ipairs({ "proposedSubventions", "activeSubventions", "completedSubventions", "failedSubventions" }) do
+	if not native then return uids end
+	for _, name in ipairs({ "proposedSubventions", "activeSubventions", "completedSubventions" }) do
 		local list = native:find(name)
-		local count, ids = 0, {}
 		for _, entry in pairs(list and list:asTable() or {}) do
-			count = count + 1
-			if type(entry) == "table" then ids[#ids + 1] = tostring(entry.id):match("([^/]+)$") or "?" end
+			if type(entry) == "table" and type(entry.uid) == "number" then uids[#uids + 1] = entry.uid end
 		end
-		parts[#parts + 1] = name:gsub("Subventions", "") .. "=" .. count .. "[" .. table.concat(ids, ",") .. "]"
 	end
-	local signature = table.concat(parts, " ")
-	if signature ~= state.last_subvention_counts then
-		state.last_subvention_counts = signature
-		say("experiment: subventions " .. signature)
-	end
+	return uids
 end
 
-local function experiment_contracts(inbox)
-	if not inbox.contracts or type(app.loadUserdata(DIR, "archipelago_tf3_experiment")) ~= "table" then return end
+local function sync_contracts(inbox)
+	if not inbox.contracts or not experiment_enabled() then return end
 	state.spawned = state.spawned or {}
-	guarded("subvention counts", log_subvention_counts)
+	state.sync_tick = (state.sync_tick or 0) + 1
 	local open = notify.open_contracts(inbox.contracts, state.checks, inbox.config)
-	local first = open[1]
-	if first and not state.spawned[first.key] then
-		state.spawned[first.key] = { uid = uid_of(first.key) }
-		api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "Subvention", "subventionSpawn", {
-			name = SUBVENTION_RES,
-			specific = { uid = state.spawned[first.key].uid, expireDurationProposed = -1, task = first.title, reward = first.text },
-		}))
-		say("experiment: spawned subvention " .. first.key .. " uid=" .. state.spawned[first.key].uid)
+	local actions = contract_sync.plan(open, state.checks, state.spawned, listed_subvention_uids(), state.sync_tick)
+	local function send(event, name, param)
+		api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", event, name, param))
 	end
-	local reached = {}
-	for _, id in ipairs(state.checks) do reached[id] = true end
-	for key, entry in pairs(state.spawned) do
-		if reached[key] and not entry.sent then
-			entry.sent = true
-			api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "ArchipelagoContract", "reached", { uid = entry.uid }))
-			say("experiment: reached " .. key)
-		end
+	for _, spawn in ipairs(actions.spawn) do
+		send("Subvention", "subventionSpawn", {
+			name = SUBVENTION_RES,
+			specific = { uid = spawn.uid, expireDurationProposed = -1, task = spawn.title, reward = spawn.text,
+				progress = spawn.progress },
+		})
+	end
+	for _, accept in ipairs(actions.accept) do send("Subvention", "onAccept", { uid = accept.uid }) end
+	for _, done in ipairs(actions.reached) do
+		send("ArchipelagoContract", "reached", { uid = done.uid })
+		say("contract finished: " .. done.key)
 	end
 end
 
@@ -579,7 +570,7 @@ local function tick()
 	guarded("effects", apply_next_effect, player, inbox)
 	guarded("notify", notify_changes, inbox)
 	guarded("contracts", publish_contracts, inbox)
-	guarded("experiment", experiment_contracts, inbox)
+	guarded("sync", sync_contracts, inbox)
 	guarded("outbox", write_outbox)
 end
 

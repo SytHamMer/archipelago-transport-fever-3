@@ -15,6 +15,46 @@ local function anchor_town()
 	return town
 end
 
+local function cargo_id(short)
+	for id, name in pairs(api.res.cargoTypeRep.getAll()) do
+		if tostring(name):match("/cargos/([^/]+)/") == short then return id end
+	end
+end
+
+-- The current value of what a contract follows ({ kind, goal, cargo? }), or nil when it cannot be read.
+local function current_value(spec)
+	local player = api.engine.util.getPlayer()
+	if spec.kind == "passengers" or spec.kind == "cargo" then
+		local transported = api.engine.util.headquarters.getTransportedData()
+		return spec.kind == "passengers" and transported.passengersTransported or transported.cargoTransported
+	elseif spec.kind == "delivered" then
+		local id = cargo_id(spec.cargo)
+		return id and api.engine.util.logbook.getLogValueMostRecent(player, "itemsTransported" .. tostring(id)) or 0
+	end
+	local progression = ug_require("::/game_mechanics/company/company_progression_util.tl")
+	local status = progression.getCompanyProgressionState(player)
+	if not status then return nil end
+	if spec.kind == "population" then return status.experience end
+	if spec.kind == "company_level" then
+		local company = ug_require("::/game_mechanics/company/company_util.tl")
+		return (progression.getLevelAndFraction(company.getBasePopulation(), status.experience))
+	end
+end
+
+local function with_separators(number)
+	local digits = tostring(math.floor(number))
+	local out = digits:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	return (out:gsub("^,", ""))
+end
+
+-- "35 / 100" for a contract that follows a number, nil otherwise.
+local function progress_text(spec)
+	if type(spec) ~= "table" or not spec.goal then return nil end
+	local ok, value = pcall(current_value, spec)
+	if not ok or type(value) ~= "number" then return nil end
+	return with_separators(math.min(value, spec.goal)) .. " / " .. with_separators(spec.goal), math.min(1, value / spec.goal)
+end
+
 local function text_of(params)
 	return params and params.text or ""
 end
@@ -33,6 +73,7 @@ local contract = {
 		state.effectDuration = api.util.getDefaultMonthDuration() * 6
 		state.upfront, state.failure, state.complete = {}, {}, {}
 		state.task = param.task
+		state.progress = param.progress
 		state.reward = param.reward
 		state.reached = false
 		return state, param.uid
@@ -80,7 +121,9 @@ local contract = {
 	-- The card the game shows: the task as the description, what completing it gives under "on completion".
 	getCardData = function(state)
 		local card = subvention_util.makeDefaultCardData(state, ICON)
-		card.description = state.data.task or ""
+		local text, fraction = progress_text(state.data.progress)
+		card.description = (state.data.task or "") .. (text and (" (" .. text .. ")") or "")
+		if text and card.status == "Active" then card.progress = { value = fraction, text = text } end
 		card.deadline, card.expireDuration = nil, nil
 		card.upfront, card.failure = {}, {}
 		card.complete = { { text = state.data.reward or "" } }
