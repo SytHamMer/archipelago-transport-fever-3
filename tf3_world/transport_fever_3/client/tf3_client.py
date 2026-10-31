@@ -3,13 +3,14 @@ import asyncio
 import os
 import time
 from argparse import Namespace
-from collections.abc import Callable, Container, Iterable, Sequence
+from collections.abc import Callable, Coroutine, Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from .. import data
 from ..Locations import location_table
 from .bridge import Bridge
+from .contracts import contracts_from_scout, contracts_report
 
 STEAM_ROOT = Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Steam"
 TF3_APP_ID = "3493540"
@@ -77,29 +78,6 @@ def received_log(
     return log
 
 
-def contracts_from_scout(
-    infos: Iterable[tuple[int, int, int]],
-    own_slot: int,
-    location_name: Callable[[int], str | None],
-    item_name: Callable[[int, int], str | None],
-    player_name: Callable[[int], str | None],
-) -> dict:
-    """The reward of each check from the server's scout reply, keyed by check id.
-
-    `infos` is a list of (location id, item id, receiving slot); an id that cannot be named is skipped.
-    `item_name(item id, slot)` must look the item up in the game of the receiving slot: item ids are numbered per
-    game, so the receiver may play another game than ours.
-    """
-    contracts = {}
-    for location, item, receiver in infos:
-        check, reward = location_name(location), item_name(item, receiver)
-        if check is None or reward is None:
-            continue
-        contracts[check] = {"item": reward, "to": player_name(receiver) or f"Player {receiver}",
-                            "own": receiver == own_slot}
-    return contracts
-
-
 def death_effect(payload: dict, own_name: str, loss: int) -> dict | None:
     """The money loss of a DeathLink received from another player, or None when it must be ignored.
 
@@ -110,89 +88,6 @@ def death_effect(payload: dict, own_name: str, loss: int) -> dict | None:
     if not isinstance(moment, (int, float)) or not isinstance(source, str) or source == own_name:
         return None
     return {"id": int(moment * 1000), "amount": loss, "source": source, "cause": str(payload.get("cause") or "")}
-
-
-FAMILY_ORDER = ("population", "company_level", "passengers", "cargo", "mission", "line", "delivered")
-
-
-def delivery_amount(checks: dict, cargo: str, tier: str) -> int | None:
-    """The amount of a delivery check: the cargo's own list when the seed gives one, the shared list otherwise."""
-    amounts = (checks.get("delivery_by_cargo") or {}).get(cargo) or checks.get("delivery") or []
-    return amounts[int(tier) - 1] if tier.isdigit() and 0 < int(tier) <= len(amounts) else None
-
-
-def describe_check(check: str, checks: dict | None) -> str:
-    """Readable text of a check id, as the in-game contract shows it (the id itself when it is not known)."""
-    checks = checks or {}
-    family, *parts = check.split(":")
-
-    def threshold(name: str, index: str) -> int | None:
-        values = checks.get(name) or []
-        return values[int(index) - 1] if index.isdigit() and 0 < int(index) <= len(values) else None
-
-    if family == "population" and threshold("population", parts[0]) is not None:
-        return f"Population reached {threshold('population', parts[0]):,}"
-    if family == "company_level" and parts:
-        return f"Company level {parts[0]} reached"
-    if family == "passengers" and threshold("passengers", parts[0]) is not None:
-        return f"Passengers transported: {threshold('passengers', parts[0]):,}"
-    if family == "cargo" and threshold("cargo", parts[0]) is not None:
-        return f"Cargo transported: {threshold('cargo', parts[0]):,}"
-    if family == "mission" and threshold("missions", parts[0]) is not None:
-        return f"Missions completed: {threshold('missions', parts[0]):,}"
-    if family == "line" and parts:
-        return f"First {parts[0]} line built"
-    if family == "delivered" and len(parts) == 2:
-        amount = delivery_amount(checks, parts[0], parts[1])
-        if amount is not None:
-            return f"Delivered {amount:,} {parts[0].replace('_', ' ')}"
-    return check
-
-
-def _next_contracts(open_ids: list[str]) -> list[str]:
-    """The next step of each ladder and of each cargo's deliveries, and every first line (as the game shows them)."""
-    best: dict[str, tuple[int, str]] = {}
-    chosen = []
-    for check in open_ids:
-        family, *parts = check.split(":")
-        if family == "line" or not parts or not parts[-1].isdigit():
-            chosen.append(check)
-            continue
-        group = f"{family}:{parts[0]}" if family == "delivered" else family
-        step = int(parts[-1])
-        if group not in best or step < best[group][0]:
-            best[group] = (step, check)
-    chosen += [check for _, check in best.values()]
-    return chosen
-
-
-def _order(check: str) -> tuple[int, str]:
-    family = check.split(":")[0]
-    return FAMILY_ORDER.index(family) if family in FAMILY_ORDER else len(FAMILY_ORDER), check
-
-
-def contracts_report(
-    contracts: dict, done: Container[str], checks: dict | None = None, show_all: bool = False
-) -> list[str]:
-    """Console lines for /contracts: the progress, then the next open contracts with their reward.
-
-    `checks` holds the thresholds of the slot data (to write the contracts in plain text); `show_all` lists every
-    open contract, not only the next step of each ladder.
-    """
-    if not contracts:
-        return ["No contracts known yet (waiting for the server)."]
-    open_ids = [check for check in contracts if check not in done]
-    shown = sorted(open_ids if show_all else _next_contracts(open_ids), key=_order)
-    hidden = len(open_ids) - len(shown)
-    header = f"Contracts: {len(contracts) - len(open_ids)}/{len(contracts)} done"
-    if hidden:
-        header += f" ({hidden} later contracts not shown, /contracts all lists everything)"
-    lines = [header]
-    for check in shown:
-        reward = contracts[check]
-        suffix = "" if reward["own"] else f" for {reward['to']}"
-        lines.append(f"{describe_check(check, checks)} -> {reward['item']}{suffix}")
-    return lines
 
 
 class StatusTracker:
@@ -357,6 +252,12 @@ def launch(*launch_args) -> None:
             self.warned_year = False
             self.warned_folder = False
             self.contracts: dict = {}  # check id -> reward, filled from the server's scout reply
+            self.background: set[asyncio.Task] = set()  # tasks must be referenced, or they can be collected mid-run
+
+        def spawn(self, coroutine: Coroutine, name: str) -> None:
+            task = asyncio.create_task(coroutine, name=name)
+            self.background.add(task)
+            task.add_done_callback(self.background.discard)
 
         def slot_checks(self) -> dict | None:
             return self.pending_slot[0].get("checks") if self.pending_slot else None
@@ -394,14 +295,13 @@ def launch(*launch_args) -> None:
                 if self.sync:
                     self.sync.own_name = self.player_names.get(self.slot, "")
                     self.sync.on_connected(*self.pending_slot)
-                asyncio.create_task(self.update_death_link(bool(args["slot_data"].get("death_link"))),
-                                    name="TF3 death link tag")
+                self.spawn(self.update_death_link(bool(args["slot_data"].get("death_link"))), "TF3 death link tag")
                 if self.poll_task is None or self.poll_task.done():
                     self.poll_task = asyncio.create_task(self.poll_loop(), name="TF3 outbox poll")
                 everything = sorted(set(args.get("missing_locations", [])) | set(args.get("checked_locations", [])))
                 if everything:
-                    asyncio.create_task(self.send_msgs([{"cmd": "LocationScouts", "locations": everything,
-                                                         "create_as_hint": 0}]), name="TF3 scout")
+                    self.spawn(self.send_msgs([{"cmd": "LocationScouts", "locations": everything,
+                                                "create_as_hint": 0}]), "TF3 scout")
             elif cmd == "LocationInfo":
                 infos = [(entry.location, entry.item, entry.player) for entry in
                          (NetworkItem(**raw) if isinstance(raw, dict) else raw for raw in args["locations"])]
@@ -450,8 +350,9 @@ def launch(*launch_args) -> None:
             if result.year_warning and not self.warned_year:
                 self.warned_year = True
                 logger.warning(
-                    f"The game year is before {data.MIN_START_YEAR}: vehicles of later years stay hidden and "
-                    f"no item can unlock them. Create the game with a start year of {data.MIN_START_YEAR} or later."
+                    f"The game year is before {data.MIN_START_YEAR} and this version of the mod does not remove the "
+                    f"first years of the content: vehicles of later years stay hidden and no item can unlock them. "
+                    f"Update the mod, or create the game with a start year of {data.MIN_START_YEAR} or later."
                 )
             if not self.connected_to_server():
                 return  # nothing may be marked as sent while the server cannot receive it

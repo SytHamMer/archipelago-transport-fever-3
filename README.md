@@ -19,7 +19,7 @@ Installing Archipelago, adding a world, generating, hosting and connecting a cli
 
 The client and the mod exchange two files in `...\3493540\local\towns_industries\` (the game only lets mods use that folder and `mod_presets`). Set the `TF3_USERDATA_DIR` variable to change the folder.
 
-Step by step instructions, the choice of the start year and troubleshooting are in [docs/guide-installation.md](docs/guide-installation.md).
+Step by step instructions, the choice of the start year and troubleshooting are in [docs/guide-installation.md](docs/guide-installation.md). Playing with a friend on another game is described in [docs/playing-with-a-friend.md](docs/playing-with-a-friend.md), with an example YAML in [docs/examples/tf3-friend-test.yaml](docs/examples/tf3-friend-test.yaml).
 
 ## What is in the game
 
@@ -57,7 +57,7 @@ any start year. The game's own bank loans already follow the year and are left a
 
 Each open check is shown as a real game contract, with the game's own window (task, and what completing it gives: the item and the player who receives it), icon and notification, like the game's own subsidies. A contract has no deadline and no penalty.
 
-**Contracts do not need to be accepted to be completed.** A check is reached as soon as the game reaches its value, whether or not the contract was accepted; the mod then accepts and finishes the contract by itself. Accepting only makes it appear under "contract in progress". **Do not accept more than 5 Archipelago contracts at the same time**: the game only proposes its own subsidies while fewer than 5 contracts are active, so accepting more of ours stops its subsidies (such as "Connect towns") from appearing until some of ours are finished. The game's own subsidies (for example "Connect towns") keep appearing as usual as long as you do not accept too many contracts, see below. If you decline a contract it comes back, until its check is reached.
+**Contracts do not need to be accepted to be completed.** A check is reached as soon as the game reaches its value, whether or not the contract was accepted; the mod then accepts and finishes the contract by itself. Accepting only makes it appear under "contract in progress". **Do not accept more than 5 Archipelago contracts at the same time**: the game only proposes its own subsidies while fewer than 5 contracts are active, so accepting more of ours stops its subsidies (such as "Connect towns") from appearing until some of ours are finished. If you decline a contract it comes back, until its check is reached.
 
 Only the next step of each ladder is shown (the next population level, the next company level, the next delivery tier of each cargo, every first line), so the game does not fill up with contracts. The client command `/contracts` lists the next open contracts in plain text with their reward; `/contracts all` lists every open contract.
 
@@ -113,8 +113,8 @@ games with different options are worth more than one long game. The known proble
 ## Known limits
 
 - One-shot effects (money, traps) are tied to the **seed**, not to the save: loading an old save does not give back the money already received.
-- Cargos are the temperate climate ones.
-- Air mode, tram, water, the first line and delivery checks, and tier 3 of the vehicles have not all been verified in game (see `docs/superpowers/plans/e2e-checklist.md`).
+- The cargos of each climate and their difficulty are read from the game's files; they have not been checked on every map.
+- Verified in game so far: the road (all three vehicle tiers), contracts, notifications, DeathLink, loans and a two-player multiworld. Air mode, tram and water menus, the first line and delivery checks of each mode, and the rail tiers have not all been verified (see `docs/superpowers/plans/e2e-checklist.md`).
 - Missions of the game count once completed, whatever their type; the mod reads them every 2 seconds.
 - There is no tracking window in the game: items received and checks sent are announced by notifications (with the Archipelago logo), and the open contracts are the game's own contract interface.
 

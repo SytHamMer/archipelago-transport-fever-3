@@ -1,6 +1,7 @@
 from transport_fever_3.client import luafile
 from transport_fever_3.client.bridge import INBOX_NAME, Bridge
-from transport_fever_3.client.tf3_client import TF3Sync, contracts_from_scout, contracts_report
+from transport_fever_3.client.contracts import contracts_from_scout, contracts_report
+from transport_fever_3.client.tf3_client import TF3Sync
 
 SLOT = {
     "version": 1, "seed": "seed-1", "goals": {"population": 0, "company_level": 0, "passengers": 0, "cargo": 0},
