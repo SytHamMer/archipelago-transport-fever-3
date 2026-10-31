@@ -17,12 +17,12 @@ TOOLS = ("Tool: Bus Lanes", "Tool: Tram Tracks", "Tool: Rail Signals", "Tool: El
 ITEM_ROAD_TYPES = "Progressive Road Types"
 ITEM_RAIL_TRACKS = "Progressive Rail Tracks"
 MONEY_ITEMS = {
-    "Money Grant (small)": 50_000,
-    "Money Grant (medium)": 250_000,
-    "Money Grant (large)": 1_000_000,
+    "Money Grant (small)": 1_000_000,
+    "Money Grant (medium)": 5_000_000,
+    "Money Grant (large)": 20_000_000,
 }
 # Traps take money away. The small loss is drawn three times out of four.
-TRAPS = {"Money Loss (small)": 50_000, "Money Loss (medium)": 250_000}
+TRAPS = {"Money Loss (small)": 1_000_000, "Money Loss (medium)": 5_000_000}
 TRAP_WEIGHTS = (3, 1)
 
 # Cargo types of the temperate climate (identifiers of the game's cargo files, passengers excluded).

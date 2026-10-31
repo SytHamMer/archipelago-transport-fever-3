@@ -77,7 +77,7 @@ How YAML files work (the Launcher template, the `Players` folder, weights and ra
 Main options (see the README for the full list and an example):
 
 - **Missions**: `mission_checks` (3 by default, 0 to 30) creates contracts "N missions completed". A mission is an offer of the game, for example connecting two towns; it counts once completed, whatever its type.
-- **Money**: `money_scale` (in %, 100 by default) multiplies every money grant and every money loss (base: 50,000, 250,000 and 1,000,000 for grants; 50,000 and 250,000 for losses). Lower it for a harder game.
+- **Money**: `money_scale` (in %, 100 by default) multiplies every money grant and every money loss (base: 1,000,000, 5,000,000 and 20,000,000 for grants; 1,000,000 and 5,000,000 for losses, sized for the prices of a 2020 start). Lower it for a harder game.
 - **Loans**: `loan_scale` (in %, 10 by default, 1 to 200) scales the amount of every bank loan. The game multiplies its loan amounts by 2.4 in 2020 (12 to 144 million each), which would make the money of the multiworld meaningless. The four loans the game creates when the game starts use the default scale (10%) because the game makes them before the mod can read your YAML value; your `loan_scale` applies to every loan the game makes afterwards (about every 6 months of game time, or after you take one).
 - **Goals**: `goal_population`, `goal_company_level`, `goal_passengers`, `goal_cargo`. 0 disables a goal. The game is won when **all** active goals are reached. At least one must stay active.
 - **Map climate**: `climate` (temperate by default) is the climate of the map you will play. Delivery checks only ask for cargos it can produce and whose industries appear at the company rank your level items guarantee; harder cargos ask for smaller amounts. See the README.
@@ -100,7 +100,7 @@ These steps are Archipelago's in general: see the [official documentation](https
 - Five **tools** are unlocked by their own item: **Tool: Bus Lanes**, **Tool: Tram Tracks** (tram tracks on roads), **Tool: Rail Signals**, **Tool: Electrification** and **Tool: Noise Barriers**. A tool of a locked mode stays closed even with its item. Roundabouts and interchanges follow the road types, by year.
 - Four **cargo class** items (`Cargo Class: Bulk`, `Flatbed`, `Goods`, `Liquid`) unlock the specialised freight vehicles of that class (bulk wagons, tankers...). **Universal** vehicles (any cargo) and passenger vehicles are never locked by class: a universal cart or truck of the first tier carries every cargo from the start.
 - The "**company level +1**" items grant a level, with the game's usual benefits.
-- **Money** arrives as accounting entries; traps remove money (a loss of 50,000 or 250,000).
+- **Money** arrives as accounting entries; traps remove money (a loss of 1,000,000 or 5,000,000).
 - Money effects are applied **only once**, but they are tied to the seed, not to the save: if you reload an old save, the money already received does not come back.
 
 ### Contracts

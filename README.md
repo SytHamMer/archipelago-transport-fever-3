@@ -41,6 +41,13 @@ Step by step instructions, the choice of the start year and troubleshooting are 
   100 / 500 / 2,000 / 10,000, medium ones (steel, fabric, furniture...) 50 / 250 / 1,000 / 5,000, hard ones (machines,
   tools, clothes, vehicles...) 20 / 100 / 400 / 2,000.
 
+### A 2020 start and the game's prices
+
+Starting in 2020 keeps every vehicle available, but the game then only offers its recent depots and stations, whose
+price is multiplied by an era coefficient (1 before 1940, 3 from 1940, 9 from 1980). The mod divides that coefficient
+back out for depots, stations and terminals, so they cost what they cost in the first era. The money rewards and traps are sized for
+that economy (see `money_scale`). Vehicle prices are computed by the game and are not changed.
+
 ### Contracts
 
 Each open check is shown as a real game contract, with the game's own window (task, and what completing it gives: the item and the player who receives it), icon and notification, like the game's own subsidies. A contract has no deadline and no penalty.
@@ -69,7 +76,7 @@ The format of a YAML file, weights and random options are explained in the [offi
 
 Bank loans are scaled by `loan_scale`: the game multiplies its loan amounts by 2.4 in 2020 (tens of millions each), which would make the multiworld's money meaningless. The four loans the game creates when the game starts use the default scale (10%) because the game makes them before the mod can read your YAML value; your `loan_scale` applies to every loan the game makes afterwards (about every 6 months of game time, or after you take one).
 
-The base money amounts (grants 50,000 / 250,000 / 1,000,000, losses 50,000 / 250,000) are multiplied by `money_scale`.
+The base money amounts (grants 1,000,000 / 5,000,000 / 20,000,000, losses 1,000,000 / 5,000,000) are tuned for a 2020 start, where the game's prices are in the hundreds of thousands, and are multiplied by `money_scale`.
 
 Example:
 

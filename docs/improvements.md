@@ -31,7 +31,10 @@ Newest at the end of each section. Nothing here is started unless it says so.
 
 ## Economy at a 2020 start
 
-### 3. Everything costs far more than in an early game
+### 3. Everything costs far more than in an early game (partly done on the `cargo-balance` branch)
+
+- **Done, not yet checked in game:** the era coefficient of depots, stations and terminals (x9 from 1980) is divided out at load (`ap_costs.lua`).
+- **Still open:** vehicle prices (computed by the engine), road and track prices, and a YAML-driven cost scale (needs the load script to read the exchange file, see the probe on the `economy` branch).
 
 - **Problem:** the game inflates prices with the year. Starting in 2020 (needed for vehicles, see the guide), a bus
   stop costs about 300,000 where an early game has it at about 12,000. The whole game is unbalanced for a new company.
@@ -41,7 +44,9 @@ Newest at the end of each section. Nothing here is started unless it says so.
   construction and vehicle costs back, or by giving the company a starting capital that fits the year; to be
   measured in game before choosing.
 
-### 4. Money rewards are far too small for that economy
+### 4. Money rewards are far too small for that economy (done on the `cargo-balance` branch)
+
+- **Done, not yet checked in game:** grants are now 1,000,000 / 5,000,000 / 20,000,000 and losses 1,000,000 / 5,000,000.
 
 - **Problem:** the money grants (50,000 / 250,000 / 1,000,000) and the losses (50,000 / 250,000) are tiny compared with
   prices at 2020, so a grant buys almost nothing and a loss is not felt.

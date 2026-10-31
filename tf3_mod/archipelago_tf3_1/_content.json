@@ -4,6 +4,7 @@
         "ap.gs.lua",
         "ap_checks.lua",
         "ap_contract_sync.lua",
+        "ap_costs.lua",
         "ap_effects.lua",
         "ap_icon@2x.tga",
         "ap_load.script.lua",

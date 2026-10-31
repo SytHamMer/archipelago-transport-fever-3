@@ -18,11 +18,16 @@ function data()
 				if data.availability then data.availability.yearTo = 0 end
 				return data
 			end)
+			-- Modern depots and stations cost nine times their first-era price (an era coefficient in their files): bring
+			-- them back, or a game that starts in 2020 has no cheap way to build a first line (see ap_costs.lua).
+			local found, costs = pcall(require, "archipelago_tf3_1::/ap_costs.lua")
+			if not found then pcall(debugPrint, "ARCHIPELAGO costs module unavailable: " .. tostring(costs)) end
 			-- Interchanges, roundabouts, signals: only the infrastructure constructions, never buildings or industries.
 			addModifier("loadConstruction", function(fileName, data)
 				if data.availability and tostring(fileName):find("/infrastructure/", 1, true) then
 					data.availability.yearTo = 0
 				end
+				if found then pcall(costs.normalise, fileName, data) end
 				return data
 			end)
 		end,
