@@ -493,6 +493,10 @@ end
 -- that make them. The GUI side sends the wanted percentage as an event; the simulation side keeps it in its state so
 -- that it is applied again after a load. Loans the game already made keep their amount until it renews them.
 
+-- The game makes its first four loans when the game is created, before the mod can read the YAML value: the
+-- replacement is installed as soon as the script is loaded, with this default (the default of the loan_scale option).
+local DEFAULT_LOAN_PERCENT = 10
+
 local LOAN_MAKERS = { "createSmallLoan", "createMediumLoan", "createLargeLoan", "createExtraLargeLoan" }
 
 local function patch_loans(percent)
@@ -573,6 +577,8 @@ local function tick()
 	guarded("loans", send_loan_scale, inbox)
 	guarded("outbox", write_outbox)
 end
+
+pcall(patch_loans, DEFAULT_LOAN_PERCENT)
 
 function data()
 	return {
