@@ -482,9 +482,33 @@ local function uid_of(key)
 	return sum
 end
 
+-- Counts of the game's subventions by list, logged when they change (experiment diagnosis).
+local function log_subvention_counts()
+	local script = api.engine.system.gameScriptSystem.getEntityForGameScript("::/game_mechanics/subventions/subventions.gs")
+	local component = script and api.engine.getComponent(script, api.type.ComponentType.GAME_SCRIPT)
+	local native = component and component.state_native
+	if not native then return end
+	local parts = {}
+	for _, name in ipairs({ "proposedSubventions", "activeSubventions", "completedSubventions", "failedSubventions" }) do
+		local list = native:find(name)
+		local count, ids = 0, {}
+		for _, entry in pairs(list and list:asTable() or {}) do
+			count = count + 1
+			if type(entry) == "table" then ids[#ids + 1] = tostring(entry.id):match("([^/]+)$") or "?" end
+		end
+		parts[#parts + 1] = name:gsub("Subventions", "") .. "=" .. count .. "[" .. table.concat(ids, ",") .. "]"
+	end
+	local signature = table.concat(parts, " ")
+	if signature ~= state.last_subvention_counts then
+		state.last_subvention_counts = signature
+		say("experiment: subventions " .. signature)
+	end
+end
+
 local function experiment_contracts(inbox)
 	if not inbox.contracts or type(app.loadUserdata(DIR, "archipelago_tf3_experiment")) ~= "table" then return end
 	state.spawned = state.spawned or {}
+	guarded("subvention counts", log_subvention_counts)
 	local open = notify.open_contracts(inbox.contracts, state.checks, inbox.config)
 	local first = open[1]
 	if first and not state.spawned[first.key] then
