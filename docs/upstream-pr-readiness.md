@@ -20,13 +20,11 @@ a manual check of the web page and the documentation.
 | Style: 120 columns, double quotes, annotations, snake_case | `tests/test_style.py` |
 | Documentation in English | README, world docs, guides |
 
-Upstream general tests, run with `AP_TEST_WORLDS=transport_fever_3` (the folder name, not the game name): 155 passed.
+Upstream general tests (and the web host ones, see below), run with `AP_TEST_WORLDS=transport_fever_3` (the folder name, not the game name): 155 passed.
 
 ## Not done or not run
 
-1. **Web host tests were not run.** They need Flask and the web host requirements, which are not in the project's
-   virtual environment. They cover the rendering of the docs, the option presets and the option descriptions, so they
-   matter for the web page. Installing the packages needs the author's approval.
+1. **Web host tests** (descriptions, docs, file generation, option presets): the 7 tests that cover the world pass. They were run with the web host requirements installed in the venv and the module updater disabled (it wants to downgrade other packages). The rendered pages themselves still need a manual look.
 2. **The mod is not part of the apworld.** The game needs the Lua mod, installed by `scripts/install_mod.py`. The setup
    guide says to install it but has **no download link**: the mod has to be hosted (for example a GitHub release of the
    author's repository) before the pull request, and the link added to `docs/setup_en.md`.
