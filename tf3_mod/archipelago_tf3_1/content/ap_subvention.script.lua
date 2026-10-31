@@ -1,4 +1,4 @@
--- EXPERIMENT: game side of an Archipelago contract that is a real game subvention (see ap_subvention.res.lua).
+-- Game side of an Archipelago contract that is a real game subvention (see ap_subvention.res.lua).
 -- It is never spawned by the game itself (canSpawn is false): ap_main.script.lua spawns it with the
 -- "subventionSpawn" event, and reports the check as reached with an "ArchipelagoContract"/"reached" event.
 local subvention_util = ug_require("::/game_mechanics/subventions/subvention_util.tl")

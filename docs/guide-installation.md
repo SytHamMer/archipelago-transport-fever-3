@@ -1,131 +1,139 @@
-# Guide d'installation et de jeu : Transport Fever 3 x Archipelago
+# Installation and play guide: Transport Fever 3 x Archipelago
 
-Ce guide s'adresse à un joueur qui n'a jamais vu le projet. Il décrit comment tout est installé, ce que chaque morceau fait, comment choisir l'année de départ, et quoi faire quand ça ne marche pas.
+This guide is for a player who has never seen the project. It describes how everything is installed, what each piece does, how to choose the start year, and what to do when something does not work.
 
-> Statut : version 2, testée en local sur Windows 11 avec Archipelago 0.6.8 et Transport Fever 3 (Steam). Ce n'est pas proposé au dépôt officiel d'Archipelago.
+> Status: version 2, tested locally on Windows 11 with Archipelago 0.6.8 and Transport Fever 3 (Steam). It has not been proposed to the official Archipelago repository.
 
-## 1. Comment ça marche
-
-```
-Serveur Archipelago  <->  Client (dans le Launcher)  <->  deux fichiers  <->  Mod dans Transport Fever 3
-```
-
-- Le **monde** (`transport_fever_3.apworld`) dit à Archipelago quels items et quels checks existent.
-- Le **client** se connecte au serveur et écrit dans un fichier `inbox` l'état voulu (items reçus, options). Il lit un fichier `outbox` pour envoyer les checks.
-- Le **mod** tourne dans le jeu. Toutes les 2 secondes, il lit l'`inbox`, verrouille ou déverrouille les modes, les véhicules, les types de routes et de voies, les outils et les classes de cargo, applique l'argent et les pièges, puis écrit l'`outbox` (checks atteints, année du jeu, battement).
-
-Le jeu ne laisse pas les mods lire ou écrire des fichiers librement : ils n'ont accès qu'à un dossier fixe, `towns_industries`, dans les données utilisateur de TF3. C'est le dossier d'échange.
-
-## 2. Ce qu'il faut
-
-- Transport Fever 3 (Steam), version avec les outils de mod (c'est le cas de la version normale).
-- Archipelago 0.6.x, installé selon la [documentation officielle](https://archipelago.gg/tutorial/Archipelago/setup/en).
-- Les deux livrables du projet :
-  - `dist/transport_fever_3.apworld` (le monde) ;
-  - `tf3_mod/archipelago_tf3_1/` (le mod).
-
-Pour reconstruire le monde : `python scripts/build_world.py`.
-
-## 3. Installer le monde
-
-Ajouter un `.apworld` à Archipelago est décrit dans la [documentation officielle](https://archipelago.gg/tutorial/Archipelago/setup/en) (Launcher, **Install APWorld**, puis redémarrage du Launcher). Ici, le fichier est `dist/transport_fever_3.apworld`, et l'outil à repérer ensuite dans le Launcher s'appelle **Transport Fever 3 Client**.
-
-## 4. Installer le mod dans le jeu
-
-**Ferme Transport Fever 3 avant.** Le mod s'installe comme un **nouveau dossier** dans le dossier des mods utilisateur ; ni l'installation du jeu ni tes sauvegardes ne sont touchées.
-
-Avec le script (recommandé) :
+## 1. How it works
 
 ```
-python scripts/install_mod.py          # première installation
-python scripts/install_mod.py --update # mise à jour d'une copie déjà installée
+Archipelago server  <->  Client (in the Launcher)  <->  two files  <->  Mod in Transport Fever 3
 ```
 
-Le script refuse de s'exécuter si le jeu tourne, et ne copie qu'un dossier. Il détecte le dossier des mods ; sinon passe `--mods-dir`.
+- The **world** (`transport_fever_3.apworld`) tells Archipelago which items and checks exist.
+- The **client** connects to the server and writes the wanted state (received items, options, the reward of each contract) into an `inbox` file. It reads an `outbox` file to send the checks.
+- The **mod** runs in the game. Every 2 seconds it reads the `inbox`, locks or unlocks the modes, vehicles, road and rail types, tools and cargo classes, applies money and traps, creates and finishes the contracts, then writes the `outbox` (reached checks, game year, heartbeat).
 
-À la main : copie le dossier `tf3_mod/archipelago_tf3_1` dans
+The game does not let mods read or write files freely: they only get one fixed folder, `towns_industries`, in TF3's user data. That is the exchange folder.
+
+## 2. What you need
+
+- Transport Fever 3 (Steam), the version with the mod tools (the normal version has them).
+- Archipelago 0.6.x, installed as described in the [official documentation](https://archipelago.gg/tutorial/Archipelago/setup/en).
+- The two deliverables of the project:
+  - `dist/transport_fever_3.apworld` (the world);
+  - `tf3_mod/archipelago_tf3_1/` (the mod).
+
+To rebuild the world: `python scripts/build_world.py`.
+
+## 3. Install the world
+
+Adding an `.apworld` to Archipelago is described in the [official documentation](https://archipelago.gg/tutorial/Archipelago/setup/en) (Launcher, **Install APWorld**, then restart the Launcher). Here the file is `dist/transport_fever_3.apworld`, and the tool to look for afterwards in the Launcher is called **Transport Fever 3 Client**.
+
+## 4. Install the mod in the game
+
+**Close Transport Fever 3 first.** The mod is installed as a **new folder** in the user mods folder; neither the game installation nor your saves are touched.
+
+With the script (recommended):
 
 ```
-C:\Program Files (x86)\Steam\userdata\<ton id Steam>\3493540\local\mods\
+python scripts/install_mod.py          # first installation
+python scripts/install_mod.py --update # update of an already installed copy
 ```
 
-Le dossier de ce mod doit s'appeler exactement `archipelago_tf3_1`. Le dossier `save`, juste à côté, ne doit jamais être modifié.
+The script refuses to run while the game is running, and only copies one folder. It detects the mods folder; otherwise pass `--mods-dir`.
 
-Au lancement de TF3, le mod « Archipelago for Transport Fever 3 » apparaît dans le gestionnaire de mods ; il doit être **activé à la création de la partie**.
+By hand: copy the `tf3_mod/archipelago_tf3_1` folder into
 
-Pour le retirer : supprime ce dossier de `mods` (jeu fermé).
+```
+C:\Program Files (x86)\Steam\userdata\<your Steam id>\3493540\local\mods\
+```
 
-## 5. Créer la partie dans Transport Fever 3
+The folder of this mod must be named exactly `archipelago_tf3_1`. The `save` folder next to it must never be modified.
 
-Une partie Archipelago est une **partie dédiée** : un slot, un seed. On ne branche pas le mod sur une sauvegarde existante.
+When TF3 starts, the "Archipelago for Transport Fever 3" mod appears in the mod manager; it must be **enabled when the game is created**.
 
-1. Nouvelle partie libre (bac à sable), avec le mod activé.
-2. **Année de départ : le plus tard possible, 2000 ou plus.** Le maximum proposé est 2020.
+To remove it: delete that folder from `mods` (game closed).
 
-### Pourquoi l'année de départ compte
+## 5. Create the game in Transport Fever 3
 
-Le jeu cache de lui-même les véhicules (et les stations, voies…) dont l'année de sortie n'est pas arrivée. Les filtres du mod ne peuvent que **cacher** davantage : ils ne peuvent pas montrer un véhicule que le jeu cache déjà. Dans une partie qui démarre en 1890, un train de 1950 serait inatteignable pour un item, et attendre que les années passent contredit l'idée d'une partie plus rapide.
+An Archipelago game is a **dedicated game**: one slot, one seed. The mod is not attached to an existing save.
 
-En démarrant en 2020, tout est disponible par la date, et ce sont les items du multiworld qui verrouillent. Le mod retire aussi les dates de fin des véhicules (comme le mod officiel « véhicules sans année de fin »), pour que les vieux véhicules restent en vente.
+1. New free-play (sandbox) game, with the mod enabled.
+2. **Start year: as late as possible, 2000 or later.** The maximum offered is 2020.
 
-Si l'année est inférieure à 2000, le client affiche un avertissement dans sa fenêtre : recrée la partie avec une année plus tardive. Le mod ne règle jamais la date lui-même.
+### Why the start year matters
 
-## 6. Régler les options (YAML)
+The game hides vehicles (and stations, tracks...) whose release year has not come yet. The mod's filters can only hide **more**: they cannot show a vehicle the game already hides. In a game that starts in 1890, a train from 1950 would be out of reach of any item, and waiting for years to pass defeats the idea of a faster game.
 
-Le fonctionnement des YAML (modèle du Launcher, dossier `Players`, poids et valeurs aléatoires) est décrit dans la [documentation officielle des réglages](https://archipelago.gg/tutorial/Archipelago/advanced_settings/en). Ce monde n'ajoute que ses propres options, listées ci-dessous.
+Starting in 2020, everything is available by date, and the items of the multiworld do the locking. The mod also removes the end dates of vehicles and roads (like the official "vehicles without end year" mod), so that old vehicles stay on sale.
 
-Principales options (voir le README pour la liste complète et un exemple) :
+If the year is before 2000, the client shows a warning in its window: recreate the game with a later year. The mod never sets the date itself.
 
-- **Missions** : `mission_checks` (3 par défaut, 0 à 30) crée des contrats « N missions accomplies ». Une mission est une offre du jeu, par exemple relier deux villes ; elle compte une fois accomplie, quel que soit son type.
-- **Argent** : `money_scale` (en %, 100 par défaut) multiplie tous les gains et toutes les pertes d'argent (base : 50 000, 250 000 et 1 000 000 pour les gains ; 50 000 et 250 000 pour les pertes). Baissez-le pour une partie plus dure.
-- **Goals** : `goal_population`, `goal_company_level`, `goal_passengers`, `goal_cargo`. 0 désactive un goal. La partie est gagnée quand **tous** les goals actifs sont atteints. Au moins un doit rester actif.
-- **Checks** : paliers de population, de passagers et de fret (nombre, première et dernière valeur), niveaux d'entreprise, livraisons par cargo, première ligne de chaque mode, missions du jeu.
-- Il faut au moins autant de checks que d'items de progression, sinon la génération s'arrête avec un message qui donne le nombre.
+## 6. Set the options (YAML)
 
-Les mesures du jeu : la **population** est lue par l'expérience de la compagnie (égale à la population totale), les passagers et le fret par les totaux historiques de la barre du jeu.
+How YAML files work (the Launcher template, the `Players` folder, weights and random values) is described in the [official settings documentation](https://archipelago.gg/tutorial/Archipelago/advanced_settings/en). This world only adds its own options, listed below.
 
-## 7. Générer, héberger, se connecter
+Main options (see the README for the full list and an example):
 
-Ces étapes sont celles d'Archipelago en général : voir la [documentation officielle](https://archipelago.gg/tutorial/Archipelago/setup/en). Deux points propres à ce client :
+- **Missions**: `mission_checks` (3 by default, 0 to 30) creates contracts "N missions completed". A mission is an offer of the game, for example connecting two towns; it counts once completed, whatever its type.
+- **Money**: `money_scale` (in %, 100 by default) multiplies every money grant and every money loss (base: 50,000, 250,000 and 1,000,000 for grants; 50,000 and 250,000 for losses). Lower it for a harder game.
+- **Goals**: `goal_population`, `goal_company_level`, `goal_passengers`, `goal_cargo`. 0 disables a goal. The game is won when **all** active goals are reached. At least one must stay active.
+- **Checks**: population, passengers and cargo steps (count, first and last value), company levels, deliveries per cargo, first line of each mode, game missions.
+- There must be at least as many checks as progression items, otherwise generation stops with a message that gives the number.
 
-- L'outil à lancer est **Transport Fever 3 Client**. Dans son champ d'adresse, **efface tout** le texte par défaut avant de taper l'adresse du serveur, sans quoi la connexion échoue.
-- Il affiche « Game connected » dès que le mod répond. Archipelago libère automatiquement les items restants quand un joueur termine son goal : c'est normal, tout se déverrouille alors dans le jeu.
+How the game's values are measured: **population** is read from the company's experience (equal to the total population); passengers and cargo come from the all-time totals of the game's top bar.
 
-## 8. Dans le jeu
+## 7. Generate, host, connect
 
-- Sans item reçu : la **route** est libre, le **tram, le rail, l'eau et l'air** sont verrouillés, et seuls les véhicules les plus anciens (avant 1920) sont en vente.
-- Les items de **mode** déverrouillent les menus (stations, dépôts, voies, signaux) et les véhicules de ce mode. Les items « véhicules progressifs » ajoutent deux tranches : 1920 à 1960, puis après 1960. Les items **« Progressive Road Types »** et **« Progressive Rail Tracks »** font de même pour les types de routes (anciennes routes de campagne et de ville au départ, puis les routes récentes et les autoroutes) et de voies ferrées (voie simple au départ, puis voie standard avec caténaire, puis grande vitesse).
-- Cinq **outils** se débloquent chacun par leur item : **Tool: Bus Lanes** (voies de bus), **Tool: Tram Tracks** (voies de tram sur les routes), **Tool: Rail Signals** (signaux), **Tool: Electrification** et **Tool: Noise Barriers** (murs antibruit). Un outil d'un mode verrouillé reste fermé même avec son item. Les ronds-points et les échangeurs suivent les types de routes, par année.
-- Chaque check est un **contrat** : il n'a ni date de fin ni pénalité. À la connexion, le client demande au serveur la récompense de chaque contrat ; quand vous en remplissez un, la notification du jeu indique la récompense (item et joueur destinataire). La commande `/contracts` du client liste les contrats ouverts avec leur récompense. Les contrats ouverts sont aussi listés dans l'onglet **Notifications** du jeu (le prochain palier de chaque famille, les premières lignes et la prochaine livraison de chaque cargo), chacun avec sa récompense ; un contrat rempli en disparaît.
-- Quatre items de **classe de cargo** (`Cargo Class: Bulk`, `Flatbed`, `Goods`, `Liquid`) débloquent les véhicules de fret spécialisés de cette classe (wagons de vrac, camions-citernes…). Les véhicules **universels** (tout cargo) et ceux de passagers ne sont jamais verrouillés par classe : un chariot ou camion universel de la première tranche transporte tous les cargos dès le départ.
-- Les items « **niveau d'entreprise +1** » accordent un niveau, avec les avantages du jeu.
-- L'**argent** arrive en écritures comptables ; les pièges retirent de l'argent (perte de 50 000 ou de 250 000).
-- Les effets d'argent sont appliqués **une seule fois**, mais ils sont liés au seed, pas à la sauvegarde : si tu recharges une vieille sauvegarde, l'argent déjà reçu ne revient pas.
-- Chaque item reçu et chaque check envoyé est annoncé par une **notification** du jeu avec le logo d'Archipelago (en haut de l'écran, puis dans l'onglet des notifications) : « Rail Transport from Alice (son check) », « Population reached 2,500 »… Au chargement d'une partie, rien n'est annoncé de ce qui était déjà reçu. Les items et checks apparaissent aussi dans la fenêtre du client.
+These steps are Archipelago's in general: see the [official documentation](https://archipelago.gg/tutorial/Archipelago/setup/en). Two points specific to this client:
 
-## 9. Quand ça ne marche pas
+- The tool to start is **Transport Fever 3 Client**. In its address field, **erase all** the default text before typing the server address, or the connection fails.
+- It shows "Game connected" as soon as the mod answers. Archipelago automatically releases the remaining items when a player finishes their goal: this is normal, everything then unlocks in the game.
 
-| Symptôme | Cause probable | Que faire |
+## 8. In the game
+
+- With no item received: the **road** is free, **tram, rail, water and air** are locked, and only the oldest vehicles (before 1920) are on sale.
+- The **mode** items unlock the menus (stations, depots, tracks, signals) and the vehicles of that mode. The "progressive vehicles" items add two tiers: 1920 to 1960, then after 1960. The **"Progressive Road Types"** and **"Progressive Rail Tracks"** items do the same for road types (old country and town roads at the start, then recent roads and motorways) and rail types (simple track at the start, then standard track with catenary, then high speed).
+- Five **tools** are unlocked by their own item: **Tool: Bus Lanes**, **Tool: Tram Tracks** (tram tracks on roads), **Tool: Rail Signals**, **Tool: Electrification** and **Tool: Noise Barriers**. A tool of a locked mode stays closed even with its item. Roundabouts and interchanges follow the road types, by year.
+- Four **cargo class** items (`Cargo Class: Bulk`, `Flatbed`, `Goods`, `Liquid`) unlock the specialised freight vehicles of that class (bulk wagons, tankers...). **Universal** vehicles (any cargo) and passenger vehicles are never locked by class: a universal cart or truck of the first tier carries every cargo from the start.
+- The "**company level +1**" items grant a level, with the game's usual benefits.
+- **Money** arrives as accounting entries; traps remove money (a loss of 50,000 or 250,000).
+- Money effects are applied **only once**, but they are tied to the seed, not to the save: if you reload an old save, the money already received does not come back.
+
+### Contracts
+
+Every open check is a **contract**, shown with the game's own contract interface: an icon at the top of the screen, a notification (category "Opportunity"), and a window with the task and, under "On completion", the reward (the item and the player who receives it). It looks like the game's own subsidies, with no deadline and no penalty. The window shows the current value, for example "Population reached 1,260 (579 / 1,260)".
+
+- **Contracts do not need to be accepted to be completed.** The check is reached when the game reaches its value; the mod then accepts and finishes the contract by itself, and the reward goes out. Accepting a contract only moves it to "contract in progress". The game's own subsidies are separate and keep appearing as usual.
+- Only the next step of each ladder is shown (the next population level, the next company level, the next delivery tier of each cargo, every first line), so the game is not flooded with contracts.
+- If you **decline** a contract, it comes back with a new identifier until its check is reached.
+- The client command `/contracts` lists the open contracts with their reward.
+- Each item received and each check sent is also announced by a **notification** with the Archipelago logo (top of the screen, then the notifications tab): "Rail Transport from Alice (their check)", "Population reached 2,500"... When a game is loaded, nothing that was already received is announced again. Items and checks also appear in the client window.
+
+## 9. When it does not work
+
+| Symptom | Likely cause | What to do |
 |---|---|---|
-| Le client n'apparaît pas dans le Launcher | Monde non installé ou Launcher pas redémarré | Refaire **Install APWorld**, relancer le Launcher |
-| Erreur de connexion avec `archipelago.gg:...` dans le champ | Texte par défaut non effacé | Effacer tout le champ, retaper l'adresse |
-| La génération s'arrête sur « only give N checks » | Pas assez de checks pour les items | Augmenter les options de checks |
-| La génération s'arrête sur « no goal is active » | Les quatre goals sont à 0 | Mettre un goal au-dessus de 0 |
-| « Waiting for the game mod » | Le mod n'a pas écrit l'`outbox` de ce seed | Vérifier que le mod est actif et que la partie est lancée |
-| « The game mod is not answering » | Le jeu est fermé ou en pause longue | Relancer le jeu |
-| « user data not found » | Dossier de données de TF3 introuvable (Steam installé ailleurs) | Dans le client, taper `/folder <chemin du dossier towns_industries>` |
-| Avertissement sur l'année du jeu | Partie créée avant 2000 | Recréer la partie, année de départ la plus tardive |
-| Le jeu refuse de démarrer : « essayez de retirer le mod » | Erreur dans un script de mod | Lire `...\3493540\local\crash_dump\error.json` et retirer le mod en attendant |
-| Aucun véhicule récent malgré les items | Partie d'avant 2000 | Voir « Année de départ » ci-dessus |
+| The client does not appear in the Launcher | World not installed or Launcher not restarted | Redo **Install APWorld**, restart the Launcher |
+| Connection error with `archipelago.gg:...` in the field | Default text not erased | Erase the whole field, retype the address |
+| Generation stops on "only give N checks" | Not enough checks for the items | Raise the check options |
+| Generation stops on "no goal is active" | The four goals are at 0 | Set one goal above 0 |
+| "Waiting for the game mod" | The mod has not written this seed's `outbox` | Check that the mod is active and the game is started |
+| "The game mod is not answering" | The game is closed or paused for a long time | Restart the game |
+| "user data not found" | TF3's data folder not found (Steam installed elsewhere) | In the client, type `/folder <path of the towns_industries folder>` |
+| Warning about the game year | Game created before 2000 | Recreate the game, latest start year |
+| The game refuses to start: "try removing the mod" | Error in a mod script | Read `...\3493540\local\crash_dump\error.json` and remove the mod in the meantime |
+| No recent vehicle despite the items | Game from before 2000 | See "Start year" above |
+| Red screen "Reload UI" | Error in a mod script or a contract window | Copy the message (Copy to clipboard) and read `crash_dump\stdout.txt` |
 
-Fichiers utiles :
-- le journal du jeu : `...\3493540\local\crash_dump\stdout.txt` (les lignes du mod commencent par `ARCHIPELAGO`) ;
-- les fichiers d'échange : `...\3493540\local\towns_industries\archipelago_tf3_inbox.lua` et `archipelago_tf3_outbox_<seed>.lua` (un fichier par seed), lisibles dans un éditeur de texte.
+Useful files:
+- the game log: `...\3493540\local\crash_dump\stdout.txt` (the mod's lines start with `ARCHIPELAGO`);
+- the exchange files: `...\3493540\local\towns_industries\archipelago_tf3_inbox.lua` and `archipelago_tf3_outbox_<seed>.lua` (one file per seed), readable in a text editor.
 
-## 10. Limites actuelles
+## 10. Current limits
 
-- Cargos du climat tempéré uniquement.
-- Le tram, l'eau et l'air n'ont pas tous été vérifiés dans les menus ; voir `docs/superpowers/plans/e2e-checklist.md`.
-- Pas de fenêtre de suivi dans le jeu (seulement des notifications) : la liste des contrats ouverts est donnée par la commande `/contracts` du client, avec les identifiants des checks.
-- Les missions du jeu comptent une fois accomplies, quel que soit leur type.
-- Plateforme : PC Windows uniquement.
+- Temperate climate cargos only.
+- Tram, water and air have not all been verified in the menus; see `docs/superpowers/plans/e2e-checklist.md`.
+- No tracking window in the game: the open contracts use the game's contract interface, and items and checks are announced by notifications.
+- Platform: Windows PC only.

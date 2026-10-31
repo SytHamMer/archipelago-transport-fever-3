@@ -46,7 +46,6 @@ local state = {
 	enforced = nil,
 	inflight = false,
 	failures = {}, -- failed attempts per effect id
-	last_contracts = nil, -- signature of the open contracts last published to the notifications tab
 	last_notified = nil, -- items and checks as of the last tick; nil until the first tick of a seed (silent baseline)
 	logged = {},
 }
@@ -275,7 +274,6 @@ local function adopt_seed(seed)
 	state.seed = seed
 	state.checks, state.goals, state.missions, state.applied, state.failures = {}, {}, {}, 0, {}
 	state.last_notified = nil -- a new seed starts a new silent baseline
-	state.last_contracts = nil
 	state.spawned = nil
 	local previous = app.loadUserdata(DIR, outbox_name(seed))
 	if type(previous) == "table" and previous.seed == seed then
@@ -444,42 +442,8 @@ local function send_notification(message)
 	}))
 end
 
--- Experiment switch: the file archipelago_tf3_experiment in the exchange folder (see scripts/dev_experiment.py).
-local function experiment_enabled()
-	return type(app.loadUserdata(DIR, "archipelago_tf3_experiment")) == "table"
-end
-
-local CONTRACT_TYPE = MOD .. "::/ap_contract.script"
-
--- Keeps one notification per open contract in the notifications tab (see ap_notify.open_contracts). The game replaces
--- the notifications of a type that changed and dismisses the ones that are gone, so this only runs on changes.
-local function publish_contracts(inbox)
-	if not inbox.contracts or experiment_enabled() then return end
-	local open = notify.open_contracts(inbox.contracts, state.checks, inbox.config)
-	local keys = {}
-	for _, contract in ipairs(open) do keys[#keys + 1] = contract.key end
-	local signature = table.concat(keys, ",")
-	if signature == state.last_contracts then return end
-
-	local entities = {}
-	local entity_util = ug_require("::/scripts/entity_util.tl")
-	local anchor = entity_util and entity_util.makeEntityAndRevision(api.engine.util.getPlayer())
-	-- A notification with no entity is not kept as persistent by the game. The revision is fixed: the game compares the
-	-- entities of the open notifications with the new ones, and a changing revision made it replace every contract
-	-- (and show its pop-up again) each time one was completed.
-	if anchor then entities = { { entity = anchor.entity, revision = { num = { 0, 0, 0 } } } } end
-	local entries = {}
-	for _, contract in ipairs(open) do
-		entries[#entries + 1] = { entities = entities, param = { title = contract.title, text = contract.text, progress = contract.progress } }
-	end
-	api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "Notifications", "updatePersistent", {
-		type = CONTRACT_TYPE, passOnlyParam = true, entitiesAndParam = entries,
-	}))
-	state.last_contracts = signature
-end
-
--- EXPERIMENT (only when the file archipelago_tf3_experiment exists in the exchange folder): every open contract
--- becomes a real game subvention, so the game shows its own contract window, icon and notification for it.
+-- Every open contract (check) is a real game subvention, so the game shows its own contract window, icon and
+-- notification for it. A reached check accepts and finishes its subvention: the player never has to accept it.
 local SUBVENTION_RES = MOD .. "::/ap_subvention.res"
 
 -- Uids of the subventions the game lists as proposed, active or completed.
@@ -499,7 +463,7 @@ local function listed_subvention_uids()
 end
 
 local function sync_contracts(inbox)
-	if not inbox.contracts or not experiment_enabled() then return end
+	if not inbox.contracts then return end
 	state.spawned = state.spawned or {}
 	state.sync_tick = (state.sync_tick or 0) + 1
 	local open = notify.open_contracts(inbox.contracts, state.checks, inbox.config)
@@ -569,7 +533,6 @@ local function tick()
 	end
 	guarded("effects", apply_next_effect, player, inbox)
 	guarded("notify", notify_changes, inbox)
-	guarded("contracts", publish_contracts, inbox)
 	guarded("sync", sync_contracts, inbox)
 	guarded("outbox", write_outbox)
 end
