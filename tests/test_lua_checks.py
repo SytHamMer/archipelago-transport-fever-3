@@ -121,3 +121,21 @@ def test_completed_missions_are_remembered_once_by_uid():
 
 def test_a_mission_that_leaves_the_game_list_is_still_counted():
     assert merge_missions([5, 7], []) == [5, 7]
+
+
+def foreign_mission_uids(entries):
+    runtime, checks = load_module("ap_checks")
+    return from_lua(checks.foreign_mission_uids(to_lua(runtime, entries)))
+
+
+def test_the_missions_of_the_game_are_counted_but_not_our_own_contracts():
+    entries = [
+        {"id": "::/game_mechanics/subventions/deliver_passengers/deliver_passengers.res", "uid": 11},
+        {"id": "archipelago_tf3_1::/ap_subvention.res", "uid": 3905751701},
+        {"id": "::/game_mechanics/subventions/deliver_cargo/deliver_cargo.res", "uid": 12},
+    ]
+    assert foreign_mission_uids(entries) == [11, 12]
+
+
+def test_entries_without_a_uid_or_an_id_are_skipped():
+    assert foreign_mission_uids([{"id": "x"}, {"uid": 5}, {"id": "y", "uid": "bad"}]) == []

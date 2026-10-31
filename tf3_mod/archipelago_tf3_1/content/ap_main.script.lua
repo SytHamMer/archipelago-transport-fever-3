@@ -359,10 +359,11 @@ local function completed_mission_uids()
 	local script = api.engine.system.gameScriptSystem.getEntityForGameScript("::/game_mechanics/subventions/subventions.gs")
 	local component = script and api.engine.getComponent(script, api.type.ComponentType.GAME_SCRIPT)
 	local list = component and component.state_native and component.state_native:find("completedSubventions")
+	local entries = {}
 	for _, entry in pairs(list and list:asTable() or {}) do
-		if type(entry) == "table" and type(entry.uid) == "number" then uids[#uids + 1] = entry.uid end
+		if type(entry) == "table" then entries[#entries + 1] = { id = tostring(entry.id), uid = entry.uid } end
 	end
-	return uids
+	return checks.foreign_mission_uids(entries)
 end
 
 -- ===== effects =====

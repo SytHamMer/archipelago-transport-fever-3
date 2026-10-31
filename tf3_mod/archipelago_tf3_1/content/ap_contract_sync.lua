@@ -36,7 +36,9 @@ function M.plan(open, checks, spawned, present, tick)
 			need = true -- declined, or never taken by the game
 		end
 		if need and not reached[key] then
-			local n = (entry and entry.n or 0) + 1
+			-- a spawn the game never took is sent again with the same uid (the game ignores a uid it already took, so a
+			-- slow game cannot end up with two contracts); a declined one needs a new uid
+			local n = entry and (entry.seen and entry.n + 1 or entry.n) or 1
 			local uid = M.uid(key, n)
 			spawned[key] = { uid = uid, n = n, tick = tick }
 			actions.spawn[#actions.spawn + 1] = {

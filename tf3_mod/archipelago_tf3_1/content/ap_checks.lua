@@ -84,6 +84,18 @@ function M.evaluate(config, readings)
 	return { checks = sorted_unique(reached), goals = goals }
 end
 
+-- The uids of the game's missions among the completed subventions `entries` ({ id, uid }): our own contracts are
+-- subventions too and must not count as missions.
+function M.foreign_mission_uids(entries)
+	local uids = {}
+	for _, entry in ipairs(entries or {}) do
+		if type(entry.id) == "string" and type(entry.uid) == "number" and not entry.id:find("ap_subvention", 1, true) then
+			uids[#uids + 1] = entry.uid
+		end
+	end
+	return uids
+end
+
 -- Uids of the missions completed so far: the ones already known plus the ones the game lists now, each once.
 -- A mission that later leaves the game's list stays counted.
 function M.merge_missions(previous, current)

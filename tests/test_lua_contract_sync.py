@@ -31,11 +31,12 @@ def test_a_pending_spawn_is_not_repeated_before_the_game_lists_it():
     assert again["spawn"] == []
 
 
-def test_a_spawn_the_game_never_listed_is_retried_after_a_while_with_a_new_uid():
+def test_a_spawn_the_game_never_listed_is_retried_with_the_same_uid():
+    # the game ignores a uid it already took, so a slow game cannot end up with two contracts for one check
     first, state = plan([contract("population:1")], [], {}, [], tick=1)
     late, _ = plan([contract("population:1")], [], state, [], tick=20)
     assert keys(late["spawn"]) == ["population:1"]
-    assert late["spawn"][0]["uid"] != first["spawn"][0]["uid"]
+    assert late["spawn"][0]["uid"] == first["spawn"][0]["uid"]
 
 
 def test_a_declined_contract_comes_back_with_a_new_uid():
