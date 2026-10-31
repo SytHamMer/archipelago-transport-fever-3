@@ -5,7 +5,7 @@ Format: ``function data()\\nreturn <table>\\nend``. Only a small subset of Lua i
 An empty table reads back as an empty list.
 """
 import re
-from typing import Any
+from typing import Any, NoReturn
 
 
 class LuaFormatError(ValueError):
@@ -72,7 +72,7 @@ def loads(text: str) -> dict:
 
 
 class _Parser:
-    def __init__(self, text: str):
+    def __init__(self, text: str) -> None:
         self.text = text
         self.pos = 0
 
@@ -80,13 +80,14 @@ class _Parser:
         while self.pos < len(self.text) and self.text[self.pos].isspace():
             self.pos += 1
 
-    def fail(self, message: str):
+    def fail(self, message: str) -> NoReturn:
         raise LuaFormatError(f"{message} at offset {self.pos}")
 
     def expect_word(self, word: str) -> None:
         self.skip_space()
         end = self.pos + len(word)
-        if self.text[self.pos:end] != word or (end < len(self.text) and (self.text[end].isalnum() or self.text[end] == "_")):
+        continues = end < len(self.text) and (self.text[end].isalnum() or self.text[end] == "_")
+        if self.text[self.pos:end] != word or continues:
             self.fail(f"expected '{word}'")
         self.pos = end
 

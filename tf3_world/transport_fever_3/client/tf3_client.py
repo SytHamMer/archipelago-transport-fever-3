@@ -2,6 +2,8 @@
 import asyncio
 import os
 import time
+from argparse import Namespace
+from collections.abc import Callable, Container, Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -41,12 +43,17 @@ def resolve_userdata_dir(text: str) -> Path | None:
     return path if path.is_dir() else None
 
 
-def check_ids(names) -> list[int]:
+def check_ids(names: Iterable[str]) -> list[int]:
     """Archipelago location ids for the check names the mod reported (unknown names are skipped)."""
     return sorted(location_table[name] for name in names if name in location_table)
 
 
-def received_log(received, own_slot: int, player_name, location_name) -> list[dict]:
+def received_log(
+    received: Iterable[tuple[str, int, int]],
+    own_slot: int,
+    player_name: Callable[[int], str | None],
+    location_name: Callable[[int, int], str],
+) -> list[dict]:
     """Who sent each received item and for which check, for the in-game notifications.
 
     `received` is a list of (item name, location id, sender slot); `player_name(slot)` and `location_name(id, slot)`
@@ -67,7 +74,13 @@ def received_log(received, own_slot: int, player_name, location_name) -> list[di
     return log
 
 
-def contracts_from_scout(infos, own_slot: int, location_name, item_name, player_name) -> dict:
+def contracts_from_scout(
+    infos: Iterable[tuple[int, int, int]],
+    own_slot: int,
+    location_name: Callable[[int], str | None],
+    item_name: Callable[[int, int], str | None],
+    player_name: Callable[[int], str | None],
+) -> dict:
     """The reward of each check from the server's scout reply, keyed by check id.
 
     `infos` is a list of (location id, item id, receiving slot); an id that cannot be named is skipped.
@@ -92,7 +105,7 @@ def describe_check(check: str, checks: dict | None) -> str:
     checks = checks or {}
     family, *parts = check.split(":")
 
-    def threshold(name: str, index: str):
+    def threshold(name: str, index: str) -> int | None:
         values = checks.get(name) or []
         return values[int(index) - 1] if index.isdigit() and 0 < int(index) <= len(values) else None
 
@@ -130,12 +143,14 @@ def _next_contracts(open_ids: list[str]) -> list[str]:
     return chosen
 
 
-def _order(check: str):
+def _order(check: str) -> tuple[int, str]:
     family = check.split(":")[0]
     return FAMILY_ORDER.index(family) if family in FAMILY_ORDER else len(FAMILY_ORDER), check
 
 
-def contracts_report(contracts: dict, done, checks: dict | None = None, show_all: bool = False) -> list[str]:
+def contracts_report(
+    contracts: dict, done: Container[str], checks: dict | None = None, show_all: bool = False
+) -> list[str]:
     """Console lines for /contracts: the progress, then the next open contracts with their reward.
 
     `checks` holds the thresholds of the slot data (to write the contracts in plain text); `show_all` lists every
@@ -157,6 +172,33 @@ def contracts_report(contracts: dict, done, checks: dict | None = None, show_all
     return lines
 
 
+class StatusTracker:
+    """Decides when a change of the game's status is worth telling the player.
+
+    The mod rewrites its outbox every two seconds, so reading it can briefly fail while the file is half written:
+    "no_outbox" is only reported once it has lasted a few polls, instead of flapping between two messages.
+    """
+
+    NO_OUTBOX_POLLS = 3
+
+    def __init__(self) -> None:
+        self.reported: str | None = None
+        self.missing = 0
+
+    def update(self, status: str) -> str | None:
+        """The status to report now, or None when there is nothing new to say."""
+        if status == "no_outbox" and self.reported not in (None, "no_outbox"):
+            self.missing += 1
+            if self.missing < self.NO_OUTBOX_POLLS:
+                return None
+        else:
+            self.missing = 0
+        if status == self.reported:
+            return None
+        self.reported = status
+        return status
+
+
 @dataclass
 class PollResult:
     new_checks: set = field(default_factory=set)
@@ -168,7 +210,7 @@ class PollResult:
 class TF3Sync:
     """The logic of the client, independent of the network: slot state in, checks and goal status out."""
 
-    def __init__(self, bridge: Bridge):
+    def __init__(self, bridge: Bridge) -> None:
         self.bridge = bridge
         self.slot_data: dict | None = None
         self.received: list[str] = []
@@ -208,7 +250,7 @@ class TF3Sync:
         if self.inbox_dirty:
             self._write_inbox()
 
-    def mark_sent(self, checks) -> None:
+    def mark_sent(self, checks: Iterable[str]) -> None:
         self.sent |= set(checks)
 
     def poll(self, now: float | None = None) -> PollResult:
@@ -224,7 +266,7 @@ class TF3Sync:
                           year_warning=year_warning)
 
 
-def parse_launch_args(launch_args):
+def parse_launch_args(launch_args: Sequence[str]) -> Namespace:
     """Command line of the client: the base Archipelago arguments plus --name and an archipelago:// url."""
     from CommonClient import get_base_parser, handle_url_arg
 
@@ -262,12 +304,12 @@ def launch(*launch_args) -> None:
         command_processor = TF3CommandProcessor
         items_handling = 0b111
 
-        def __init__(self, server_address, password, userdata_dir: Path | None):
+        def __init__(self, server_address: str | None, password: str | None, userdata_dir: Path | None) -> None:
             super().__init__(server_address, password)
             self.sync = TF3Sync(Bridge(userdata_dir)) if userdata_dir else None
             self.pending_slot: tuple[dict, list[str], list[dict]] | None = None  # kept until a folder is known
             self.poll_task: asyncio.Task | None = None
-            self.last_status = ""
+            self.status_tracker = StatusTracker()
             self.warned_year = False
             self.warned_folder = False
             self.contracts: dict = {}  # check id -> reward, filled from the server's scout reply
@@ -283,7 +325,7 @@ def launch(*launch_args) -> None:
             if self.pending_slot:
                 self.sync.on_connected(*self.pending_slot)
 
-        async def server_auth(self, password_requested: bool = False):
+        async def server_auth(self, password_requested: bool = False) -> None:
             if password_requested and not self.password:
                 await super().server_auth(password_requested)
             await self.get_username()
@@ -345,18 +387,19 @@ def launch(*launch_args) -> None:
                 return
             self.sync.flush_inbox()
             result = self.sync.poll()
-            if result.status != self.last_status:
-                self.last_status = result.status
+            reported = self.status_tracker.update(result.status)
+            if reported is not None:
                 logger.info({
                     "no_outbox": "Waiting for the game mod (no outbox file for this seed yet).",
                     "game_connected": "Game connected.",
                     "game_idle": "The game mod is not answering (is the game running with the mod?).",
-                }[result.status])
+                }[reported])
             if result.year_warning and not self.warned_year:
                 self.warned_year = True
-                logger.warning(f"The game year is before {data.MIN_START_YEAR}: vehicles of later years stay hidden and "
-                               "no item can unlock them. Create the game with a start year of "
-                               f"{data.MIN_START_YEAR} or later.")
+                logger.warning(
+                    f"The game year is before {data.MIN_START_YEAR}: vehicles of later years stay hidden and "
+                    f"no item can unlock them. Create the game with a start year of {data.MIN_START_YEAR} or later."
+                )
             if not self.connected_to_server():
                 return  # nothing may be marked as sent while the server cannot receive it
             if result.new_checks:
@@ -368,7 +411,7 @@ def launch(*launch_args) -> None:
                 await self.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
                 logger.info("Goal reached.")
 
-    async def main(args) -> None:
+    async def main(args: Namespace) -> None:
         userdata = find_userdata_dir()
         ctx = TF3Context(args.connect, args.password, userdata)
         ctx.auth = args.name

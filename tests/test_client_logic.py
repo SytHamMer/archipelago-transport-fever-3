@@ -252,3 +252,31 @@ def test_sync_passes_the_log_to_the_inbox(sync, tmp_path):
     more = log + [{"item": "Tram Transport", "own": True, "where": "population:1"}]
     sync.on_items(["Rail Transport", "Tram Transport"], more)
     assert luafile.loads((tmp_path / "archipelago_tf3_inbox.lua").read_text(encoding="utf-8"))["log"] == more
+
+
+def test_a_brief_missing_outbox_does_not_change_the_reported_status():
+    from transport_fever_3.client.tf3_client import StatusTracker
+
+    tracker = StatusTracker()
+    assert tracker.update("game_connected") == "game_connected"
+    assert tracker.update("no_outbox") is None  # half-written file: ignored
+    assert tracker.update("no_outbox") is None
+    assert tracker.update("game_connected") is None  # back to the same status: nothing to say
+
+
+def test_a_missing_outbox_that_lasts_is_reported():
+    from transport_fever_3.client.tf3_client import StatusTracker
+
+    tracker = StatusTracker()
+    tracker.update("game_connected")
+    results = [tracker.update("no_outbox") for _ in range(StatusTracker.NO_OUTBOX_POLLS)]
+    assert results[:-1] == [None] * (StatusTracker.NO_OUTBOX_POLLS - 1) and results[-1] == "no_outbox"
+
+
+def test_the_first_status_is_always_reported_and_real_changes_are_immediate():
+    from transport_fever_3.client.tf3_client import StatusTracker
+
+    tracker = StatusTracker()
+    assert tracker.update("no_outbox") == "no_outbox"
+    assert tracker.update("game_idle") == "game_idle"
+    assert tracker.update("game_connected") == "game_connected"

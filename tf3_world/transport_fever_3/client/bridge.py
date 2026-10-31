@@ -40,7 +40,7 @@ def safe_seed(seed: str) -> str:
 
 
 class Bridge:
-    def __init__(self, userdata_dir: Path, seed: str | None = None):
+    def __init__(self, userdata_dir: Path, seed: str | None = None) -> None:
         self.dir = Path(userdata_dir)
         self.seed = seed
 

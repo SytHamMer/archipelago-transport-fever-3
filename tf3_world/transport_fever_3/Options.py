@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from Options import OptionError, PerGameCommonOptions, Range, Toggle
 
 
-def _ladder(prefix: str, label: str, checks: int, first: int, last: int, top: int):
+def _ladder(prefix: str, label: str, checks: int, first: int, last: int, top: int) -> tuple[type, type, type]:
     """Three options describing a ladder of thresholds: how many, the first and the last value."""
     count = type(f"{prefix.title().replace('_', '')}Checks", (Range,), {
         "__doc__": f"Number of {label} milestones that are checks (0 disables them).",
@@ -24,7 +24,9 @@ def _ladder(prefix: str, label: str, checks: int, first: int, last: int, top: in
 
 
 PopulationChecks, PopulationFirst, PopulationLast = _ladder("population", "population", 4, 500, 5000, 1_000_000)
-PassengersChecks, PassengersFirst, PassengersLast = _ladder("passengers", "passengers transported", 3, 100, 2000, 10_000_000)
+PassengersChecks, PassengersFirst, PassengersLast = _ladder(
+    "passengers", "passengers transported", 3, 100, 2000, 10_000_000
+)
 CargoChecks, CargoFirst, CargoLast = _ladder("cargo", "cargo transported", 3, 100, 2000, 10_000_000)
 
 

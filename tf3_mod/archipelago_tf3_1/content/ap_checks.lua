@@ -105,6 +105,12 @@ function M.merge_missions(previous, current)
 	return sorted_unique(all)
 end
 
+-- Whether the mod understands an inbox of this format version (an older or the same one: the client of a newer
+-- version may write a format this mod does not know, and the mod then must not guess).
+function M.format_supported(version, supported)
+	return type(version) == "number" and version <= supported
+end
+
 -- Checks never go away, even if a reading later drops.
 function M.merge_monotonic(previous, current)
 	local all = {}

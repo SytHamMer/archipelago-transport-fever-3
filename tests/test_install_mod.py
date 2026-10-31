@@ -68,3 +68,24 @@ def test_find_mods_dir_uses_steam_layout(tmp_path):
     mods.mkdir(parents=True)
     assert install_mod.find_mods_dir(steam_root=tmp_path) == mods
     assert install_mod.find_mods_dir(steam_root=tmp_path / "nowhere") is None
+
+
+def test_update_removes_files_that_are_no_longer_in_the_source(tree):
+    source, mods, local = tree
+    target = install_mod.install(source, mods, game_running=lambda: False)
+    (target / "content" / "old.lua").write_text("-- removed from the source", encoding="utf-8")
+    (target / "gone").mkdir()
+    (target / "gone" / "x.lua").write_text("-- x", encoding="utf-8")
+    before_others = snapshot(local / "save") | snapshot(mods / "other_mod")
+    install_mod.install(source, mods, update=True, game_running=lambda: False)
+    assert not (target / "content" / "old.lua").exists() and not (target / "gone").exists()
+    assert (target / "content" / "a.lua").exists() and (target / "mod.json").exists()
+    assert snapshot(local / "save") | snapshot(mods / "other_mod") == before_others
+
+
+def test_a_first_install_does_not_delete_anything(tree):
+    source, mods, _ = tree
+    install_mod.install(source, mods, game_running=lambda: False)
+    installed = {path.relative_to(mods / "archipelago_tf3").as_posix(): path.read_text(encoding="utf-8")
+                 for path in (mods / "archipelago_tf3").rglob("*") if path.is_file()}
+    assert installed == {"mod.json": "{}", "content/a.lua": "-- a"}

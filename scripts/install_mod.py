@@ -41,7 +41,20 @@ def install(source: Path, mods_dir: Path, update: bool = False, game_running=gam
     if target.exists() and not update:
         raise InstallError(f"{target} already exists; use --update to replace the mod files.")
     shutil.copytree(source, target, dirs_exist_ok=True)
+    if update:
+        remove_stale(source, target)
     return target
+
+
+def remove_stale(source: Path, target: Path) -> None:
+    """Delete what an earlier version left in the installed copy and the source no longer has (that folder only)."""
+    for path in sorted(target.rglob("*"), key=lambda item: len(item.parts), reverse=True):
+        if (source / path.relative_to(target)).exists():
+            continue
+        if path.is_dir():
+            shutil.rmtree(path)
+        else:
+            path.unlink()
 
 
 def main() -> int:

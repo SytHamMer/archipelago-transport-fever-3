@@ -1,0 +1,9 @@
+name: Mathys
+game: Transport Fever 3
+Transport Fever 3:
+  goal_population: 2500
+  population_checks: 4
+  population_first: 500
+  population_last: 2000
+  passengers_checks: 3
+  cargo_checks: 3

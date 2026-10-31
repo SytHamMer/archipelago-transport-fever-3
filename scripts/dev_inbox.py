@@ -5,13 +5,30 @@ Loads the bridge modules directly so the Archipelago world package is not import
 """
 import argparse
 import importlib.util
+import os
 import sys
 import types
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "tf3_world" / "transport_fever_3"
-DEFAULT_DIR = Path(r"C:\Program Files (x86)\Steam\userdata\260400121\3493540\local\towns_industries")
+STEAM_ROOT = Path(r"C:\Program Files (x86)\Steam")
+TF3_APP_ID = "3493540"
+
+
+def find_exchange_dir(steam_root: Path | None = None, override: str | None = None) -> Path | None:
+    """The folder shared with the mod: TF3_USERDATA_DIR, or the one of the most recently used Steam account."""
+    override = override or os.environ.get("TF3_USERDATA_DIR")
+    if override:
+        return Path(override)
+    root = Path(steam_root) if steam_root is not None else STEAM_ROOT
+    accounts = [path for path in (root / "userdata").glob(f"*/{TF3_APP_ID}/local") if (path / "towns_industries").is_dir()]
+    if not accounts:
+        return None
+    return max(accounts, key=lambda path: path.stat().st_mtime) / "towns_industries"
+
+
+DEFAULT_DIR = find_exchange_dir()
 
 
 def load_bridge():
@@ -49,6 +66,8 @@ def main() -> None:
     parser.add_argument("--where", default="a faraway chest", help="source check shown with --sender")
     parser.add_argument("--contracts", action="store_true", help="add fake contract rewards for the population and level checks")
     args = parser.parse_args()
+    if args.dir is None:
+        parser.error("Transport Fever 3's user data folder was not found: pass --dir or set TF3_USERDATA_DIR.")
     args.dir.mkdir(exist_ok=True)
     contracts = {
         "population:1": {"item": "Progressive Rail Vehicles", "to": "Me", "own": True},

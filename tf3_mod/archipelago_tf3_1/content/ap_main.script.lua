@@ -6,6 +6,7 @@ local MOD = "archipelago_tf3_1"
 local DIR = "towns_industries"
 local INBOX, OUTBOX_PREFIX = "archipelago_tf3_inbox", "archipelago_tf3_outbox_" -- one outbox per seed
 local TICK_SECONDS = 2
+local CATALOG_RETRY_SECONDS = 30 -- wait before building the catalog again after a failure
 local FORMAT_VERSION = 1
 local ERAS = { B = 1920, C = 1960 } -- first years of vehicle era B and C
 
@@ -260,6 +261,10 @@ end
 local function read_inbox()
 	local inbox = app.loadUserdata(DIR, INBOX)
 	if type(inbox) ~= "table" or inbox.version == nil then return nil end
+	if not checks.format_supported(inbox.version, FORMAT_VERSION) then
+		problem("inbox", "format " .. tostring(inbox.version) .. " is newer than this mod understands: update the mod")
+		return nil
+	end
 	return inbox
 end
 
@@ -298,7 +303,14 @@ end
 
 local function apply_locks(items, eras)
 	if not state.catalog then
-		state.catalog = build_catalog()
+		-- a failed build is not retried on every tick: the game stays unlocked, so wait before trying again
+		if state.catalog_retry_at and os.time() < state.catalog_retry_at then return end
+		local built, catalog = pcall(build_catalog)
+		if not built then
+			state.catalog_retry_at = os.time() + CATALOG_RETRY_SECONDS
+			error(catalog, 0)
+		end
+		state.catalog = catalog
 		guarded("catalog report", catalog_report, state.catalog)
 	end
 	state.catalog.eras = eras or ERAS

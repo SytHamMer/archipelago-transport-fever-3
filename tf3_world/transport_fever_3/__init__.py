@@ -1,4 +1,6 @@
-from BaseClasses import Item, ItemClassification, Location, Region
+from collections.abc import Callable
+
+from BaseClasses import CollectionState, Item, ItemClassification, Location, Region
 from Options import OptionError
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_component
@@ -33,7 +35,10 @@ class TF3Location(Location):
 
 
 class TF3World(World):
-    """Transport Fever 3: build road, rail, tram, water and air networks. Unlocks and checks are driven by a game mod."""
+    """
+    Transport Fever 3: build road, rail, tram, water and air networks.
+    Unlocks and checks are driven by a game mod.
+    """
 
     game = "Transport Fever 3"
     web = TF3Web()
@@ -51,8 +56,8 @@ class TF3World(World):
             raise OptionError(
                 f"Transport Fever 3: the chosen options only give {locations} checks, but {needed} progression items "
                 f"must be placed. Raise the check options (population_checks, company_level_checks, "
-                f"passengers_checks, cargo_checks, delivery_checks, first_line_checks, mission_checks) until there are at least "
-                f"{needed} checks."
+                f"passengers_checks, cargo_checks, delivery_checks, first_line_checks, mission_checks) until there are "
+                f"at least {needed} checks."
             )
 
     def _ladder_sizes(self) -> dict[str, int]:
@@ -93,9 +98,11 @@ class TF3World(World):
             return self.random.choices(list(data.TRAPS), weights=data.TRAP_WEIGHTS)[0]
         return self.random.choices(list(data.MONEY_ITEMS), weights=(5, 3, 1))[0]
 
-    def _rule(self, need: Need):
+    def _rule(self, need: Need) -> Callable[[CollectionState], bool]:
         player = self.player
-        return lambda state: state.has_all_counts(need.items, player) and state.count_from_list(MODE_ITEMS, player) >= need.modes
+        return lambda state: (
+            state.has_all_counts(need.items, player) and state.count_from_list(MODE_ITEMS, player) >= need.modes
+        )
 
     def set_rules(self) -> None:
         sizes = self._ladder_sizes()
@@ -119,9 +126,13 @@ class TF3World(World):
                 "cargo": options.goal_cargo.value,
             },
             "checks": {
-                "population": data.spread(options.population_checks.value, options.population_first.value, options.population_last.value),
+                "population": data.spread(
+                    options.population_checks.value, options.population_first.value, options.population_last.value
+                ),
                 "company_level": list(range(2, options.company_level_checks.value + 2)),
-                "passengers": data.spread(options.passengers_checks.value, options.passengers_first.value, options.passengers_last.value),
+                "passengers": data.spread(
+                    options.passengers_checks.value, options.passengers_first.value, options.passengers_last.value
+                ),
                 "cargo": data.spread(options.cargo_checks.value, options.cargo_first.value, options.cargo_last.value),
                 "first_line": bool(options.first_line_checks.value),
                 "missions": list(range(1, options.mission_checks.value + 1)),

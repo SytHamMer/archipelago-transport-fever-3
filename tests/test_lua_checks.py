@@ -139,3 +139,18 @@ def test_the_missions_of_the_game_are_counted_but_not_our_own_contracts():
 
 def test_entries_without_a_uid_or_an_id_are_skipped():
     assert foreign_mission_uids([{"id": "x"}, {"uid": 5}, {"id": "y", "uid": "bad"}]) == []
+
+
+def format_supported(version, supported=1):
+    runtime, checks = load_module("ap_checks")
+    return checks.format_supported(version, supported)
+
+
+def test_an_inbox_format_the_mod_understands_is_supported():
+    assert format_supported(1) is True and format_supported(0) is True
+
+
+def test_a_newer_or_missing_or_invalid_inbox_format_is_not_supported():
+    assert format_supported(2) is False
+    assert format_supported(None) is False
+    assert format_supported("1") is False
