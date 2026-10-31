@@ -1,0 +1,33 @@
+# Transport Fever 3 slot for a multiworld test with a friend.
+# Put this file in the "Players" folder of your Archipelago installation, next to your friend's YAML.
+# The name must be different from your friend's name, and is the name your clients connect with.
+name: Mathys
+game: Transport Fever 3
+
+Transport Fever 3:
+  # Goals: the game is won when ALL active goals are reached (0 disables a goal).
+  # Higher goals keep the game going longer, so your friend does not get every item at once.
+  goal_population: 5000
+  goal_company_level: 0
+  goal_passengers: 2000
+  goal_cargo: 0
+
+  # Checks (every check is a contract in the game): how many, and from which value to which value.
+  population_checks: 6
+  population_first: 500
+  population_last: 5000
+  passengers_checks: 4
+  passengers_first: 100
+  passengers_last: 2000
+  cargo_checks: 3
+  cargo_first: 100
+  cargo_last: 2000
+  company_level_checks: 4
+  delivery_checks: 1
+  first_line_checks: true
+  mission_checks: 3
+
+  # Money: percentage applied to every money grant and loss (100 = 50,000 / 250,000 / 1,000,000 and the traps).
+  money_scale: 100
+  # Bank loans: percentage applied to the game's loan amounts (the game's are huge in 2020).
+  loan_scale: 10
