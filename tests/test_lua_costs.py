@@ -53,3 +53,40 @@ def test_a_construction_without_a_year_or_a_cost_is_left_alone():
 def test_free_and_unpriced_entries_stay_as_they_are():
     result = normalised("::/depots/water/water_depot.con", 1990, [0, -1])
     assert result["cost"] == [0, -1]
+
+
+def templated(file_name, templates):
+    runtime, module = costs()
+    data = {"availability": {}, "constructionTemplates": [
+        {"availability": {"yearFrom": year, "yearTo": 0},
+         "description": {"attributes": {"cost": cost, "maintenanceCost": upkeep}}}
+        for year, cost, upkeep in templates]}
+    table = to_lua(runtime, data)
+    module.normalise(file_name, table)
+    return from_lua(table)["constructionTemplates"]
+
+
+def test_each_template_of_a_depot_is_divided_by_its_own_era_coefficient():
+    result = templated("::/depots/road/road_depot/road_depot.con.lua", [
+        (1900, [180_000, -1], [30_000, -1]),
+        (1940, [540_000, -1], [90_000, -1]),
+        (1980, [1_620_000, -1], [270_000, -1]),
+    ])
+    assert [t["description"]["attributes"]["cost"] for t in result] == [[180_000, -1]] * 3
+    assert [t["description"]["attributes"]["maintenanceCost"] for t in result] == [[30_000, -1]] * 3
+
+
+def test_templates_of_constructions_without_an_era_coefficient_are_left_alone():
+    result = templated("::/stations/street/small_stops/small_new.con.lua", [(1990, [30_000, -1], [5_000, -1])])
+    assert result[0]["description"]["attributes"]["cost"] == [30_000, -1]
+
+
+def test_a_template_without_a_year_or_attributes_does_not_break_the_others():
+    runtime, module = costs()
+    table = to_lua(runtime, {"availability": {}, "constructionTemplates": [
+        {"description": {}},
+        {"availability": {"yearFrom": 1990}},
+        {"availability": {"yearFrom": 1990}, "description": {"attributes": {"cost": [900_000, -1]}}},
+    ]})
+    module.normalise("::/depots/road/road_depot/road_depot.con.lua", table)
+    assert from_lua(table)["constructionTemplates"][2]["description"]["attributes"]["cost"] == [100_000, -1]

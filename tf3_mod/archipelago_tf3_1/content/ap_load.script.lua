@@ -49,6 +49,15 @@ function data()
 					data.availability.yearTo = 0
 				end
 				if found then pcall(costs.normalise, fileName, data) end
+				if tostring(fileName):find("road_depot", 1, true) or tostring(fileName):find("small_new_twosided", 1, true) then
+					local parts = {}
+					for index, template in ipairs(data.constructionTemplates or {}) do
+						local attributes = template.description and template.description.attributes
+						parts[#parts + 1] = tostring(template.availability and template.availability.yearFrom) .. ":" ..
+							tostring(attributes and attributes.cost and attributes.cost[1])
+					end
+					pcall(debugPrint, "ARCHIPELAGO costs after: " .. tostring(fileName) .. " templates{" .. table.concat(parts, ",") .. "}")
+				end
 				return data
 			end)
 		end,

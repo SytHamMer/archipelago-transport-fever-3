@@ -29,21 +29,33 @@ local function divide(list, coefficient)
 	end
 end
 
--- Divides the cost and the upkeep of a matching construction by its era coefficient (in place).
-function M.normalise(file_name, data)
-	if type(data) ~= "table" or type(data.availability) ~= "table" then return end
-	local year = data.availability.yearFrom
-	if type(year) ~= "number" then return end
-	local name = tostring(file_name)
-	local matches = false
-	for _, fragment in ipairs(M.FRAGMENTS) do
-		if name:find(fragment, 1, true) then matches = true break end
-	end
-	if not matches then return end
+local function normalise_attributes(attributes, year)
+	if type(attributes) ~= "table" or type(year) ~= "number" then return end
 	local coefficient = M.era_coefficient(year)
 	if coefficient == 1 then return end
-	divide(data.cost, coefficient)
-	divide(data.maintenanceCost, coefficient)
+	divide(attributes.cost, coefficient)
+	divide(attributes.maintenanceCost, coefficient)
+end
+
+local function matches(file_name)
+	local name = tostring(file_name)
+	for _, fragment in ipairs(M.FRAGMENTS) do
+		if name:find(fragment, 1, true) then return true end
+	end
+	return false
+end
+
+-- Divides the cost and the upkeep of a matching construction by its era coefficient (in place). The era variants
+-- of a depot or station are the `constructionTemplates` of its file, each with its own first year and prices; a file
+-- that has its price at the top level instead (with an `availability.yearFrom`) is handled too.
+function M.normalise(file_name, data)
+	if type(data) ~= "table" or not matches(file_name) then return end
+	if type(data.availability) == "table" then normalise_attributes(data, data.availability.yearFrom) end
+	for _, template in ipairs(type(data.constructionTemplates) == "table" and data.constructionTemplates or {}) do
+		if type(template) == "table" and type(template.availability) == "table" and type(template.description) == "table" then
+			normalise_attributes(template.description.attributes, template.availability.yearFrom)
+		end
+	end
 end
 
 return M
