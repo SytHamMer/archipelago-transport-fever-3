@@ -121,9 +121,10 @@ local contract = {
 	-- The card the game shows: the task as the description, what completing it gives under "on completion".
 	getCardData = function(state)
 		local card = subvention_util.makeDefaultCardData(state, ICON)
-		local text, fraction = progress_text(state.data.progress)
+		-- The value is in the description only: the game's notification code expects a progress bar to come with a
+		-- deadline bar, and these contracts have no deadline (it crashed the interface).
+		local text = progress_text(state.data.progress)
 		card.description = (state.data.task or "") .. (text and (" (" .. text .. ")") or "")
-		if text and card.status == "Active" then card.progress = { value = fraction, text = text } end
 		card.deadline, card.expireDuration = nil, nil
 		card.upfront, card.failure = {}, {}
 		card.complete = { { text = state.data.reward or "" } }
