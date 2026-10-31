@@ -38,3 +38,18 @@ Fait en jeu avec l'utilisateur : pièges d'argent, notifications (items et check
 9. [ ] Un piège (perte d'argent) et un gain, avec `money_scale` : montants divisés par deux pour Alice.
 10. [ ] Fermer et rouvrir la partie : aucune notification rejouée, checks conservés.
 11. [ ] Reconnexion du client : les contrats reviennent, aucun check perdu.
+
+## Pipeline V2 final (2026-10-31)
+
+Automatique : 280 tests, monde reconstruit, multiworld deux joueurs régénéré (`out/AP_71905630507863958534.zip`), `scripts/e2e_headless.py` PASS, mod installé identique à la source.
+
+Vérifié en jeu : contrats réels du jeu (fenêtre, progression, fin sans acceptation, récompense pour un autre joueur), notifications, missions, emprunts à l'échelle (départ et renouvellement), `/contracts` avec le vrai serveur.
+
+À refaire avec le vrai Launcher (nouvelle version du client) :
+1. [ ] **Install APWorld** (`dist/transport_fever_3.apworld`), redémarrer le Launcher.
+2. [ ] **Host Game** avec `out/AP_71905630507863958534.zip`.
+3. [ ] Client en Mathys connecté, partie libre neuve en 2020.
+4. [ ] `/contracts` en texte clair (prochain palier de chaque famille) et `/contracts all`.
+5. [ ] Un check réel : contrat terminé, item reçu et appliqué, annonce bleue.
+6. [ ] Fermer et rouvrir le client (reconnexion) puis la partie : rien rejoué, checks conservés.
+7. [ ] Multiworld avec un autre jeu (à faire quand un second monde est disponible) : le nom de l'item de l'autre jeu apparaît dans le contrat.
