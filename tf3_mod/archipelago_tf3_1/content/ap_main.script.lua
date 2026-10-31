@@ -16,7 +16,9 @@ local MODES = {
 	-- interchanges) are tiered by year and released by the mode's `type_item`, on top of the mode itself.
 	-- `tools` are released one by one by their item (and need their mode): `tags` are exact resource names, `cons`
 	-- and `edges` are fragments searched in the construction and edge decoration resources.
+	-- `era_cons` are the depots and stations that come in several eras (a mode that is not locked has no `cons`).
 	road = { vehicles = { "bus", "truck", "car" }, type_item = "Progressive Road Types",
+		era_cons = { "/depots/road/road_depot/", "/depots/road/road_maint_station", "/stations/street/small_stops/" },
 		types = { "/infrastructure/street/country/", "/infrastructure/street/town/", "/infrastructure/street/highway/" },
 		con_types = { "/infrastructure/street_construction/" },
 		tools = {
@@ -149,8 +151,13 @@ local function street_types(fragments)
 	return out
 end
 
--- The era variants of the constructions matching the fragments (depots, stations): each template of a construction is
--- a menu entry "<name>@<index>" with its own first year. Constructions with a single template have no variants.
+-- The era variants of the constructions matching the fragments (depots, stations).
+-- * A depot or maintenance station is one construction with three templates (1900, 1940, 1980), the menu entries
+--   "<name>@0", "@1", "@2". The game cannot hand the templates over as a table (reading them fails), but they all follow
+--   that order, so the later ones are tiered by their index.
+-- * Other stations, such as the small bus stops, are separate constructions with their own first year.
+local ERA_TEMPLATE_YEARS = { [1] = 1940, [2] = 1980 }
+
 local function construction_variants(fragments)
 	local out = {}
 	local rep = api.res.constructionRep
@@ -158,11 +165,13 @@ local function construction_variants(fragments)
 		if type(name) == "string" then
 			for _, fragment in ipairs(fragments) do
 				if name:find(fragment, 1, true) then
-					local table_ = rep.getAsTable(id)
-					local templates = table_ and table_.constructionTemplates
-					if type(templates) == "table" and #templates > 1 then
-						for index, template in ipairs(templates) do
-							out[#out + 1] = { tag = name .. "@" .. (index - 1), year = years.original(template.availability) }
+					local read, table_ = pcall(rep.getAsTable, id)
+					if read and type(table_) == "table" then
+						local year = years.original(table_.availability)
+						if year and year > 0 then out[#out + 1] = { tag = name, year = year } end
+					else
+						for index, year in pairs(ERA_TEMPLATE_YEARS) do
+							out[#out + 1] = { tag = name .. "@" .. index, year = year }
 						end
 					end
 					break
@@ -216,7 +225,7 @@ local function build_catalog()
 		for _, entry_type in ipairs(construction_types(def.con_types or {})) do types[#types + 1] = entry_type end
 		catalog.modes[mode] = { menu = menu, vehicles = vehicles_of(def.vehicles),
 			type_item = def.type_item, types = types, tools = tool_list(def.tools),
-			variants = construction_variants(def.cons or {}) }
+			variants = construction_variants(def.era_cons or def.cons or {}) }
 	end
 	return catalog
 end
