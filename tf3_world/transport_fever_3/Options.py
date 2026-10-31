@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Choice, DeathLink, OptionError, PerGameCommonOptions, Range, Toggle
+from Options import Choice, DeathLink, OptionError, OptionGroup, PerGameCommonOptions, Range, Toggle
 
 
 def _ladder(prefix: str, label: str, checks: int, first: int, last: int, top: int) -> tuple[type, type, type]:
@@ -8,17 +8,17 @@ def _ladder(prefix: str, label: str, checks: int, first: int, last: int, top: in
     count = type(f"{prefix.title().replace('_', '')}Checks", (Range,), {
         "__doc__": f"Number of {label} milestones that are checks (0 disables them).",
         "display_name": f"{label.capitalize()} checks",
-        "range_start": 0, "range_end": 30, "default": checks,
+        "range_start": 0, "range_end": 30, "default": checks, "__module__": __name__,
     })
     low = type(f"{prefix.title().replace('_', '')}First", (Range,), {
         "__doc__": f"Value of the first {label} milestone.",
         "display_name": f"First {label} milestone",
-        "range_start": 1, "range_end": top, "default": first,
+        "range_start": 1, "range_end": top, "default": first, "__module__": __name__,
     })
     high = type(f"{prefix.title().replace('_', '')}Last", (Range,), {
         "__doc__": f"Value of the last {label} milestone.",
         "display_name": f"Last {label} milestone",
-        "range_start": 1, "range_end": top, "default": last,
+        "range_start": 1, "range_end": top, "default": last, "__module__": __name__,
     })
     return count, low, high
 
@@ -39,7 +39,8 @@ class CompanyLevelChecks(Range):
 
 
 class DeliveryChecks(Range):
-    """Delivery tiers per cargo type that are checks (100, 500, 2000, 10000 units). 0 disables them."""
+    """Delivery tiers per cargo that are checks (up to four; the amounts depend on how hard the cargo is). 0 disables
+    them."""
     display_name = "Delivery checks per cargo"
     range_start = 0
     range_end = 4
@@ -164,3 +165,29 @@ def validate_goals(options: TF3Options) -> None:
             "Transport Fever 3: no goal is active. Set at least one of goal_population, goal_company_level, "
             "goal_passengers or goal_cargo above 0."
         )
+
+
+OPTION_GROUPS = [
+    OptionGroup("Checks", [
+        PopulationChecks, PopulationFirst, PopulationLast, PassengersChecks, PassengersFirst, PassengersLast,
+        CargoChecks, CargoFirst, CargoLast, CompanyLevelChecks, DeliveryChecks, FirstLineChecks, MissionChecks,
+    ]),
+    OptionGroup("Map and economy", [Climate, MoneyScale, LoanScale]),
+    OptionGroup("Goals", [GoalPopulation, GoalCompanyLevel, GoalPassengers, GoalCargo]),
+    OptionGroup("DeathLink", [DeathLink, DeathLinkLoss]),
+]
+
+
+# Presets offered on the web page of the game: a quick game, the default one and a long one.
+OPTION_PRESETS: dict[str, dict[str, int]] = {
+    "Short game": {
+        "goal_population": 1500, "population_checks": 3, "population_last": 1500, "passengers_checks": 2,
+        "cargo_checks": 2, "mission_checks": 2,
+    },
+    "Default": {},
+    "Long game": {
+        "goal_population": 20_000, "goal_passengers": 5_000, "population_checks": 10, "population_last": 20_000,
+        "passengers_checks": 6, "passengers_last": 5_000, "cargo_checks": 5, "company_level_checks": 9,
+        "delivery_checks": 2, "mission_checks": 5,
+    },
+}

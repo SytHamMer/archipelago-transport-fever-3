@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 
 from . import cargos, data
 
-MODE_ITEMS = tuple(data.ITEM_MODE(mode) for mode in data.MODES)
-ROAD_VEHICLES = data.ITEM_VEHICLES("Road")
+MODE_ITEMS = tuple(data.mode_item(mode) for mode in data.MODES)
+ROAD_VEHICLES = data.vehicles_item("Road")
 
 
 @dataclass(frozen=True)
@@ -35,7 +35,7 @@ def need_for(location: str, ladder_sizes: dict[str, int], climate: str = "temper
         return _level_need(int(parts[0]))
     if family == "line":
         mode = parts[0]
-        return Need({data.ITEM_MODE(mode.capitalize()): 1}) if mode != "road" else Need()
+        return Need({data.mode_item(mode.capitalize()): 1}) if mode != "road" else Need()
     if family == "delivered":
         tier = int(parts[1])
         tiers = 0 if tier <= 1 else 1 if tier <= 2 else 2

@@ -3,6 +3,7 @@ from pathlib import Path
 
 WORLD = Path(__file__).resolve().parent.parent / "tf3_world"
 FILES = sorted(WORLD.rglob("*.py"))
+SOURCE_FILES = [path for path in FILES if "test" not in path.relative_to(WORLD).parts]  # the tests are not annotated
 
 
 def test_no_python_line_of_the_world_is_longer_than_120_characters():
@@ -19,7 +20,7 @@ def test_no_python_line_of_the_world_has_trailing_whitespace():
 
 def test_every_function_of_the_world_has_annotated_parameters_and_return_type():
     missing = []
-    for f in FILES:
+    for f in SOURCE_FILES:
         for node in ast.walk(ast.parse(f.read_text(encoding="utf-8"))):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 params = [a for a in node.args.args + node.args.kwonlyargs if a.arg not in ("self", "cls")]

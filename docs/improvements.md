@@ -3,6 +3,8 @@
 Points noted while testing, to be done later. Each one says what is wrong, why it matters, and how it could be done.
 Newest at the end of each section. Nothing here is started unless it says so.
 
+**Balance can only be tuned with feedback from real games** (see "Status and feedback" in the README): the values of this world are a first guess from the game's data and a few solo test games.
+
 ## Checks that fit the map and the game
 
 ### 1. Only ask for cargos the map can produce (done on the `cargo-balance` branch)

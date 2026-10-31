@@ -19,6 +19,11 @@ _NAMES = [
     *(data.location_id("mission", step) for step in range(1, MAX_LADDER_STEPS + 1)),  # appended last: ids stay stable
 ]
 location_table: dict[str, int] = {name: LOCATION_ID_BASE + index for index, name in enumerate(_NAMES)}
+# Location groups, for hints and plando.
+LOCATION_GROUPS: dict[str, set[str]] = {
+    family: {name for name in location_table if name.split(":")[0] == family}
+    for family in ("population", "company_level", "passengers", "cargo", "line", "delivered", "mission")
+}
 
 
 def eligible_cargos(options: TF3Options) -> list[str]:

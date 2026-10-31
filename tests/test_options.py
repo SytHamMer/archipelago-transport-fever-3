@@ -39,3 +39,11 @@ def test_check_families_default_to_small_ladders():
     assert options.population_first.value < options.population_last.value
     assert options.first_line_checks.value == 1
     assert options.delivery_checks.value == 1
+
+
+def test_every_option_class_can_be_pickled():
+    # Archipelago pickles the options of a generated game; a class made by a factory must name its real module
+    import pickle
+
+    for name, option in TF3Options.type_hints.items():
+        assert pickle.loads(pickle.dumps(option)) is option, name

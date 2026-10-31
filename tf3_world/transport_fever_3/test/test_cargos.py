@@ -1,11 +1,9 @@
-from helpers import make_options
-from test.bases import WorldTestBase
-
-from transport_fever_3 import cargos, data
-from transport_fever_3.cargo_data import CARGO_BY_CLIMATE
-from transport_fever_3.Locations import active_locations
-from transport_fever_3.Options import TF3Options
-from transport_fever_3.Rules import need_for
+from .. import cargos, data
+from ..cargo_data import CARGO_BY_CLIMATE
+from ..Locations import active_locations
+from ..Options import TF3Options
+from ..Rules import need_for
+from .bases import TF3TestBase, make_options
 
 
 def opts(**overrides):
@@ -71,8 +69,7 @@ def test_a_delivery_needs_as_many_level_items_as_its_industries_need_rank():
     assert data.ITEM_LEVEL not in easy.items
 
 
-class TestSlotDataCarriesPerCargoAmounts(WorldTestBase):
-    game = "Transport Fever 3"
+class TestSlotDataCarriesPerCargoAmounts(TF3TestBase):
     options = {"climate": 1, "company_level_checks": 8, "delivery_checks": 2}
 
     def test_the_slot_data_lists_the_amounts_of_the_eligible_cargos_only(self):
@@ -89,18 +86,15 @@ class TestSlotDataCarriesPerCargoAmounts(WorldTestBase):
         assert deliveries and all(self.can_reach_location(name) for name in deliveries)
 
 
-class TestDryMapFills(WorldTestBase):
-    game = "Transport Fever 3"
+class TestDryMapFills(TF3TestBase):
     options = {"climate": 1}
 
 
-class TestSubarcticMapFills(WorldTestBase):
-    game = "Transport Fever 3"
+class TestSubarcticMapFills(TF3TestBase):
     options = {"climate": 2, "company_level_checks": 9, "delivery_checks": 3}
 
 
-class TestTropicalMapWithManyLevelsFills(WorldTestBase):
-    game = "Transport Fever 3"
+class TestTropicalMapWithManyLevelsFills(TF3TestBase):
     options = {"climate": 3, "company_level_checks": 14, "delivery_checks": 4}
 
     def test_hard_cargos_become_available_with_enough_levels(self):

@@ -34,9 +34,9 @@ def test_spread_zero_count_is_empty():
 
 
 def test_item_names():
-    assert data.ITEM_MODE("Rail") == "Rail Transport"
-    assert data.ITEM_VEHICLES("Road") == "Progressive Road Vehicles"
-    assert data.ITEM_VEHICLES("Air") == "Progressive Air Vehicles"
+    assert data.mode_item("Rail") == "Rail Transport"
+    assert data.vehicles_item("Road") == "Progressive Road Vehicles"
+    assert data.vehicles_item("Air") == "Progressive Air Vehicles"
     assert data.ITEM_LEVEL == "Company Level +1"
 
 
@@ -91,4 +91,4 @@ def test_cargo_class_items_cover_the_four_specialised_classes():
     assert data.cargo_class_items() == [
         "Cargo Class: Bulk", "Cargo Class: Flatbed", "Cargo Class: Goods", "Cargo Class: Liquid",
     ]
-    assert data.ITEM_CARGO_CLASS("Bulk") == "Cargo Class: Bulk"
+    assert data.cargo_class_item("Bulk") == "Cargo Class: Bulk"

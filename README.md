@@ -87,6 +87,29 @@ The base money amounts (grants 50,000 / 250,000 / 1,000,000, losses 50,000 / 250
 
 There must be at least as many checks as progression items: otherwise generation stops with a message that says how many.
 
+## Status and feedback
+
+This world works end to end (generation, the client, the mod, contracts, multiworlds with other games), but it is
+young. **Balance in particular needs polishing, and that can only be done with feedback from real games**: the numbers
+below were chosen from the game's own data and a few solo test games, not from many played multiworlds.
+
+What is most likely to need tuning:
+
+- **How hard the checks are**: the population, passenger and cargo steps, the delivery amounts per difficulty, the
+  company level each cargo needs, and how many checks a default game has compared with its items.
+- **How fast progress comes**: how the vehicle tiers, the transport modes, the tools and the cargo classes are spread
+  over the logic, and what is needed to reach the goal.
+- **The economy**: the money grants and losses, the DeathLink loss, the loan amounts, and how they feel at different
+  start years.
+- **The cargos and climates**: which cargos exist on which map (read from the game's files, not yet checked on every
+  map), and the difficulty level of each cargo.
+
+Feedback that helps most: the YAML you used (or its main options), the start year and climate, what felt too easy, too
+hard, too slow or too fast, how long the game lasted, and the game log
+(`...\3493540\local\crash_dump\stdout.txt`, lines starting with `ARCHIPELAGO`) if something looked wrong. Several
+games with different options are worth more than one long game. The known problems and ideas are listed in
+[docs/improvements.md](docs/improvements.md).
+
 ## Known limits
 
 - One-shot effects (money, traps) are tied to the **seed**, not to the save: loading an old save does not give back the money already received.

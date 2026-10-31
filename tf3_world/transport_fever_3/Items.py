@@ -5,7 +5,7 @@ ITEM_ID_BASE = 7_300_000
 
 # Every item the world can create, in a fixed order so that ids stay stable between versions.
 _ITEM_NAMES = [
-    *(data.ITEM_MODE(mode) for mode in data.MODES),
+    *(data.mode_item(mode) for mode in data.MODES),
     *data.vehicle_items(),
     *data.type_items(),
     *data.TOOLS,
@@ -16,13 +16,24 @@ _ITEM_NAMES = [
 ]
 item_table: dict[str, int] = {name: ITEM_ID_BASE + index for index, name in enumerate(_ITEM_NAMES)}
 
+# Item groups, for hints and plando.
+ITEM_GROUPS: dict[str, set[str]] = {
+    "Transport Modes": {data.mode_item(mode) for mode in data.MODES},
+    "Vehicles": set(data.vehicle_items()),
+    "Road and Track Types": set(data.type_items()),
+    "Tools": set(data.TOOLS),
+    "Cargo Classes": set(data.cargo_class_items()),
+    "Money": set(data.MONEY_ITEMS),
+    "Traps": set(data.TRAPS),
+}
+
 # Vehicle tiers beyond the starting one (era B and era C), unlocked by the progressive items.
 VEHICLE_TIERS_PER_MODE = 2
 
 
 def item_counts(options: TF3Options) -> dict[str, int]:
     """Progression items the world creates; filler money and traps are added by the world itself."""
-    counts = {data.ITEM_MODE(mode): 1 for mode in data.MODES}
+    counts = {data.mode_item(mode): 1 for mode in data.MODES}
     counts.update({name: VEHICLE_TIERS_PER_MODE for name in data.vehicle_items()})
     counts.update({name: VEHICLE_TIERS_PER_MODE for name in data.type_items()})  # same two steps as the vehicles
     counts.update({name: 1 for name in data.TOOLS})

@@ -1,10 +1,6 @@
-import pytest
 from Options import OptionError
-from test.bases import WorldTestBase
 
-
-class TF3TestBase(WorldTestBase):
-    game = "Transport Fever 3"
+from .bases import TF3TestBase
 
 
 class TestDefaultWorld(TF3TestBase):
@@ -74,7 +70,7 @@ class TestTooFewChecks(TF3TestBase):
     auto_construct = False
 
     def test_too_few_checks_raises_with_numbers(self):
-        with pytest.raises(OptionError, match=r"0 checks.*progression items"):
+        with self.assertRaisesRegex(OptionError, r"0 checks.*progression items"):
             self.world_setup()
 
 
@@ -83,7 +79,7 @@ class TestNoGoal(TF3TestBase):
     auto_construct = False
 
     def test_no_goal_raises(self):
-        with pytest.raises(OptionError, match="goal"):
+        with self.assertRaisesRegex(OptionError, "goal"):
             self.world_setup()
 
 

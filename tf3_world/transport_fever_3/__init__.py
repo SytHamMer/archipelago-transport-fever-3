@@ -1,37 +1,47 @@
 from collections.abc import Callable
 
-from BaseClasses import CollectionState, Item, ItemClassification, Location, Region
+from BaseClasses import CollectionState, Item, ItemClassification, Location, Region, Tutorial
 from Options import OptionError
 from worlds.AutoWorld import WebWorld, World
 from worlds.LauncherComponents import Component, Type, components, launch as launch_component
 from worlds.generic.Rules import set_rule
 
 from . import cargos, data
-from .Items import item_counts, item_table
-from .Locations import active_locations, eligible_cargos, location_table
-from .Options import TF3Options, validate_goals
+from .Items import ITEM_GROUPS, item_counts, item_table
+from .Locations import LOCATION_GROUPS, active_locations, eligible_cargos, location_table
+from .Options import OPTION_GROUPS, OPTION_PRESETS, TF3Options, validate_goals
 from .Rules import GOAL_NEED, MODE_ITEMS, Need, need_for
 
 
-def launch_client(*args) -> None:
+CLIENT_NAME = f"{data.GAME_NAME} Client"
+CARGO_CLASS_ITEMS = frozenset(data.cargo_class_items())
+
+
+def launch_client(*args: str) -> None:
     from .client.tf3_client import launch
 
-    launch_component(launch, name="Transport Fever 3 Client", args=args)
+    launch_component(launch, name=CLIENT_NAME, args=args)
 
 
-components.append(Component("Transport Fever 3 Client", func=launch_client, component_type=Type.CLIENT))
+components.append(Component(CLIENT_NAME, func=launch_client, component_type=Type.CLIENT))
 
 
 class TF3Web(WebWorld):
     theme = "ocean"
+    tutorials = [Tutorial(
+        "Multiworld Setup Guide", "A guide to setting up Transport Fever 3 for Archipelago.", "English",
+        "setup_en.md", "setup/en", ["Mathys"],
+    )]
+    option_groups = OPTION_GROUPS
+    options_presets = OPTION_PRESETS
 
 
 class TF3Item(Item):
-    game = "Transport Fever 3"
+    game = data.GAME_NAME
 
 
 class TF3Location(Location):
-    game = "Transport Fever 3"
+    game = data.GAME_NAME
 
 
 class TF3World(World):
@@ -40,12 +50,14 @@ class TF3World(World):
     Unlocks and checks are driven by a game mod.
     """
 
-    game = "Transport Fever 3"
+    game = data.GAME_NAME
     web = TF3Web()
     options_dataclass = TF3Options
     options: TF3Options
     item_name_to_id = item_table
     location_name_to_id = location_table
+    item_name_groups = ITEM_GROUPS
+    location_name_groups = LOCATION_GROUPS
     topology_present = False
 
     def generate_early(self) -> None:
@@ -54,7 +66,7 @@ class TF3World(World):
         needed = sum(item_counts(self.options).values())
         if locations < needed:
             raise OptionError(
-                f"Transport Fever 3: the chosen options only give {locations} checks, but {needed} progression items "
+                f"{data.GAME_NAME}: the chosen options only give {locations} checks, but {needed} progression items "
                 f"must be placed. Raise the check options (population_checks, company_level_checks, "
                 f"passengers_checks, cargo_checks, delivery_checks, first_line_checks, mission_checks) until there are "
                 f"at least {needed} checks."
@@ -72,7 +84,7 @@ class TF3World(World):
             classification = ItemClassification.trap
         elif name in data.MONEY_ITEMS:
             classification = ItemClassification.filler
-        elif name in data.cargo_class_items():
+        elif name in CARGO_CLASS_ITEMS:
             classification = ItemClassification.useful
         else:
             classification = ItemClassification.progression
@@ -96,7 +108,7 @@ class TF3World(World):
     def get_filler_item_name(self) -> str:
         if self.random.random() < 0.15:
             return self.random.choices(list(data.TRAPS), weights=data.TRAP_WEIGHTS)[0]
-        return self.random.choices(list(data.MONEY_ITEMS), weights=(5, 3, 1))[0]
+        return self.random.choices(list(data.MONEY_ITEMS), weights=data.MONEY_WEIGHTS)[0]
 
     def _rule(self, need: Need) -> Callable[[CollectionState], bool]:
         player = self.player
