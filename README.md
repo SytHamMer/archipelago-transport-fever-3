@@ -52,7 +52,7 @@ The format of a YAML file, weights and random options are explained in the [offi
 | `loan_scale` | 10 | percentage applied to the amount of every bank loan (1 to 200; 100 = the game's amounts, very large in 2020) |
 | `goal_population`, `goal_company_level`, `goal_passengers`, `goal_cargo` | 2500, 0, 0, 0 | goals; 0 disables a goal; the game is won when **all** active goals are reached |
 
-Bank loans are scaled by `loan_scale`: the game multiplies its loan amounts by 2.4 in 2020 (tens of millions each), which would make the multiworld's money meaningless. Loans the game already made when the game starts keep their amount until it renews them (about every 6 months of game time).
+Bank loans are scaled by `loan_scale`: the game multiplies its loan amounts by 2.4 in 2020 (tens of millions each), which would make the multiworld's money meaningless. The four loans the game creates when the game starts use the default scale (10%) because the game makes them before the mod can read your YAML value; your `loan_scale` applies to every loan the game makes afterwards (about every 6 months of game time, or after you take one).
 
 The base money amounts (grants 50,000 / 250,000 / 1,000,000, losses 50,000 / 250,000) are multiplied by `money_scale`.
 
