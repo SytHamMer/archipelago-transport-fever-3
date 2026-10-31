@@ -1,4 +1,4 @@
-from lua_helpers import load_module, new_runtime
+from lua_helpers import load_module
 
 
 def install_modifier():

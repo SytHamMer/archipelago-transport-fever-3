@@ -68,6 +68,7 @@ Newest at the end of each section. Nothing here is started unless it says so.
 
 ## Before proposing the world upstream
 
-- A `docs/` folder inside the world (a game page and a setup guide) and a `WebWorld`, as the official worlds have.
-- Review of the world against Archipelago's world guidelines, and a decision on what the maintainers should see.
+- The world docs, the `WebWorld` and the review against Archipelago's guidelines are done: what is left (mod hosting
+  and download link, bug report page, maintainer duties, web host tests, manual check) is in
+  [upstream-pr-readiness.md](upstream-pr-readiness.md).
 - Nothing is pushed or proposed to the official repository until the user says so.
