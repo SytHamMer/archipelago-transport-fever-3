@@ -41,3 +41,5 @@ This world is young. The number of checks, the amounts of the contracts, the log
 amounts and the cargos of each climate were chosen from the game's own data and a few test games, so they can still be
 improved, and that needs feedback from real multiworlds. If a game felt too easy, too hard, too slow or too fast, tell the
 maintainers which options you used (start year, climate, goals, number of checks) and how long the game lasted.
+
+An idea for later: unlocking vehicles one by one instead of by tier (three eras per mode). It is not started, and it would change how many items and checks a game needs.

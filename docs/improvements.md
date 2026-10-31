@@ -48,6 +48,23 @@ Newest at the end of each section. Nothing here is started unless it says so.
   that should be locked shows up, that the menus are not cluttered by the era variants of depots and stations, and that
   towns and industries behave in an early year.
 
+## Vehicles unlocked one by one (idea, not started)
+
+- **Today:** vehicles come in three tiers per mode (before 1920, 1920 to 1960, after 1960), unlocked by the
+  "Progressive ... Vehicles" items.
+- **Idea:** one item per vehicle, so each check can unlock a single bus, truck, train or ship. Planned as a `v3`
+  attempt on its own branch; if it turns out too complex the world stays as it is (v2).
+- **Feasible:** the mod already locks vehicle by vehicle (the tier is only computed from the vehicle's year).
+- **Hard parts:**
+  - the generator needs a fixed list of vehicles (name, mode, year, cargos carried), which only exists in the game:
+    the mod would have to dump it, and the world would store it like `cargo_data.py`;
+  - dozens of vehicles per mode make hundreds of items: the pool and the number of checks have to be rebalanced, or
+    only some vehicles become individual items;
+  - the logic of the delivery checks must know which vehicles carry which cargo, or a delivery could become impossible;
+  - vehicles from other mods, and the era variants of depots and stations (which follow the vehicle tiers today).
+- **Plan:** a YAML option (tiers by default, single vehicles optional), road first (the mode verified in game), a dump
+  of the catalog as the first step.
+
 ## DeathLink
 
 - Receive only for now. A TF3 "death" to send (for example going bankrupt) is an open question.
