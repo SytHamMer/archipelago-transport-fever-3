@@ -43,3 +43,7 @@ improved, and that needs feedback from real multiworlds. If a game felt too easy
 maintainers which options you used (start year, climate, goals, number of checks) and how long the game lasted.
 
 An idea for later: unlocking vehicles one by one instead of by tier (three eras per mode). It is not started, and it would change how many items and checks a game needs.
+
+## How this world was made
+
+This world was built with the help of an AI assistant, Claude (Anthropic): it was used to reverse engineer the game and to write most of the code, the tests and the documentation. The author is a professional developer who read the code, tested the mod in the game and went through the documentation. What has not been tested in the game is listed in the README of the project.
