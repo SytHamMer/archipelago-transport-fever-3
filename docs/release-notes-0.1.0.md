@@ -28,6 +28,11 @@ multiworld, including one with Satisfactory.
 
 Not verified yet: tram, water and air menus, the first line and delivery checks of each mode, the rail tiers.
 
+## How it was made
+
+Largely written with an AI assistant (Claude), then read and tested in the game by the author: see "How this project was
+made" in the README.
+
 ## Help wanted: balance
 
 The numbers (checks, delivery amounts, money, logic) are a first guess. They can only be polished with feedback from

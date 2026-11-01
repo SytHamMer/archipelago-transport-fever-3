@@ -110,6 +110,23 @@ hard, too slow or too fast, how long the game lasted, and the game log
 games with different options are worth more than one long game. The known problems and ideas are listed in
 [docs/improvements.md](docs/improvements.md).
 
+## How this project was made
+
+This project was built with the help of an AI assistant, [Claude](https://claude.ai) (Anthropic), used through Claude Code.
+
+Claude was used to:
+
+- reverse engineer the game: find out what the scripting and modding system of Transport Fever 3 allows, and how its
+  content (vehicles, cargos, industries, contracts, economy) is described in its files;
+- write most of the code (the world, the client and the mod), the tests, and the documentation.
+
+I am a professional developer. I read the code, tested the mod in the game myself (every behaviour listed as verified
+in this repository was checked in a real game), and went through the documentation. The decisions about what the
+world should do, and how it should feel to play, are mine. Claude is credited as co-author in the commit messages.
+
+What has not been tested in the game is listed below ("Known limits"). As the code was largely written with an AI
+assistant, bugs and rough edges are likely, and reports are welcome.
+
 ## Known limits
 
 - One-shot effects (money, traps) are tied to the **seed**, not to the save: loading an old save does not give back the money already received.
