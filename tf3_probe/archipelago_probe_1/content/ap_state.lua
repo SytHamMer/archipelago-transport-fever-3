@@ -1,1 +1,0 @@
-return { counter = 1 }

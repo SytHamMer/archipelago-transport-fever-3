@@ -131,7 +131,7 @@ assistant, bugs and rough edges are likely, and reports are welcome.
 
 - One-shot effects (money, traps) are tied to the **seed**, not to the save: loading an old save does not give back the money already received.
 - The cargos of each climate and their difficulty are read from the game's files; they have not been checked on every map.
-- Verified in game so far: the road (all three vehicle tiers), contracts, notifications, DeathLink, loans and a two-player multiworld. Air mode, tram and water menus, the first line and delivery checks of each mode, and the rail tiers have not all been verified (see `docs/superpowers/plans/e2e-checklist.md`).
+- Verified in game so far: the road (all three vehicle tiers), contracts, notifications, DeathLink, loans and a two-player multiworld. Air mode, tram and water menus, the first line and delivery checks of each mode, and the rail tiers have not all been verified.
 - Vehicles are unlocked by tier (three eras per mode), not one by one. Unlocking them individually is an idea that is not started, see [docs/improvements.md](docs/improvements.md).
 - Missions of the game count once completed, whatever their type; the mod reads them every 2 seconds.
 - There is no tracking window in the game: items received and checks sent are announced by notifications (with the Archipelago logo), and the open contracts are the game's own contract interface.
@@ -147,7 +147,7 @@ venv\Scripts\python scripts\dev_inbox.py --seed s1 "Rail Transport"   # simulate
 venv\Scripts\python scripts\e2e_headless.py out\AP_xxx.zip            # server + client + fake mod
 ```
 
-`ap/` (an Archipelago clone) and `m/` (the Manual template) are not tracked by git. `tf3_ap/` is the Manual prototype, `tf3_probe/` the probes used to measure what the game allows.
+`ap/` (an Archipelago clone) is not tracked by git; the development scripts expect it there.
 
 ## Contact
 

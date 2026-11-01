@@ -137,6 +137,6 @@ Useful files:
 ## 10. Current limits
 
 - Temperate climate cargos only.
-- Tram, water and air have not all been verified in the menus; see `docs/superpowers/plans/e2e-checklist.md`.
+- Tram, water and air have not all been verified in the menus; see [improvements.md](improvements.md).
 - No tracking window in the game: the open contracts use the game's contract interface, and items and checks are announced by notifications.
 - Platform: Windows PC only.
