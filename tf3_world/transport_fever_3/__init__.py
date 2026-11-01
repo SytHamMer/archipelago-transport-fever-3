@@ -34,6 +34,7 @@ class TF3Web(WebWorld):
     )]
     option_groups = OPTION_GROUPS
     options_presets = OPTION_PRESETS
+    bug_report_page = "https://github.com/SytHamMer/archipelago-transport-fever-3/issues"
 
 
 class TF3Item(Item):

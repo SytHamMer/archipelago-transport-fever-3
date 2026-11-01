@@ -30,9 +30,9 @@ Upstream general tests (and the web host ones, see below), run with `AP_TEST_WOR
    author's repository) before the pull request, and the link added to `docs/setup_en.md`.
 3. **Client in the Launcher.** The client is registered as a Launcher component. It was checked with a real Launcher in a
    two-player and a mixed Transport Fever 3 and Satisfactory multiworld.
-4. **No bug report page** (`bug_report_page` in the `WebWorld`): needs the URL of the repository where issues go.
+4. **Bug report page**: set to the issues page of the public repository (`bug_report_page` in the `WebWorld`).
 5. **Author name** in the tutorial is `Mathys`; to be confirmed.
-6. **Maintainer duties** (world maintainer guide): to be the code owner of the world (entry in `docs/CODEOWNERS`), to
+6. **Maintainer duties** (world maintainer guide): to be the maintainer of the world (the author of a merged world becomes it; the `docs/CODEOWNERS` entry is settled with the reviewers), to
    review the pull requests that touch it, to test the world on release candidates and to answer on Discord. The author
    has to accept these before the pull request.
 7. **Not verified in game**: tram, water and air menus, the first line and delivery checks of each mode, the rail tiers
