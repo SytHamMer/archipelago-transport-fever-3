@@ -148,3 +148,7 @@ venv\Scripts\python scripts\e2e_headless.py out\AP_xxx.zip            # server +
 ```
 
 `ap/` (an Archipelago clone) and `m/` (the Manual template) are not tracked by git. `tf3_ap/` is the Manual prototype, `tf3_probe/` the probes used to measure what the game allows.
+
+## Contact
+
+To reach the author, on Discord: **sythammer**. Bug reports and feedback on the balance are welcome there, or as issues on this repository.
