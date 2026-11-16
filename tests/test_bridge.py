@@ -113,6 +113,13 @@ def test_read_outbox_roundtrip(bridge, tmp_path):
     )
 
 
+def test_read_outbox_ignores_the_notified_cursor_of_the_mod(bridge, tmp_path):
+    write_outbox(tmp_path, {**OUTBOX, "notified": 3})
+    assert bridge.read_outbox() == Outbox(
+        seed="seed-1", checks={"population:1", "line:road"}, goals={"population": False}, applied=0, heartbeat=100,
+    )
+
+
 def test_read_outbox_missing_returns_none(bridge):
     assert bridge.read_outbox() is None
 

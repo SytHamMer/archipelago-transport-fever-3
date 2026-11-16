@@ -52,7 +52,8 @@ local state = {
 	enforced = nil,
 	inflight = false,
 	failures = {}, -- failed attempts per effect id
-	last_notified = nil, -- items and checks as of the last tick; nil until the first tick of a seed (silent baseline)
+	last_notified = nil, -- items and checks as of the last tick; nil until the first tick of a seed
+	notified = nil, -- log entries announced before the game was closed (from the seed's outbox), nil for an old outbox
 	logged = {},
 }
 
@@ -336,7 +337,8 @@ local function adopt_seed(seed)
 	state.seed = seed
 	state.checks, state.goals, state.missions, state.applied, state.failures = {}, {}, {}, 0, {}
 	state.applied_deaths, state.messages = 0, {}
-	state.last_notified = nil -- a new seed starts a new silent baseline
+	state.last_notified = nil -- a new seed resumes from its outbox, or starts a silent baseline
+	state.notified = nil
 	state.spawned = nil
 	state.sent_loan_scale = nil
 	local previous = app.loadUserdata(DIR, outbox_name(seed))
@@ -346,6 +348,7 @@ local function adopt_seed(seed)
 		state.missions = previous.missions or {}
 		state.applied = previous.applied or 0
 		state.applied_deaths = previous.applied_deaths or 0
+		state.notified = type(previous.notified) == "number" and previous.notified or nil
 	end
 end
 
@@ -353,7 +356,8 @@ local function write_outbox()
 	if not state.seed then return end
 	app.saveUserdata(DIR, outbox_name(state.seed), {
 		version = FORMAT_VERSION, seed = state.seed, checks = state.checks, goals = state.goals, missions = state.missions,
-		applied = state.applied, applied_deaths = state.applied_deaths, heartbeat = os.time(), year = state.year, years_freed = state.years_freed,
+		applied = state.applied, applied_deaths = state.applied_deaths,
+			notified = (state.last_notified and state.last_notified.log_size) or state.notified, heartbeat = os.time(), year = state.year, years_freed = state.years_freed,
 	})
 end
 
@@ -524,7 +528,7 @@ local function send_notification(message)
 	api.cmd.sendCommand(api.cmd.makeScriptingSendEventCmd("", "Notifications", "add", {
 		type = NOTIFICATION_TYPE,
 		params = { title = message.title, text = message.text },
-		autoDismissDuration = NOTIFICATION_SECONDS * 1000,
+		autoDismissDuration = (type(message.seconds) == "number" and message.seconds or NOTIFICATION_SECONDS) * 1000,
 	}))
 end
 
@@ -609,8 +613,9 @@ local function send_loan_scale(inbox)
 	say("loan scale sent: " .. percent)
 end
 
--- Tells the player about received items and sent checks. The first tick of a seed only records what is already
--- there, so reloading a game does not replay everything.
+-- Tells the player about received items and sent checks. The first tick of a seed resumes from the number of log
+-- entries announced before (saved in the outbox), so what arrived while the game was closed is announced and nothing
+-- is replayed; without that number (old outbox) it only records what is already there.
 local function notify_changes(inbox)
 	local items, ids = {}, {}
 	for name, count in pairs(inbox.items or {}) do items[name] = count end
@@ -620,7 +625,8 @@ local function notify_changes(inbox)
 		current.log = inbox.log
 		current.log_size = #inbox.log
 	end
-	local messages = notify.diff(state.last_notified, current, inbox.config, nil, inbox.contracts)
+	local previous = state.last_notified or notify.resume(current, state.notified)
+	local messages = notify.diff(previous, current, inbox.config, nil, inbox.contracts)
 	state.last_notified = current
 	for _, message in ipairs(state.messages) do messages[#messages + 1] = message end -- DeathLink losses
 	state.messages = {}
