@@ -57,7 +57,11 @@ any start year. The game's own bank loans already follow the year and are left a
 
 Each open check is shown as a real game contract, with the game's own window (task, and what completing it gives: the item and the player who receives it), icon and notification, like the game's own subsidies. A contract has no deadline and no penalty.
 
-**Contracts do not need to be accepted to be completed.** A check is reached as soon as the game reaches its value, whether or not the contract was accepted; the mod then accepts and finishes the contract by itself. Accepting only makes it appear under "contract in progress". **Do not accept more than 5 Archipelago contracts at the same time**: the game only proposes its own subsidies while fewer than 5 contracts are active, so accepting more of ours stops its subsidies (such as "Connect towns") from appearing until some of ours are finished. If you decline a contract it comes back, until its check is reached.
+> **Do NOT accept the Archipelago contracts.** You never need to: a check is reached as soon as the game reaches its value, accepted or not.
+> The game only proposes its own subsidies (such as "Connect towns") while fewer than 5 contracts are active, and our contracts count. Accept five of them and the game's subsidies stop appearing, so the "N missions completed" checks can no longer be reached.
+> If no subsidy shows up in your game, check that you have fewer than 5 Archipelago contracts accepted, and finish or abandon some. If you do not want to depend on the game's subsidies at all, set `mission_checks: 0` in your YAML.
+
+**Contracts do not need to be accepted to be completed.** The mod accepts and finishes the contract by itself once its check is reached. Accepting only makes it appear under "contract in progress". If you decline a contract it comes back, until its check is reached.
 
 Only the next step of each ladder is shown (the next population level, the next company level, the next delivery tier of each cargo, every first line), so the game does not fill up with contracts. The client command `/contracts` lists the next open contracts in plain text with their reward; `/contracts all` lists every open contract.
 
@@ -74,7 +78,7 @@ The format of a YAML file, weights and random options are explained in the [offi
 | `delivery_checks` | 1 | delivery tiers per cargo (up to 4; the amounts depend on how hard the cargo is, see below) |
 | `climate` | temperate | climate of your map (temperate, dry, subarctic, tropical): deliveries only ask for cargos it can produce |
 | `first_line_checks` | yes | first line of each mode |
-| `mission_checks` | 3 | number of "N game missions completed" checks (0 to 30) |
+| `mission_checks` | 3 | number of "N game missions completed" checks (0 to 30). They need the game to propose subsidies, see [Contracts](#contracts); 0 turns them off |
 | `money_scale` | 100 | percentage applied to every money grant and loss (10 to 1000) |
 | `loan_scale` | 100 | percentage applied to the amount of every bank loan (1 to 200; 100 leaves the game's amounts, which follow the year and are very large in 2020) |
 | `death_link` | off | when another player's game sends a DeathLink, the company loses money (see `death_link_loss`) |

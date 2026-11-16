@@ -40,18 +40,15 @@ Reported by a tester: no regular subsidies show up in their game, so the "N miss
   active once accepted (no deadline, so they stay active). A player who accepts every Archipelago contract ends up
   with no game subsidies, so mission checks can never be completed. The limit is in the engine (not visible in the
   scripts), so the cause is not confirmed in game yet.
-- **To do (docs):**
-  - make the README (and the installation guide and `setup_en.md`) much clearer: **do NOT accept the Archipelago
-    contracts**, (to confirm in game: a check is reached without accepting its contract), and accepting too many blocks the game's
-    subsidies;
-  - say that `mission_checks: 0` removes the checks that depend on the game's subsidies, and that it is a good choice
-    when subsidies are not appearing.
+- **Done (docs, on the `docs/subsidies-warning` branch):** README, installation guide and `setup_en.md` now say clearly
+  **not to accept the Archipelago contracts** (a check is reached without it, as already documented), why (five
+  accepted contracts stop the game's subsidies), what to look at when no subsidy shows up, and that
+  `mission_checks: 0` removes the checks that depend on them. The default stays 3.
 - **To do (in game):** add the same advice as a help text, in the game (text of the contract itself, a notification
   or the mod's description) or elsewhere: to be decided together.
 - **To do (mod, to study):** keep at most four Archipelago contracts active so a place always stays free for the
   game's subsidies, or keep ours out of the count (risky: the contract window reads that list). First confirm in game
   that the limit is five and that our contracts count.
-- **To decide:** whether the `mission_checks` default stays 3.
 
 ## Economy
 
