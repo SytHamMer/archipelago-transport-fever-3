@@ -11,6 +11,9 @@ M.CHECK_TITLE = "Archipelago: check sent"
 M.CONTRACT_TITLE = "Archipelago: contract completed"
 M.SUMMARY_TITLE = "Archipelago"
 M.DEATH_TITLE = "Archipelago: DeathLink"
+M.BATCH_TITLE = "Archipelago: items received"
+M.BATCH_NAMES = 4 -- item names listed in the summary of a big batch, the rest is "and N more"
+M.BATCH_SECONDS = 20 -- the summary stays longer than a single notification
 
 local function with_separators(number)
 	local digits = tostring(math.floor(number))
@@ -145,6 +148,35 @@ local function sorted_names(items)
 	return names
 end
 
+-- One text for a batch of log entries: the item names with their count, most frequent first, cut to BATCH_NAMES.
+local function batch_text(entries)
+	local counts, names = {}, {}
+	for _, entry in ipairs(entries) do
+		if not counts[entry.item] then names[#names + 1] = entry.item end
+		counts[entry.item] = (counts[entry.item] or 0) + 1
+	end
+	table.sort(names, function(a, b)
+		if counts[a] ~= counts[b] then return counts[a] > counts[b] end
+		return a < b
+	end)
+	local parts = {}
+	for index = 1, math.min(#names, M.BATCH_NAMES) do
+		local name = names[index]
+		parts[index] = counts[name] > 1 and (name .. " x" .. counts[name]) or name
+	end
+	local text = table.concat(parts, ", ")
+	if #names > M.BATCH_NAMES then text = text .. " and " .. (#names - M.BATCH_NAMES) .. " more" end
+	return text
+end
+
+-- The state to compare with on the first tick of a seed: what was announced before the game was closed. `notified` is
+-- the number of log entries announced then (saved in the outbox); nil, or a number the log cannot match, gives nil: the
+-- first state is then only recorded, silently.
+function M.resume(current, notified)
+	if not current.log or type(notified) ~= "number" or notified < 0 or notified > #current.log then return nil end
+	return { items = current.items, checks = current.checks, log_size = notified }
+end
+
 -- Messages for what is new in `current` compared with `previous`. The first state (previous is nil) only sets the
 -- baseline and notifies nothing, so a reloaded game does not replay everything already received.
 -- `contracts` (optional) maps a check id to its reward { item, to, own }: such checks are announced as contracts.
@@ -156,8 +188,14 @@ function M.diff(previous, current, config, limit, contracts)
 	if current.log then
 		-- the ordered log says who sent what: announce the entries that are new
 		local seen = previous.log_size or #(previous.log or {})
-		for index = seen + 1, #current.log do
-			messages[#messages + 1] = { title = M.ITEM_TITLE, text = item_text(current.log[index], config) }
+		if #current.log - seen > limit then
+			local entries = {}
+			for index = seen + 1, #current.log do entries[#entries + 1] = current.log[index] end
+			messages[#messages + 1] = { title = M.BATCH_TITLE, text = batch_text(entries), seconds = M.BATCH_SECONDS }
+		else
+			for index = seen + 1, #current.log do
+				messages[#messages + 1] = { title = M.ITEM_TITLE, text = item_text(current.log[index], config) }
+			end
 		end
 	else
 		for _, name in ipairs(sorted_names(current.items)) do

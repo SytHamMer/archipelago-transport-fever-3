@@ -248,3 +248,48 @@ def test_a_death_message_names_who_died_and_what_it_costs():
 def test_a_death_message_without_a_cause_uses_the_name():
     message = death_message({"id": 1, "amount": 500_000, "source": "Alice", "cause": ""})
     assert message["text"] == "Alice died - the company loses 500,000"
+
+
+def resume(current, notified):
+    runtime, notify = load_module("ap_notify")
+    return from_lua(notify.resume(to_lua(runtime, current), notified))
+
+
+def test_resume_starts_from_the_saved_cursor_so_missed_entries_are_new():
+    entries = [{"item": f"Item {i}"} for i in range(3)]
+    previous = resume(log_state(entries, ["population:1"]), 1)
+    assert previous["log_size"] == 1 and previous["checks"] == ["population:1"]
+    assert texts(diff(previous, log_state(entries, ["population:1"]))) == ["Item 1", "Item 2"]
+
+
+def test_resume_without_a_cursor_or_with_a_cursor_past_the_log_is_silent():
+    current = log_state([{"item": "A"}])
+    assert resume(current, None) is None
+    assert resume(current, 5) is None
+    assert resume(current, -1) is None
+    assert resume(state(), 0) is None  # no log in the inbox: the item-count path is unchanged
+
+
+def test_a_batch_above_the_limit_is_one_grouped_summary():
+    entries = [{"item": "Rail Transport"}, {"item": "Rail Transport"}, {"item": "Tool: Bus Lanes"}] + \
+        [{"item": f"Extra {i}"} for i in range(4)]
+    messages = diff(log_state([]), log_state(entries), limit=5)
+    assert messages == [{"title": "Archipelago: items received", "seconds": 20,
+                         "text": "Rail Transport x2, Extra 0, Extra 1, Extra 2 and 2 more"}]
+
+
+def test_exactly_the_limit_is_announced_one_by_one():
+    entries = [{"item": f"Item {i}"} for i in range(5)]
+    assert len(diff(log_state([]), log_state(entries), limit=5)) == 5
+
+
+def test_the_summary_counts_the_same_item_from_different_players_together():
+    entries = [{"item": "Rail Transport", "from": "Alice"}, {"item": "Rail Transport", "from": "Bob"}] + \
+        [{"item": f"Item {i}"} for i in range(4)]
+    assert texts(diff(log_state([]), log_state(entries), limit=5))[0].startswith("Rail Transport x2")
+
+
+def test_the_summary_comes_before_the_check_messages():
+    entries = [{"item": f"Item {i}"} for i in range(6)]
+    messages = diff(log_state([]), log_state(entries, ["population:1"]), limit=5)
+    assert [m["title"] for m in messages] == ["Archipelago: items received", "Archipelago: check sent"]
