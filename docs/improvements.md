@@ -42,7 +42,7 @@ Reported by a tester: no regular subsidies show up in their game, so the "N miss
   scripts), so the cause is not confirmed in game yet.
 - **To do (docs):**
   - make the README (and the installation guide and `setup_en.md`) much clearer: **do NOT accept the Archipelago
-    contracts**, a check is reached without accepting its contract, and accepting too many blocks the game's
+    contracts**, (to confirm in game: a check is reached without accepting its contract), and accepting too many blocks the game's
     subsidies;
   - say that `mission_checks: 0` removes the checks that depend on the game's subsidies, and that it is a good choice
     when subsidies are not appearing.
