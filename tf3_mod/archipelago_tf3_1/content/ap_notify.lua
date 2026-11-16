@@ -13,7 +13,7 @@ M.SUMMARY_TITLE = "Archipelago"
 M.DEATH_TITLE = "Archipelago: DeathLink"
 M.BATCH_TITLE = "Archipelago: items received"
 M.BATCH_NAMES = 4 -- item names listed in the summary of a big batch, the rest is "and N more"
-M.BATCH_SECONDS = 20 -- the summary stays longer than a single notification
+M.BATCH_SECONDS = 30 -- what is announced on catching up (a load, a reconnection) stays longer than a single notification
 
 local function with_separators(number)
 	local digits = tostring(math.floor(number))
@@ -167,6 +167,12 @@ local function batch_text(entries)
 	local text = table.concat(parts, ", ")
 	if #names > M.BATCH_NAMES then text = text .. " and " .. (#names - M.BATCH_NAMES) .. " more" end
 	return text
+end
+
+-- Makes catch-up messages last BATCH_SECONDS (a message that already has a duration keeps it).
+function M.linger(messages)
+	for _, message in ipairs(messages) do message.seconds = message.seconds or M.BATCH_SECONDS end
+	return messages
 end
 
 -- The state to compare with on the first tick of a seed: what was announced before the game was closed. `notified` is

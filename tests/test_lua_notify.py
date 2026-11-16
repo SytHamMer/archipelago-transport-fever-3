@@ -274,7 +274,7 @@ def test_a_batch_above_the_limit_is_one_grouped_summary():
     entries = [{"item": "Rail Transport"}, {"item": "Rail Transport"}, {"item": "Tool: Bus Lanes"}] + \
         [{"item": f"Extra {i}"} for i in range(4)]
     messages = diff(log_state([]), log_state(entries), limit=5)
-    assert messages == [{"title": "Archipelago: items received", "seconds": 20,
+    assert messages == [{"title": "Archipelago: items received", "seconds": 30,
                          "text": "Rail Transport x2, Extra 0, Extra 1, Extra 2 and 2 more"}]
 
 
@@ -293,3 +293,9 @@ def test_the_summary_comes_before_the_check_messages():
     entries = [{"item": f"Item {i}"} for i in range(6)]
     messages = diff(log_state([]), log_state(entries, ["population:1"]), limit=5)
     assert [m["title"] for m in messages] == ["Archipelago: items received", "Archipelago: check sent"]
+
+
+def test_linger_makes_catch_up_messages_last_longer_without_changing_a_set_duration():
+    runtime, notify = load_module("ap_notify")
+    messages = to_lua(runtime, [{"title": "A", "text": "x"}, {"title": "B", "text": "y", "seconds": 5}])
+    assert [m["seconds"] for m in from_lua(notify.linger(messages))] == [30, 5]

@@ -57,7 +57,7 @@ then "and N more", which does not say which.
 ## Choices made while building
 
 Summary title "Archipelago: items received", up to 4 item names (most frequent first, then alphabetical) followed by
-"and N more", displayed for 20 seconds; the summary starts above 5 new entries (`M.DEFAULT_LIMIT`).
+"and N more", displayed for 30 seconds (every catch-up message, not only the summary); the summary starts above 5 new entries (`M.DEFAULT_LIMIT`).
 
 ## Manual check in game (not run yet)
 

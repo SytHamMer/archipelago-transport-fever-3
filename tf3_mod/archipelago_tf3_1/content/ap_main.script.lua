@@ -625,8 +625,9 @@ local function notify_changes(inbox)
 		current.log = inbox.log
 		current.log_size = #inbox.log
 	end
-	local previous = state.last_notified or notify.resume(current, state.notified)
-	local messages = notify.diff(previous, current, inbox.config, nil, inbox.contracts)
+	local resumed = not state.last_notified and notify.resume(current, state.notified)
+	local messages = notify.diff(state.last_notified or resumed or nil, current, inbox.config, nil, inbox.contracts)
+	if resumed then notify.linger(messages) end -- what arrived while the game was closed stays on screen longer
 	state.last_notified = current
 	for _, message in ipairs(state.messages) do messages[#messages + 1] = message end -- DeathLink losses
 	state.messages = {}
