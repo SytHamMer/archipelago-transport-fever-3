@@ -2,7 +2,7 @@
 
 Play Transport Fever 3 (PC, Steam) in an [Archipelago](https://archipelago.gg) multiworld, without the honor system: the game locks what has not been received and sends the checks itself.
 
-Status: version 0.1.0, an unofficial world that is open for testing. It has not been proposed to the official Archipelago repository yet: it waits for feedback from real games first (see "Status and feedback" below). Licensed under the MIT License.
+Status: version 0.1.1, an unofficial world that is open for testing. It has not been proposed to the official Archipelago repository yet: it waits for feedback from real games first (see "Status and feedback" below). Licensed under the MIT License.
 
 ## What you need
 

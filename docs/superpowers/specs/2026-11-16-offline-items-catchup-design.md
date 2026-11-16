@@ -62,7 +62,7 @@ Summary title "Archipelago: items received", up to 4 item names (most frequent f
 The summary cuts after 4 names and cannot be clicked: the client command `/received` lists everything (documented). A
 clickable list or a history window is the 0.2.0 idea (`docs/improvements.md`).
 
-## Manual check in game (not run yet)
+## Manual check in game (done for 0.1.1: items A, B and C)
 
 1. Play with the mod, then close the game.
 2. With the client connected, receive 1 item from another slot, start the game and load the save: the item is announced
