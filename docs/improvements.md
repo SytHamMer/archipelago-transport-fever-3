@@ -89,3 +89,13 @@ Newest at the end of each section. Nothing here is started unless it says so.
   and download link, bug report page, maintainer duties, web host tests, manual check) is in
   [upstream-pr-readiness.md](upstream-pr-readiness.md).
 - Nothing is pushed or proposed to the official repository until the user says so.
+## In-game history and other interfaces (idea for 0.2.0, not started)
+
+- **Idea:** a way to see, at any time, what was received and what is open, beyond the short-lived notifications:
+  an in-game history of the received items (who sent what, for which check), possibly with the open contracts and
+  their progress in one place. More generally, try other interfaces of the game to make the mod more readable.
+- **Why:** notifications disappear after a few seconds; a player who was away (issue #1) or who missed one has no
+  way to look it up in the game. The 0.1.1 fix only adds a catch-up summary notification.
+- **Constraint:** the mod has no window of its own today, and the game's interface crashes on malformed contract
+  data, so this needs careful experiments (see how the game's own windows and the notification tab are built).
+
