@@ -134,7 +134,7 @@ assistant, bugs and rough edges are likely, and reports are welcome.
 - Verified in game so far: the road (all three vehicle tiers), contracts, notifications, DeathLink, loans and a two-player multiworld. Air mode, tram and water menus, the first line and delivery checks of each mode, and the rail tiers have not all been verified.
 - Vehicles are unlocked by tier (three eras per mode), not one by one. Unlocking them individually is an idea that is not started, see [docs/improvements.md](docs/improvements.md).
 - Missions of the game count once completed, whatever their type; the mod reads them every 2 seconds.
-- There is no tracking window in the game: items received and checks sent are announced by notifications (with the Archipelago logo), and the open contracts are the game's own contract interface.
+- There is no tracking window in the game: items received and checks sent are announced by notifications (with the Archipelago logo; what arrives while the game is closed is announced as a summary when you load the save), and the open contracts are the game's own contract interface.
 
 ## Development
 

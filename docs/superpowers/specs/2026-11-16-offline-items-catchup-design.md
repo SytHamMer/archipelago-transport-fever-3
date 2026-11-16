@@ -54,10 +54,20 @@ then "and N more", which does not say which.
 - Tests: the pure logic of `ap_notify` (diff with a cursor, grouping, limit, old outbox, cursor larger than the log) in
   the existing Lua tests; no in-game test is possible without the game, so a manual check is listed.
 
-## Left to the builder
+## Choices made while building
 
-Exact wording and title of the summary, how many names it lists, its display duration, and the manual test steps
-(play, close the game, receive items from another slot, reload, check the notification).
+Summary title "Archipelago: items received", up to 4 item names (most frequent first, then alphabetical) followed by
+"and N more", displayed for 20 seconds; the summary starts above 5 new entries (`M.DEFAULT_LIMIT`).
+
+## Manual check in game (not run yet)
+
+1. Play with the mod, then close the game.
+2. With the client connected, receive 1 item from another slot, start the game and load the save: the item is announced
+   by name.
+3. Close the game, receive 8 items, load the save: one "Archipelago: items received" summary.
+4. Reload the save again: nothing is announced a second time.
+5. Start with an outbox from 0.1.0 (no `notified` field): nothing is announced on the first load, and the next one
+   resumes normally.
 
 ## Next steps after this change (release, not part of this design)
 
