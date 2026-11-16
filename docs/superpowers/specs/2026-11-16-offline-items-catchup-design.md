@@ -59,6 +59,9 @@ then "and N more", which does not say which.
 Summary title "Archipelago: items received", up to 4 item names (most frequent first, then alphabetical) followed by
 "and N more", displayed for 30 seconds (every catch-up message, not only the summary); the summary starts above 5 new entries (`M.DEFAULT_LIMIT`).
 
+The summary cuts after 4 names and cannot be clicked: the client command `/received` lists everything (documented). A
+clickable list or a history window is the 0.2.0 idea (`docs/improvements.md`).
+
 ## Manual check in game (not run yet)
 
 1. Play with the mod, then close the game.
