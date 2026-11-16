@@ -31,6 +31,28 @@ Newest at the end of each section. Nothing here is started unless it says so.
   - make the logic reflect it: hard cargos need more items (modes, vehicle tiers, the matching cargo class) than easy ones;
   - let the YAML choose how many of each level are checks.
 
+## Archipelago contracts can block the game's own subsidies
+
+Reported by a tester: no regular subsidies show up in their game, so the "N missions completed" checks
+(`mission_checks`, 3 by default) cannot be reached.
+
+- **Problem:** the game stops offering its own subsidies while five contracts are active, and our contracts count as
+  active once accepted (no deadline, so they stay active). A player who accepts every Archipelago contract ends up
+  with no game subsidies, so mission checks can never be completed. The limit is in the engine (not visible in the
+  scripts), so the cause is not confirmed in game yet.
+- **To do (docs):**
+  - make the README (and the installation guide and `setup_en.md`) much clearer: **do NOT accept the Archipelago
+    contracts**, a check is reached without accepting its contract, and accepting too many blocks the game's
+    subsidies;
+  - say that `mission_checks: 0` removes the checks that depend on the game's subsidies, and that it is a good choice
+    when subsidies are not appearing.
+- **To do (in game):** add the same advice as a help text, in the game (text of the contract itself, a notification
+  or the mod's description) or elsewhere: to be decided together.
+- **To do (mod, to study):** keep at most four Archipelago contracts active so a place always stays free for the
+  game's subsidies, or keep ours out of the count (risky: the contract window reads that list). First confirm in game
+  that the limit is five and that our contracts count.
+- **To decide:** whether the `mission_checks` default stays 3.
+
 ## Economy
 
 - **Done on the `free-years` branch (to check in game):** instead of fighting the date-based prices, the start year is
